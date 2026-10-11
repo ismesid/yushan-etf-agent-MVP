@@ -1,0 +1,2270 @@
+{
+  "note": "全部價格、成交量、因子、排名、帳戶與場景時刻都是合成測試資料；2026-10-13～15 為合成測試日曆，未核實官方交易日。只有 25 檔的前收及 2891 額外一日資料共 26 筆，沒有完成 21 日因子或歷史回測資料。fixture_score 為手填假值，並非計算結果；O1～O25 只示範內部引用，沒有建立完整官方證據鏈。研究切分日期、5 日標籤與隔離設定只是示例，尚未確認研究參數或取得對應歷史資料。不可當正式行情、正式帳戶、真實模型輸出或正式可提交產物。",
+  "market_snapshot": {
+    "contract_version": "1.0",
+    "snapshot_id": "fixture-market-2026-10-15",
+    "trade_date": "2026-10-15",
+    "previous_trade_date": "2026-10-14",
+    "snapshot_cutoff": "2026-10-15T08:00:00+08:00",
+    "data_origin": "fixture",
+    "dataset_version": "synthetic-v1",
+    "prices": [
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2891",
+        "market": "TWSE",
+        "open": "50.00",
+        "high": "51.00",
+        "low": "49.00",
+        "close_raw": "50.00",
+        "return_close": "50.00",
+        "volume_shares": 2000000,
+        "amount_twd": "100000000.00",
+        "source_key": "fixture:2891",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2330",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2330",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2454",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2454",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2308",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2308",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2317",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2317",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "3711",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:3711",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2881",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2881",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2383",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2383",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2303",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2303",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2882",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2882",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "3037",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:3037",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "1303",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:1303",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2345",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2345",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2382",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2382",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2408",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2408",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2412",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2412",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2327",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2327",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "6669",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:6669",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "3017",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:3017",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2885",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2885",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2887",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2887",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2360",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2360",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "2886",
+        "market": "TWSE",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:2886",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "5274",
+        "market": "TPEX",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:5274",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-14",
+        "ticker": "6223",
+        "market": "TPEX",
+        "open": "62.50",
+        "high": "63.50",
+        "low": "61.50",
+        "close_raw": "62.50",
+        "return_close": "62.50",
+        "volume_shares": 2000000,
+        "amount_twd": "125000000.00",
+        "source_key": "fixture:6223",
+        "known_at": "2026-10-14T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      },
+      {
+        "trade_date": "2026-10-13",
+        "ticker": "2891",
+        "market": "TWSE",
+        "open": "49.50",
+        "high": "50.50",
+        "low": "48.50",
+        "close_raw": "49.50",
+        "return_close": "49.50",
+        "volume_shares": 2000000,
+        "amount_twd": "99000000.00",
+        "source_key": "fixture:2891",
+        "known_at": "2026-10-13T14:00:00+08:00",
+        "fetched_at": "2026-10-15T07:00:00+08:00",
+        "raw_sha256": null,
+        "data_version": "synthetic-v1",
+        "adjustment_status": "raw",
+        "price_valid": true,
+        "tradable": true
+      }
+    ],
+    "timezone": "Asia/Taipei"
+  },
+  "account_snapshot": {
+    "contract_version": "1.0",
+    "snapshot_id": "fixture-account-2026-10-14",
+    "as_of_trade_date": "2026-10-14",
+    "status": "demo",
+    "cash_twd": "10000000.00",
+    "nav_twd": "100000000.00",
+    "positions": [
+      {
+        "ticker": "2891",
+        "shares": 60000
+      },
+      {
+        "ticker": "2330",
+        "shares": 58000
+      },
+      {
+        "ticker": "2454",
+        "shares": 58000
+      },
+      {
+        "ticker": "2308",
+        "shares": 58000
+      },
+      {
+        "ticker": "2317",
+        "shares": 58000
+      },
+      {
+        "ticker": "3711",
+        "shares": 58000
+      },
+      {
+        "ticker": "2881",
+        "shares": 58000
+      },
+      {
+        "ticker": "2383",
+        "shares": 58000
+      },
+      {
+        "ticker": "2303",
+        "shares": 58000
+      },
+      {
+        "ticker": "2882",
+        "shares": 58000
+      },
+      {
+        "ticker": "3037",
+        "shares": 58000
+      },
+      {
+        "ticker": "1303",
+        "shares": 58000
+      },
+      {
+        "ticker": "2345",
+        "shares": 58000
+      },
+      {
+        "ticker": "2382",
+        "shares": 58000
+      },
+      {
+        "ticker": "2408",
+        "shares": 58000
+      },
+      {
+        "ticker": "2412",
+        "shares": 58000
+      },
+      {
+        "ticker": "2327",
+        "shares": 58000
+      },
+      {
+        "ticker": "6669",
+        "shares": 58000
+      },
+      {
+        "ticker": "3017",
+        "shares": 58000
+      },
+      {
+        "ticker": "2885",
+        "shares": 58000
+      },
+      {
+        "ticker": "2887",
+        "shares": 58000
+      },
+      {
+        "ticker": "2360",
+        "shares": 58000
+      },
+      {
+        "ticker": "2886",
+        "shares": 58000
+      },
+      {
+        "ticker": "5274",
+        "shares": 58000
+      },
+      {
+        "ticker": "6223",
+        "shares": 58000
+      }
+    ],
+    "origin": "synthetic_existing_holdings",
+    "reconciled": false,
+    "demo": true,
+    "origin_ref": null
+  },
+  "feature_table": {
+    "contract_version": "1.0",
+    "snapshot_id": "fixture-market-2026-10-15",
+    "dataset_version": "synthetic-v1",
+    "feature_version": "handfilled-fixture-v1",
+    "factor_profile": "fixture_score_only_not_calculated",
+    "origin": "fixture",
+    "rows": [
+      {
+        "ticker": "2891",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.75
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2891"
+        ],
+        "observation_ids": [
+          "O1"
+        ],
+        "eligible": true,
+        "rank": 1
+      },
+      {
+        "ticker": "2330",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.74
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2330"
+        ],
+        "observation_ids": [
+          "O2"
+        ],
+        "eligible": true,
+        "rank": 2
+      },
+      {
+        "ticker": "2454",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.73
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2454"
+        ],
+        "observation_ids": [
+          "O3"
+        ],
+        "eligible": true,
+        "rank": 3
+      },
+      {
+        "ticker": "2308",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.72
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2308"
+        ],
+        "observation_ids": [
+          "O4"
+        ],
+        "eligible": true,
+        "rank": 4
+      },
+      {
+        "ticker": "2317",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.71
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2317"
+        ],
+        "observation_ids": [
+          "O5"
+        ],
+        "eligible": true,
+        "rank": 5
+      },
+      {
+        "ticker": "3711",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.7
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:3711"
+        ],
+        "observation_ids": [
+          "O6"
+        ],
+        "eligible": true,
+        "rank": 6
+      },
+      {
+        "ticker": "2881",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.69
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2881"
+        ],
+        "observation_ids": [
+          "O7"
+        ],
+        "eligible": true,
+        "rank": 7
+      },
+      {
+        "ticker": "2383",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.68
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2383"
+        ],
+        "observation_ids": [
+          "O8"
+        ],
+        "eligible": true,
+        "rank": 8
+      },
+      {
+        "ticker": "2303",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.67
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2303"
+        ],
+        "observation_ids": [
+          "O9"
+        ],
+        "eligible": true,
+        "rank": 9
+      },
+      {
+        "ticker": "2882",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.66
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2882"
+        ],
+        "observation_ids": [
+          "O10"
+        ],
+        "eligible": true,
+        "rank": 10
+      },
+      {
+        "ticker": "3037",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.65
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:3037"
+        ],
+        "observation_ids": [
+          "O11"
+        ],
+        "eligible": true,
+        "rank": 11
+      },
+      {
+        "ticker": "1303",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.64
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:1303"
+        ],
+        "observation_ids": [
+          "O12"
+        ],
+        "eligible": true,
+        "rank": 12
+      },
+      {
+        "ticker": "2345",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.63
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2345"
+        ],
+        "observation_ids": [
+          "O13"
+        ],
+        "eligible": true,
+        "rank": 13
+      },
+      {
+        "ticker": "2382",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.62
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2382"
+        ],
+        "observation_ids": [
+          "O14"
+        ],
+        "eligible": true,
+        "rank": 14
+      },
+      {
+        "ticker": "2408",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.61
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2408"
+        ],
+        "observation_ids": [
+          "O15"
+        ],
+        "eligible": true,
+        "rank": 15
+      },
+      {
+        "ticker": "2412",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.6
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2412"
+        ],
+        "observation_ids": [
+          "O16"
+        ],
+        "eligible": true,
+        "rank": 16
+      },
+      {
+        "ticker": "2327",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.59
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2327"
+        ],
+        "observation_ids": [
+          "O17"
+        ],
+        "eligible": true,
+        "rank": 17
+      },
+      {
+        "ticker": "6669",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.58
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:6669"
+        ],
+        "observation_ids": [
+          "O18"
+        ],
+        "eligible": true,
+        "rank": 18
+      },
+      {
+        "ticker": "3017",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.57
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:3017"
+        ],
+        "observation_ids": [
+          "O19"
+        ],
+        "eligible": true,
+        "rank": 19
+      },
+      {
+        "ticker": "2885",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.56
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2885"
+        ],
+        "observation_ids": [
+          "O20"
+        ],
+        "eligible": true,
+        "rank": 20
+      },
+      {
+        "ticker": "2887",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.55
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2887"
+        ],
+        "observation_ids": [
+          "O21"
+        ],
+        "eligible": true,
+        "rank": 21
+      },
+      {
+        "ticker": "2360",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.54
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2360"
+        ],
+        "observation_ids": [
+          "O22"
+        ],
+        "eligible": true,
+        "rank": 22
+      },
+      {
+        "ticker": "2886",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.53
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:2886"
+        ],
+        "observation_ids": [
+          "O23"
+        ],
+        "eligible": true,
+        "rank": 23
+      },
+      {
+        "ticker": "5274",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.52
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:5274"
+        ],
+        "observation_ids": [
+          "O24"
+        ],
+        "eligible": true,
+        "rank": 24
+      },
+      {
+        "ticker": "6223",
+        "window_start": "2026-10-13",
+        "window_end": "2026-10-14",
+        "values": {
+          "fixture_score": 0.51
+        },
+        "missing_reasons": {},
+        "source_refs": [
+          "fixture:6223"
+        ],
+        "observation_ids": [
+          "O25"
+        ],
+        "eligible": true,
+        "rank": 25
+      }
+    ]
+  },
+  "agent_draft": {
+    "market_proposal": {
+      "regime": "neutral",
+      "stance": "neutral",
+      "cash_target": 0.09,
+      "proposed_cash_range": [
+        0.08,
+        0.12
+      ],
+      "intended_flow": "increase",
+      "basis_obs_ids": [
+        "O1"
+      ],
+      "rationale": "固定測試提案，非模型輸出；示範現金由 10% 調整至 9%，尚未計算費用與委託流向。",
+      "counter_evidence": null
+    },
+    "selections": [
+      {
+        "ticker": "2891",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O1"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O1，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2330",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O2"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O2，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2454",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O3"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O3，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2308",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O4"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O4，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2317",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O5"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O5，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "3711",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O6"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O6，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2881",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O7"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O7，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2383",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O8"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O8，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2303",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O9"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O9，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2882",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O10"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O10，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "3037",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O11"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O11，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "1303",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O12"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O12，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2345",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O13"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O13，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2382",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O14"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O14，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2408",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O15"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O15，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2412",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O16"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O16，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2327",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O17"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O17，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "6669",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O18"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O18，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "3017",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O19"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O19，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2885",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O20"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O20，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2887",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O21"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O21，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2360",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O22"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O22，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2886",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O23"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O23，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "5274",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O24"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O24，沒有實際選股判斷。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "6223",
+        "conviction": 1,
+        "supporting_obs_ids": [
+          "O25"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範引用 O25，沒有實際選股判斷。",
+        "counter_evidence": null
+      }
+    ],
+    "held_reviews": [
+      {
+        "ticker": "2891",
+        "intent": "rebalance",
+        "supporting_obs_ids": [
+          "O1"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範將 2891 的目標權重設為 4%。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2330",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O2"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2454",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O3"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2308",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O4"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2317",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O5"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "3711",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O6"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2881",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O7"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2383",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O8"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2303",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O9"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2882",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O10"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "3037",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O11"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "1303",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O12"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2345",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O13"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2382",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O14"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2408",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O15"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2412",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O16"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2327",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O17"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "6669",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O18"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "3017",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O19"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2885",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O20"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2887",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O21"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2360",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O22"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "2886",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O23"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "5274",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O24"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      },
+      {
+        "ticker": "6223",
+        "intent": "keep",
+        "supporting_obs_ids": [
+          "O25"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+        "counter_evidence": null
+      }
+    ]
+  },
+  "portfolio_proposal": {
+    "contract_version": "1.0",
+    "market_snapshot_id": "fixture-market-2026-10-15",
+    "account_snapshot_id": "fixture-account-2026-10-14",
+    "allocation_method": "fixture",
+    "cash_target": "0.09",
+    "targets": [
+      {
+        "ticker": "2891",
+        "target_weight": "0.04",
+        "reason_refs": [
+          "O1"
+        ]
+      },
+      {
+        "ticker": "2330",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O2"
+        ]
+      },
+      {
+        "ticker": "2454",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O3"
+        ]
+      },
+      {
+        "ticker": "2308",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O4"
+        ]
+      },
+      {
+        "ticker": "2317",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O5"
+        ]
+      },
+      {
+        "ticker": "3711",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O6"
+        ]
+      },
+      {
+        "ticker": "2881",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O7"
+        ]
+      },
+      {
+        "ticker": "2383",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O8"
+        ]
+      },
+      {
+        "ticker": "2303",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O9"
+        ]
+      },
+      {
+        "ticker": "2882",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O10"
+        ]
+      },
+      {
+        "ticker": "3037",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O11"
+        ]
+      },
+      {
+        "ticker": "1303",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O12"
+        ]
+      },
+      {
+        "ticker": "2345",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O13"
+        ]
+      },
+      {
+        "ticker": "2382",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O14"
+        ]
+      },
+      {
+        "ticker": "2408",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O15"
+        ]
+      },
+      {
+        "ticker": "2412",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O16"
+        ]
+      },
+      {
+        "ticker": "2327",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O17"
+        ]
+      },
+      {
+        "ticker": "6669",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O18"
+        ]
+      },
+      {
+        "ticker": "3017",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O19"
+        ]
+      },
+      {
+        "ticker": "2885",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O20"
+        ]
+      },
+      {
+        "ticker": "2887",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O21"
+        ]
+      },
+      {
+        "ticker": "2360",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O22"
+        ]
+      },
+      {
+        "ticker": "2886",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O23"
+        ]
+      },
+      {
+        "ticker": "5274",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O24"
+        ]
+      },
+      {
+        "ticker": "6223",
+        "target_weight": "0.03625",
+        "reason_refs": [
+          "O25"
+        ]
+      }
+    ]
+  },
+  "validation_report": {
+    "contract_version": "1.0",
+    "scope": "contract_only",
+    "mode": "demo",
+    "official_rules_confirmed": false,
+    "account_reconciled": false,
+    "real_agent_decision": false,
+    "submission_ready": false,
+    "checks": [
+      {
+        "check_id": "official_validation_pending",
+        "severity": "BLOCK",
+        "passed": false,
+        "details": "官方 D-Plan 結構與語意驗證尚未實作；本檔僅為內部合約示例，沒有聲稱 schema 已通過。",
+        "related_ids": []
+      },
+      {
+        "check_id": "real_market_data_pending",
+        "severity": "BLOCK",
+        "passed": false,
+        "details": "真實官方行情與交易日曆尚未接入；本檔使用合成測試資料。",
+        "related_ids": []
+      },
+      {
+        "check_id": "real_agent_decision_pending",
+        "severity": "BLOCK",
+        "passed": false,
+        "details": "尚未呼叫投資決策模型；固定測試草稿不能代替真實模型決策。",
+        "related_ids": []
+      },
+      {
+        "check_id": "official_account_pending",
+        "severity": "BLOCK",
+        "passed": false,
+        "details": "既有持股為 demo 帳，沒有主辦方結算核對證據。",
+        "related_ids": []
+      }
+    ]
+  },
+  "dataset_split_plan": {
+    "dataset_version": "synthetic-v1",
+    "train_start": "2020-01-01",
+    "train_end": "2023-12-29",
+    "validation_start": "2024-01-15",
+    "validation_end": "2024-12-31",
+    "test_start": "2025-01-15",
+    "test_end": "2026-09-30",
+    "label_horizon_trading_days": 5,
+    "gap_trading_days": 5,
+    "final_test_locked": true
+  },
+  "agent_result": {
+    "draft": {
+      "market_proposal": {
+        "regime": "neutral",
+        "stance": "neutral",
+        "cash_target": 0.09,
+        "proposed_cash_range": [
+          0.08,
+          0.12
+        ],
+        "intended_flow": "increase",
+        "basis_obs_ids": [
+          "O1"
+        ],
+        "rationale": "固定測試提案，非模型輸出；示範現金由 10% 調整至 9%，尚未計算費用與委託流向。",
+        "counter_evidence": null
+      },
+      "selections": [
+        {
+          "ticker": "2891",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O1"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O1，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2330",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O2"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O2，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2454",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O3"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O3，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2308",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O4"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O4，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2317",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O5"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O5，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "3711",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O6"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O6，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2881",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O7"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O7，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2383",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O8"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O8，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2303",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O9"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O9，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2882",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O10"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O10，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "3037",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O11"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O11，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "1303",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O12"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O12，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2345",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O13"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O13，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2382",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O14"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O14，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2408",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O15"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O15，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2412",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O16"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O16，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2327",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O17"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O17，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "6669",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O18"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O18，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "3017",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O19"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O19，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2885",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O20"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O20，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2887",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O21"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O21，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2360",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O22"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O22，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2886",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O23"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O23，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "5274",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O24"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O24，沒有實際選股判斷。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "6223",
+          "conviction": 1,
+          "supporting_obs_ids": [
+            "O25"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範引用 O25，沒有實際選股判斷。",
+          "counter_evidence": null
+        }
+      ],
+      "held_reviews": [
+        {
+          "ticker": "2891",
+          "intent": "rebalance",
+          "supporting_obs_ids": [
+            "O1"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範將 2891 的目標權重設為 4%。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2330",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O2"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2454",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O3"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2308",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O4"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2317",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O5"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "3711",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O6"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2881",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O7"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2383",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O8"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2303",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O9"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2882",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O10"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "3037",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O11"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "1303",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O12"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2345",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O13"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2382",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O14"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2408",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O15"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2412",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O16"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2327",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O17"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "6669",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O18"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "3017",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O19"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2885",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O20"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2887",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O21"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2360",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O22"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "2886",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O23"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "5274",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O24"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        },
+        {
+          "ticker": "6223",
+          "intent": "keep",
+          "supporting_obs_ids": [
+            "O25"
+          ],
+          "rationale": "固定測試提案，非模型輸出；示範保留既有持股。",
+          "counter_evidence": null
+        }
+      ]
+    },
+    "provider": "fixture",
+    "actual_model_version": null,
+    "started_at": null,
+    "completed_at": null,
+    "usage": null,
+    "raw_response_path": null,
+    "log_path": null
+  }
+}

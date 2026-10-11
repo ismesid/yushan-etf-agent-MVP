@@ -1,0 +1,5 @@
+# Normalize project text while preserving the official sources byte-for-byte.
+* text=auto eol=lf
+*.pdf binary
+*.docx binary
+/specs/official/** -text

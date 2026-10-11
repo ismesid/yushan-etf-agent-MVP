@@ -1,0 +1,11 @@
+[project]
+name = "yushan-etf-agent"
+version = "0.1.0"
+description = "玉山 AI CUP ETF MVP：共用資料合約與離線 demo"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+etf-agent = "etf_agent.cli:main"
+
+

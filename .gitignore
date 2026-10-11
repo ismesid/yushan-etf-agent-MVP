@@ -1,0 +1,43 @@
+# Python and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# Secrets and machine-specific settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*.json
+*service-account*.json
+config.local.*
+/.codex/
+/.agents/
+/.aws/
+/.vscode/
+
+# Private accounts, downloaded market data and generated runs
+/data/account/
+/data/cache/
+/runs/
+/exports/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini

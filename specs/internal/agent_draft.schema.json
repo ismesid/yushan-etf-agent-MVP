@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:etf-agent:agent-draft:1.0",
+  "title": "AgentDraft 內部決策草稿 v1.0",
+  "description": "Codex、Claude 與 fixture 共用的內部草稿合約；只允許提案、選股及原持股處理，不接受 shares 或帳務修改。這不是官方 D-Plan schema。",
+  "$comment": "候選池合法性、選股代碼不重複、完整且精確覆蓋原持股、引用觀察存在、現金區間排序及目標落在區間內，須另由程式以實際 context 驗證。schema 通過不代表官方語意或提交資格通過。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "market_proposal",
+    "selections",
+    "held_reviews"
+  ],
+  "properties": {
+    "market_proposal": {
+      "$ref": "#/$defs/market_proposal"
+    },
+    "selections": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 30,
+      "items": {
+        "$ref": "#/$defs/selection"
+      }
+    },
+    "held_reviews": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 30,
+      "items": {
+        "$ref": "#/$defs/held_review"
+      }
+    }
+  },
+  "$defs": {
+    "observation_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 999,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^O[1-9][0-9]{0,2}$"
+      }
+    },
+    "market_proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regime",
+        "stance",
+        "cash_target",
+        "proposed_cash_range",
+        "intended_flow",
+        "basis_obs_ids",
+        "rationale",
+        "counter_evidence"
+      ],
+      "properties": {
+        "regime": {
+          "type": "string",
+          "enum": [
+            "risk_on",
+            "neutral",
+            "risk_off"
+          ]
+        },
+        "stance": {
+          "type": "string",
+          "enum": [
+            "aggressive",
+            "neutral",
+            "defensive"
+          ]
+        },
+        "cash_target": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.25
+        },
+        "proposed_cash_range": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 0.25
+          }
+        },
+        "intended_flow": {
+          "type": "string",
+          "enum": [
+            "increase",
+            "hold",
+            "reduce"
+          ]
+        },
+        "basis_obs_ids": {
+          "$ref": "#/$defs/observation_refs"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "counter_evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ticker",
+        "conviction",
+        "supporting_obs_ids",
+        "rationale",
+        "counter_evidence"
+      ],
+      "properties": {
+        "ticker": {
+          "type": "string",
+          "pattern": "^[0-9]{4}$"
+        },
+        "conviction": {
+          "type": "number",
+          "enum": [
+            0.8,
+            1,
+            1.2
+          ]
+        },
+        "supporting_obs_ids": {
+          "$ref": "#/$defs/observation_refs"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "counter_evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "held_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ticker",
+        "intent",
+        "supporting_obs_ids",
+        "rationale",
+        "counter_evidence"
+      ],
+      "properties": {
+        "ticker": {
+          "type": "string",
+          "pattern": "^[0-9]{4}$"
+        },
+        "intent": {
+          "type": "string",
+          "enum": [
+            "keep",
+            "rebalance",
+            "exit"
+          ]
+        },
+        "supporting_obs_ids": {
+          "$ref": "#/$defs/observation_refs"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "counter_evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
