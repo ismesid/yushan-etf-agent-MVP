@@ -11,7 +11,7 @@ import re
 import types
 from dataclasses import MISSING, dataclass, fields, is_dataclass
 from datetime import date, datetime, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, localcontext
 from typing import Any, Literal, Union, get_args, get_origin, get_type_hints
 
 
@@ -364,6 +364,60 @@ class AgentDraft(Contract):
 
 
 @dataclass(frozen=True)
+class WeightedSelection(Contract):
+    """Agent 提出的目標比例；沒有最終股數或帳務欄位。"""
+
+    ticker: str
+    target_weight: Decimal
+    supporting_obs_ids: tuple[str, ...]
+    rationale: str
+    counter_evidence: str | None
+
+    def _check(self):
+        _ticker(self.ticker)
+        cap = Decimal("0.25") if self.ticker == "2330" else Decimal("0.10")
+        _require(0 < self.target_weight <= cap, f"選股目標權重須為正且不超過 {cap}")
+        _refs(self.supporting_obs_ids, "O")
+        _require(bool(self.rationale.strip()), "選股須有理由")
+
+
+@dataclass(frozen=True)
+class WeightedAgentDraft(Contract):
+    """第二版內部草稿；權重由 Agent 提案，股數仍由程式機械推導。"""
+
+    contract_version: Literal["2.0"]
+    market_proposal: MarketProposal
+    selections: tuple[WeightedSelection, ...]
+    held_reviews: tuple[HeldReview, ...]
+
+    def _check(self):
+        _require(20 <= len(self.selections) <= 30, "草稿須提案20～30檔；實際正股數仍由後續驗證")
+        _require(len(self.held_reviews) <= 30, "持股review不可超過30筆")
+        _unique((s.ticker for s in self.selections), "草稿選股")
+        _unique((r.ticker for r in self.held_reviews), "原持股review")
+        amounts = [s.target_weight for s in self.selections]
+        amounts.append(Decimal(str(self.market_proposal.cash_target)))
+        with localcontext() as context:
+            # 精度涵蓋全部小數位與加總進位，不用容差掩蓋不等於1的提案。
+            context.prec = max(50, max(len(v.as_tuple().digits) + max(0, -v.as_tuple().exponent)
+                                       for v in amounts) + 3)
+            _require(sum(amounts, Decimal(0)) == 1, "目標權重加現金須精確等於1")
+        selected = {selection.ticker for selection in self.selections}
+        for review in self.held_reviews:
+            if review.intent == "keep":
+                _require(review.ticker in selected, "續抱股須列入正目標權重選股")
+            elif review.intent == "rebalance":
+                _require(review.ticker in selected, "調整股須列入正目標權重選股；未選入須明示退出")
+            elif review.intent == "exit":
+                _require(review.ticker not in selected, "退出股不可列入正目標權重選股")
+
+    def validate_context(self, *, allowed_tickers, held_tickers, observation_ids):
+        # 兩版沿用候選白名單、完整原持股review與引用存在的相同檢查。
+        AgentDraft.validate_context(self, allowed_tickers=allowed_tickers,
+                                    held_tickers=held_tickers, observation_ids=observation_ids)
+
+
+@dataclass(frozen=True)
 class TargetWeight(Contract):
     ticker: str
     target_weight: Decimal
@@ -380,7 +434,7 @@ class PortfolioProposal(Contract):
     contract_version: Literal["1.0"]
     market_snapshot_id: str
     account_snapshot_id: str
-    allocation_method: Literal["fixture", "equal_weight", "capped_score_inverse_vol"]
+    allocation_method: Literal["fixture", "equal_weight", "capped_score_inverse_vol", "agent_target_weights"]
     cash_target: Decimal
     targets: tuple[TargetWeight, ...]
 

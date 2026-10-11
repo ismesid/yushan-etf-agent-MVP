@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:etf-agent:weighted-agent-draft:2.0",
+  "title": "WeightedAgentDraft 內部決策草稿 v2.0",
+  "description": "Agent 提出完整正目標權重、現金與原持股處理；目標權重為十進位字串，不接受 shares、委託或帳務修改。這不是官方 D-Plan schema。",
+  "$comment": "程式另驗證個股上限、權重加現金精確等於1、代碼不重複、候選與O引用合法、完整原持股review、keep須選入且exit不可選入、現金目標位於區間。schema通過不代表正式資格或股數可行。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "market_proposal", "selections", "held_reviews"],
+  "properties": {
+    "contract_version": {"type": "string", "const": "2.0"},
+    "market_proposal": {"$ref": "#/$defs/market_proposal"},
+    "selections": {
+      "type": "array", "minItems": 20, "maxItems": 30,
+      "items": {"$ref": "#/$defs/weighted_selection"}
+    },
+    "held_reviews": {
+      "type": "array", "minItems": 0, "maxItems": 30,
+      "items": {"$ref": "#/$defs/held_review"}
+    }
+  },
+  "$defs": {
+    "observation_refs": {
+      "type": "array", "minItems": 1, "maxItems": 999, "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^O[1-9][0-9]{0,2}$"}
+    },
+    "market_proposal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["regime", "stance", "cash_target", "proposed_cash_range", "intended_flow", "basis_obs_ids", "rationale", "counter_evidence"],
+      "properties": {
+        "regime": {"type": "string", "enum": ["risk_on", "neutral", "risk_off"]},
+        "stance": {"type": "string", "enum": ["aggressive", "neutral", "defensive"]},
+        "cash_target": {"type": "number", "minimum": 0, "maximum": 0.25},
+        "proposed_cash_range": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "items": {"type": "number", "minimum": 0, "maximum": 0.25}
+        },
+        "intended_flow": {"type": "string", "enum": ["increase", "hold", "reduce"]},
+        "basis_obs_ids": {"$ref": "#/$defs/observation_refs"},
+        "rationale": {"type": "string", "minLength": 1, "pattern": "\\S"},
+        "counter_evidence": {"type": ["string", "null"]}
+      }
+    },
+    "weighted_selection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ticker", "target_weight", "supporting_obs_ids", "rationale", "counter_evidence"],
+      "properties": {
+        "ticker": {"type": "string", "pattern": "^[0-9]{4}$"},
+        "target_weight": {
+          "type": "string", "pattern": "^(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$",
+          "description": "占NAV比例的十進位字串，例如0.04表示4%；正值與個股上限由程式驗證。"
+        },
+        "supporting_obs_ids": {"$ref": "#/$defs/observation_refs"},
+        "rationale": {"type": "string", "minLength": 1, "pattern": "\\S"},
+        "counter_evidence": {"type": ["string", "null"]}
+      }
+    },
+    "held_review": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ticker", "intent", "supporting_obs_ids", "rationale", "counter_evidence"],
+      "properties": {
+        "ticker": {"type": "string", "pattern": "^[0-9]{4}$"},
+        "intent": {"type": "string", "enum": ["keep", "rebalance", "exit"]},
+        "supporting_obs_ids": {"$ref": "#/$defs/observation_refs"},
+        "rationale": {"type": "string", "minLength": 1, "pattern": "\\S"},
+        "counter_evidence": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

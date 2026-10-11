@@ -119,7 +119,7 @@ python -B -m etf_agent.cli history-features --window-report data/cache/history_w
 
 ## 程式邊界與資料限制
 
-[features.py](../src/etf_agent/features.py) 的 `calculate_price_features()` 為純計算函式；`analyze_history_features()` 讀日表、核對既有輸入並整理來源；`write_feature_analysis()` 保存 CSV／JSON。CLI 在 [cli.py](../src/etf_agent/cli.py) 組合這些步驟，沒有模型呼叫、網路請求或帳戶修改。
+[features.py](../src/etf_agent/sub_agents/data_agent/features.py) 的 `calculate_price_features()` 為純計算函式；`analyze_history_features()` 讀日表、核對既有輸入並整理來源；`write_feature_analysis()` 保存 CSV／JSON。CLI 在 [cli.py](../src/etf_agent/cli.py) 組合這些步驟，沒有模型呼叫、網路請求或帳戶修改。
 
 目前使用未調整原價；公司行動、歷史公開時間 `known_at`、臨時休市與正式可交易資格尚未完整核實。原行情的 `return_close` 留空、`adjustment_status=unresolved` 及 `tradable=false` 不因計算而改變，分析產物 `submission_ready=false`。這份分析也尚未串接正式 `MarketSnapshot`／`FeatureTable` 或完整 source→observation 證據鏈。
 

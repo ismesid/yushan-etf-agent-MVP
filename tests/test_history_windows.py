@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from etf_agent.coverage import PRICE_CSV_COLUMNS
-from etf_agent.history_windows import check_history_windows, write_window_report
+from etf_agent.sub_agents.data_agent.history_windows import check_history_windows, write_window_report
 from etf_agent.universe import Stock, Universe
 
 

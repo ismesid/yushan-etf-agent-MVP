@@ -1,0 +1,114 @@
+{
+  "contract_version": "1.0",
+  "snapshot_id": "DEMO_WEAK_20250930_NAV1B_03a1b24f856c",
+  "as_of_trade_date": "2025-09-30",
+  "status": "demo",
+  "cash_twd": "107067500.00",
+  "nav_twd": "1000000000.00",
+  "positions": [
+    {
+      "ticker": "6789",
+      "shares": 128000
+    },
+    {
+      "ticker": "1519",
+      "shares": 61000
+    },
+    {
+      "ticker": "2395",
+      "shares": 112000
+    },
+    {
+      "ticker": "3081",
+      "shares": 79000
+    },
+    {
+      "ticker": "2615",
+      "shares": 484000
+    },
+    {
+      "ticker": "2377",
+      "shares": 310000
+    },
+    {
+      "ticker": "6139",
+      "shares": 100000
+    },
+    {
+      "ticker": "6274",
+      "shares": 114000
+    },
+    {
+      "ticker": "1815",
+      "shares": 547000
+    },
+    {
+      "ticker": "2454",
+      "shares": 27000
+    },
+    {
+      "ticker": "6415",
+      "shares": 139000
+    },
+    {
+      "ticker": "4958",
+      "shares": 216000
+    },
+    {
+      "ticker": "3363",
+      "shares": 101000
+    },
+    {
+      "ticker": "3163",
+      "shares": 160000
+    },
+    {
+      "ticker": "4966",
+      "shares": 48000
+    },
+    {
+      "ticker": "2368",
+      "shares": 82000
+    },
+    {
+      "ticker": "3529",
+      "shares": 17000
+    },
+    {
+      "ticker": "3661",
+      "shares": 10000
+    },
+    {
+      "ticker": "1802",
+      "shares": 1313000
+    },
+    {
+      "ticker": "2404",
+      "shares": 40000
+    },
+    {
+      "ticker": "8932",
+      "shares": 176000
+    },
+    {
+      "ticker": "6584",
+      "shares": 150000
+    },
+    {
+      "ticker": "5536",
+      "shares": 46000
+    },
+    {
+      "ticker": "4991",
+      "shares": 260000
+    },
+    {
+      "ticker": "6919",
+      "shares": 194000
+    }
+  ],
+  "origin": "synthetic_weak_historical_initial_account",
+  "reconciled": false,
+  "demo": true,
+  "origin_ref": null
+}

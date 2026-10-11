@@ -9,7 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 from unittest.mock import patch
 
-from etf_agent.ranking import (
+from etf_agent.sub_agents.data_agent.ranking import (
     RANKING_CSV_COLUMNS,
     RankingError,
     analyze_history_rankings,

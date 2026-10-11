@@ -17,9 +17,9 @@ from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
 from etf_agent.coverage import PRICE_CSV_COLUMNS
-from etf_agent.history import _write_json, download_history_sample, download_history_universe
+from etf_agent.sub_agents.test_agent.history import _write_json, download_history_sample, download_history_universe
 from etf_agent.providers.http import DownloadError, HttpResponse
-from etf_agent.providers.monthly import HistoryDataError
+from etf_agent.sub_agents.test_agent.providers.monthly import HistoryDataError
 from etf_agent.universe import load_universe
 
 
@@ -107,6 +107,52 @@ class UniverseHistoryTests(unittest.TestCase):
     def make_sample_cache(self, output):
         return download_history_sample(MONTH, Path(output), fetcher=self.fetcher([]))
 
+    def test_known_unavailable_three_are_preserved_without_http_or_fake_metadata(self):
+        skipped = ("3718", "7769", "7828")
+        calls, progress = [], []
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.download(directory, calls=calls, known_unavailable_tickers=skipped,
+                                   progress=lambda index, total, entry: progress.append(entry["ticker"]))
+            manifest = json.loads(Path(result["manifest"]).read_text(encoding="utf-8"))
+            self.assertEqual((result["network_requests"], result["cache_hits"]), (147, 0))
+            self.assertEqual(manifest["source_count"], 150)
+            self.assertEqual(manifest["known_unavailable_tickers"], list(skipped))
+            self.assertEqual(len(progress), 150)
+            requested = {ticker for _, ticker in calls}
+            self.assertFalse(requested & set(skipped))
+            self.assertIn("7750", requested)
+            self.assertFalse(result["success"])
+            for entry in result["sources"]:
+                if entry["ticker"] in skipped:
+                    self.assertEqual(entry["status"], "failed")
+                    self.assertEqual(entry["error"], "known_unavailable_preserved_no_request")
+                    self.assertFalse(entry["network_requested"])
+                    self.assertEqual(entry["previous_availability_record"], "docs/history_availability_2025-09.md")
+                    for key in ("raw_path", "raw_sha256", "fetched_at", "http_status", "requested_at"):
+                        self.assertNotIn(key, entry)
+            self.assertEqual({row["ticker"] for row in self.coverage(result)["failed_stocks"]}, set(skipped))
+
+    def test_known_skip_scope_and_refresh_wrapper_do_not_expand_data_cutoff(self):
+        from etf_agent.sub_agents.test_agent import ReviewReportError, refresh_history
+        with tempfile.TemporaryDirectory() as directory:
+            for month, skip in (("2025-08", ("3718",)), (MONTH, ("7750",)),
+                                (MONTH, ("3718", "3718")), (MONTH, ["3718"])):
+                with self.subTest(month=month, skip=skip), self.assertRaises(HistoryDataError):
+                    download_history_universe(month, directory, universe=self.universe,
+                                              known_unavailable_tickers=skip,
+                                              fetcher=lambda *args, **kwargs: self.fail("不可請求"))
+            sentinel = {"manifest": "fresh-only", "network_requests": 147}
+            with patch("etf_agent.sub_agents.test_agent.history.download_history_universe", return_value=sentinel) as download:
+                self.assertIs(refresh_history(MONTH, as_of="2025-09-30", output=directory,
+                                              universe=self.universe), sentinel)
+                self.assertIsNone(download.call_args.kwargs["cache_manifest"])
+                self.assertEqual(download.call_args.kwargs["known_unavailable_tickers"], ("3718", "7769", "7828"))
+                self.assertEqual(download.call_args.kwargs["transport"], "curl")
+                download.reset_mock()
+                with self.assertRaises(ReviewReportError):
+                    refresh_history(MONTH, as_of="2025-10-01", output=directory, universe=self.universe)
+                download.assert_not_called()
+
     def test_full_fixture_has_150_unique_sources_and_consistent_daily_monthly_and_source_views(self):
         calls = []
         with tempfile.TemporaryDirectory() as directory:
@@ -173,7 +219,7 @@ class UniverseHistoryTests(unittest.TestCase):
                 (old_run / source["source_csv"]).write_text("old source view\n", encoding="utf-8")
             original_files = {path.relative_to(old_run): path.read_bytes() for path in old_run.rglob("*") if path.is_file()}
             calls = []
-            with patch("etf_agent.history.get_https", side_effect=AssertionError("不得默默繞過注入的 fetcher")):
+            with patch("etf_agent.sub_agents.test_agent.history.get_https", side_effect=AssertionError("不得默默繞過注入的 fetcher")):
                 result = self.download(base / "output", calls=calls, cache_manifest=Path(original["manifest"]))
             self.assertTrue(result["success"])
             self.assertEqual((result["network_requests"], result["cache_hits"]), (148, 2))
@@ -230,7 +276,7 @@ class UniverseHistoryTests(unittest.TestCase):
         responses = {first.ticker: (forbidden, 403, "text/html"), second.ticker: (html, 200, "text/html")}
         calls = []
         with tempfile.TemporaryDirectory() as directory:
-            with patch("etf_agent.history.get_https", side_effect=AssertionError("HTTP 拒絕不得觸發其他下載")):
+            with patch("etf_agent.sub_agents.test_agent.history.get_https", side_effect=AssertionError("HTTP 拒絕不得觸發其他下載")):
                 result = self.download(directory, calls=calls, fetcher=self.fetcher(calls, responses=responses))
             self.assertFalse(result["success"])
             self.assertEqual((result["network_requests"], len(calls)), (150, 150))

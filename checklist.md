@@ -106,8 +106,8 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 - [ ] **DATA-11／P0** 儲存停牌／無成交／公司行動狀態；無調整資料的事件區間股票不新建倉。
 - [ ] **DATA-12／P0** 取得 TAIEX 歷史；市場級判斷有實際大盤資料，不能只靠單股平均。
 - [ ] **DATA-13／P0** 把資料日／known_at／fetched_at 分開；盤前 packet 不含 T 日結算量值。第 02 批保留真實 fetched_at、trade_date、hash，無證據的 known_at 留空；未建真實盤前 packet 或核實歷史發布版本。
-- [ ] **DATA-14／P0** 建 `account_snapshot` 匯入：cash、NAV、ticker／shares、結算日、origin、reconciled。
-- [ ] **DATA-15／P0** 區分測試全現金帳、simulated、official_confirmed；測試 10 億本金不冒充實際官方期初帳。
+- [x] **DATA-14／P0** 建 `account_snapshot` 匯入：cash、NAV、ticker／shares、結算日、origin、reconciled。第 20 批新增 `account.py`／`account-check`，接受獨立 AccountSnapshot 1.0 JSON；沿用日期、Decimal、股數與來源狀態合約，保存完整輸入。7 項相關測試 OK（0.412s）；9/30 歷史 demo CLI exit 0。官方來源引用仍須人工核實，不等於正式帳務核對。
+- [ ] **DATA-15／P0** 區分測試全現金帳、simulated、official_confirmed；測試 10 億本金不冒充實際官方期初帳。第 20 批完成含 25 檔原持股、10 億 NAV 的歷史 demo，核對成功仍保留 demo=true／reconciled=false；真實結算、模擬帳更新與官方確認流程尚未實作，完整項目維持未勾選。
 - [ ] **DATA-16／P0** 產 `data_quality.json`，列可選股數、缺資料、單位確認、資料日期、demo旗標與阻擋原因。第 02 批已有兩檔下載範圍的品質報告與限制；第 09 批已驗收獨立日表對 F05 的覆蓋率、有效價格與缺件報告。全股票池正式可選股數、交易日曆／截止／來源核實及正式阻擋檢查仍未完成，因此本項維持未勾選。
 - [ ] **DATA-17／P0** 不足20檔或缺NAV／庫存，回可讀失敗；不要硬補數字繼續。
 - [ ] **DATA-18／P0** 如果改用 fixture，記錄切換原因；資料流程與報告中明確顯示 demo。
@@ -115,6 +115,9 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 - [x] **DATA-20／資料輔助** 依 F05 全 150 檔取得一個已完成月份，保存每檔成功／失敗、原始來源及每日／每股月 CSV；日／月內容一致，缺日缺股不補造。第 10 批 2025-09 實跑、132 項測試及下方產物核對通過。此項完成的是下載功能與取得範圍核對，不等於 150／150 完整行情或正式資料合格。
 - [x] **DATA-21／資料輔助** 保存兩市場官方月份排程，依資料截止日離線檢查 150 檔的 21 筆價格視窗，另存逐股 CSV／JSON。第 13 批兩個 CLI 實跑 exit 0，4 項重點測試通過；第 18 批將說明集中 docs，停止產生重複 Markdown。完成的是排程及價格缺件診斷，正式資格仍 false。
 - [ ] **DATA-22／後續資料工作** 使用者已接受 2025-09 的四檔不足原因，下一批優先討論因子分析，不再查缺失。後續需區分掛牌前本來無該市場行情、新股尚未累積 21 筆、停牌／無成交、API／檔案意外遺漏；跨月視窗讀取與必要下載另列批次。掛牌前不補造行情，新股累積足夠有效價格再納入；意外遺漏才評估續抓。臨時休市、公司行動／調整價與歷史可知時間依 DATA-03／11／13 後續補齊，正式用途前再驗收。第 14 批僅記錄待辦，未實作上述政策。
+- [x] **DATA-23／帳戶輔助** 獨立帳戶接指定歷史收盤，保存逐股市值、現金、NAV 差額、基本期初組合條件及資料問題；缺行情仍保留原持股且完整總值未知。第 20 批 `tests/test_account.py` 7 項通過，實跑 25 檔股票 890,890,600 元＋現金 109,109,400 元＝10 億元，差額 0；持股數／白名單／單股及現金限制通過。結果只為歷史 demo，未做成交、模型或完整 D-Plan 合規。
+
+第 20 批：可追蹤的獨立輸入為 `tests/fixtures/account_demo_2025-09-30.json`，欄位與操作見 [帳戶說明](docs/account.md)。實際產物保存在本機 `data/cache/account_checks/2025-09-30/20261011T172216_f175f6cb/`，含 account_snapshot.json／positions.csv／valuation.json；不建立快取 Markdown。股數依 9/30 真實收盤建構，25 個代號沿用舊 fixture；每股 3,600 萬元預算與 90% 股票預算僅是人工期初示例，不改排名或策略參數。本金依 W06 清大轉載公告 10 億元採用，官網本輪仍 403，正式期初帳未確認。使用者已明確要求：在 Agent 作出 10/1 決策並生成、驗證及封存 D-Plan 前，不下載或讀入 2025-10-01 行情；之後才另批實作效益驗證。下一批優先討論候選資格／流動性與證據包，不自動執行。
 
 第 14 批閱讀表調整：依使用者要求，`window_coverage.csv` 移除逐股重複的 expected_dates，改為 13 欄；missing_dates／invalid_price_dates 有缺失才列日期。程式匯出與目前開啟的 150 列 CSV 已同步，其他欄位值保持一致；JSON／日曆仍保存完整預期日期。DATA-22 是後續待辦，不宣稱缺失政策已完成，因子功能仍待新批次同意。
 
@@ -162,7 +165,10 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 - [ ] **EVIDENCE-02／P0** 每個因子數字能對回原始列、區間與程式版本；計算值標明公式，不當作交易所直接公佈的欄位。
 - [ ] **EVIDENCE-03／P0** 明確決定歷史 source 分組方式；正式 sources≤50、observations≤100，不能刪必要證據湊數。
 - [ ] **EVIDENCE-04／P0** Evidence packet 含 cutoff、rules、account、rankings、原持股、baseline、O/S、allowed_tickers與品質報告。
-- [ ] **EVIDENCE-05／P0** 凍結packet與hash；不要讓Agent接資料時自行改清洗結果。
+- [x] **EVIDENCE-05／P0** 凍結packet與hash；不要讓Agent接資料時自行改清洗結果。第 21 批 `prepare-decision` 另存完整 JSON 輸入、角色報告、prompt／schema 與 5 個 artifact hashes；同輸入版本相同、重跑另建目錄。提示禁止取新資料／改輸入，真實 provider 的限制仍待接入。
+- [x] **EVIDENCE-06／演示輔助** `sub_agents/data_agent`／`test_agent` 整合歷史資料與首日無前績效狀態。第 21 批實跑 146 檔 demo 候選、25 原持股、2 系列、147 內部 O；5 項 packet 測試通過。來源系列正式接受、流動性、官方引用數量與時間條件仍未完成。
+
+第 21 批：[決策資料包操作與範例](docs/decision_workflow.md)。本機 `data/cache/decision_packets/2025-10-01/20261011T174640_396092d6/` 保存 6 檔，目錄是預定決策日，不含 10/1 行情。146 排名重用原值、4 檔缺件不重查；首日交易檢討為 prior_run_missing。內部來源依同機構／同歷史 endpoint 分組並保留 147 個 URL／來源 hash；官方 S/O 編譯、values 數字化與 O≤100 尚未完成，EVIDENCE-01～04 保持未勾選。
 
 第 15 批完成證據：`src/etf_agent/features.py`、CLI `history-features`、`tests/test_features.py`、[146 檔分析 CSV](data/cache/features/2025-09-30/20261011T160349_3b42fa16/features.csv)、[來源／公式 metadata](data/cache/features/2025-09-30/20261011T160349_3b42fa16/metadata.json)。原閱讀摘要第 18 批清理，分布與前五股範例轉存 [因子分析說明](docs/factor_analysis.md)。特徵版本 `price-features-v1-c9e2191b62ec`；3 tests、OK（1.505s），CLI exit 0，CSV BOM／146 唯一代號／6 欄與 JSON 一致，2330／5274 另用標準庫獨立公式核對 PASS；同輸入重算與不覆寫、日表改動阻擋已由測試驗收。全套、排名／權重、官方 S/O 引用及正式 FeatureTable／MarketSnapshot 尚未完成，本批不擴張勾選。
 
@@ -178,15 +184,15 @@ Git 保存授權（2026-10-11）：使用者另行要求「commit push」，保�
 
 ## 7. T+3:00～4:00：真正的 Agent 決策與 API 預留
 
-- [ ] **AGENT-01／P0** 本機執行 `codex --version`、`codex exec --help`，確認帳號登入與可用性。
-- [ ] **AGENT-02／P0** 建 `prompts/decision.md`：只用packet、不造URL／數值、選股／held_reviews完整、反方證據與O引用。
-- [ ] **AGENT-03／P0** `CodexProvider` 包裝CLI，shell=False、180秒timeout；events／stderr／最後draft各自儲存。
-- [ ] **AGENT-04／P0** 用內部schema限制草稿；ticker只限allowed_tickers、conviction只准.8／1／1.2。
-- [ ] **AGENT-05／P0** 真實呼叫一次：市場regime／stance／cash、最終選股、每檔原持股review與理由。
+- [x] **AGENT-01／P0** 本機核對codex-cli0.145.0與exec help、登入可用性。第23批設定gpt-6.1-sol被拒，實際model/list預設gpt-5.6-sol真實決策成功；不更改全域設定。
+- [x] **AGENT-02／P0** 建 `prompts/decision.md`：只用packet、不造URL／數值、選股／held_reviews完整、反方證據與O引用。第 21 批建立 WeightedAgentDraft 2.0 提示並隨 packet 封存；未呼叫真實模型，不代表 AGENT-05 已完成。
+- [x] **AGENT-03／P0** `CodexProvider` 包裝CLI，shell=False、220秒timeout；events／stderr／最後draft各自儲存。第23批6項mock檢查通過，真實服務拒絕也保存完整事件，不自動重試。
+- [x] **AGENT-04／P0** 沿第21批已同意的 WeightedAgentDraft 2.0，以正目標權重取代conviction；完整內部schema／候選／全持股／引用由本地validator與合約驗證。遠端schema投影僅作輸出工具相容，原合約及所有本地限制保留。
+- [x] **AGENT-05／P0** 第24批新弱期初真實gpt-5.6-sol初次即通過：risk_on／neutral／hold、15exit＋10keep、新買10檔；完整review與原始用量保存，不強迫換股。第23批舊決策產物依使用者指示刪除。
 - [ ] **AGENT-06／P0** 無指令碼呼叫時，用互動Codex讀同packet／schema寫JSON，再接finalize；儲存實際執行記錄。
 - [ ] **AGENT-07／P0** 比較baseline與Agent提案，記錄本次實際選擇；不強迫為展示而改答案。
-- [ ] **AGENT-08／P0** 草稿引用斷裂／不合格式最多1次修正；超時／用量不足明確報錯。
-- [ ] **AGENT-09／P0** 儲存真實model_version、起訖、CLI版本；沒有token資料就省略，不填假的0。
+- [x] **AGENT-08／P0** 草稿／財務不符最多1次修正；超時、工具或連線失敗停止，不自動重試。第23批5項runner mock檢查通過；修正只附草稿與問題，不改凍結行情、帳戶或設定。
+- [x] **AGENT-09／P0** 第23批保存explicit CLI model ID=gpt-5.6-sol、18:23:14～18:24:34+08:00、CLI0.145.0、input145146/output3976；服務端resolved snapshot未知留null，不冒充精確版本。
 - [ ] **AGENT-10／P0** FixtureProvider僅供測試，標demo；不能當AGENT-05完成證據。
 - [ ] **API-01／P0** config保留claude.enabled=false、base_url、api_key_env、model、max_tokens、timeout、預算／呼叫上限欄位。
 - [ ] **API-02／P0** `ClaudeProvider` 同合約；尚未實作要明確NotImplementedError，不回空成功。
@@ -196,17 +202,17 @@ Git 保存授權（2026-10-11）：使用者另行要求「commit push」，保�
 
 ## 8. T+4:00～5:00：配置、整張化與風控
 
-- [ ] **ALLOC-01／P0** 實作full portfolio targets，含所有原持股／退出股，不只算新增股票。
+- [x] **ALLOC-01／P0** 實作full portfolio targets，含所有原持股／退出股，不只算新增股票。第 22 批 portfolio.py 接 WeightedAgentDraft 2.0，包含全持股／退出零權重與選入股；7 項純配置測試通過。
 - [ ] **ALLOC-02／P0** 使用分數＋conviction／波動下限的配置；封頂後重分剩餘股票預算。
 - [ ] **ALLOC-03／P0** 如果改等權fallback，報告與manifest記 allocation_method=equal_weight；不冒稱inverse-vol已完成。
 - [ ] **ALLOC-04／P0** 25檔目標與現金目標；一般8%、2330 20%、產業40%為自訂；官方10%／25%另外驗。
 - [ ] **ALLOC-05／P0** 加無交易帶、正常最多2組換股、gross turnover20%；初始化demo例外明列。
-- [ ] **ORDER-01／P0** 用Decimal官方floor公式推目標shares與delta，不能用模型shares。
-- [ ] **ORDER-02／P0** 測BUY／ADD／TRIM／SELL_ALL、剛好整張邊界、零delta歸no_trade。
-- [ ] **ORDER-03／P0** JSON寫出後重讀重算股數，避免target_weight序列化改變floor結果。
+- [x] **ORDER-01／P0** 用Decimal官方floor公式推目標shares與delta，不能用模型shares。第 22 批以 Fraction 表示有限 Decimal 做精確 floor，避免28位上下界誤差。
+- [x] **ORDER-02／P0** 測BUY／ADD／TRIM／SELL_ALL、剛好整張邊界、零delta歸no_trade。人工換股案例四種動作／22股續抱通過。
+- [x] **ORDER-03／P0** JSON寫出後重讀重算股數，避免target_weight序列化改變floor結果。官方 number 轉換跨整張邊界的反例確實 BLOCK，不手改 orders。
 - [ ] **ORDER-04／P0** 0張／count不足／現金超限時，修改target_weight或選股並重推；不直接手調訂單股數。
-- [ ] **ORDER-05／P0** 非整張官方庫存先BLOCK並待確認，不自行抹除零股。
-- [ ] **RISK-01／P0** 計fee後cash、NAV、每股權重、檔數；續抱股同樣算進去。
+- [x] **ORDER-05／P0** 非整張官方庫存先BLOCK並待確認，不自行抹除零股。第 22 批原股數保留；任何原零股或非整張delta均BLOCK。
+- [x] **RISK-01／P0** 計fee後cash、NAV、每股權重、檔數；續抱股同樣算進去。第 22 批前收／Decimal demo 精確估算，完整組合與現金／姿態測試通過；正式取整未確認。
 - [ ] **RISK-02／P0** 對帳戶snapshot版本檢查；生成期間庫存改變就重新推單。
 - [ ] **RISK-03／P0** 壓力情境：買價上升／賣價下降、單股相對上漲、未成交導致count／cash變化。
 - [ ] **RISK-04／P0** 違規方案回Agent限次修訂，記錄financial revisions；超過次數就停止。
@@ -216,20 +222,22 @@ Git 保存授權（2026-10-11）：使用者另行要求「commit push」，保�
 
 ## 9. T+5:00～6:00：D-Plan 編譯與驗證
 
-- [ ] **DPLAN-01／P0** 正式JSON只用F04允許欄位；內部風險指標、manifest與報告另存。
-- [ ] **DPLAN-02／P0** 每個order引用decision→inference→observation→source；ID連續、唯一、無跳號／前導零。
-- [ ] **DPLAN-03／P0** 原持股完整覆蓋，decisions與no_trade互斥；每檔續抱有相關證據與理由。
-- [ ] **DPLAN-04／P0** 動作按起訖股數分類；orders ticker／方向／股數／decision_ref完全吻合。
-- [ ] **DPLAN-05／P0** net_flow與increase／reduce／hold一致；現金宣告區間包含前收估算，不能事後隨便改姿態。
+- [x] **DPLAN-01／P0** 第23批demo D-Plan僅用F04欄位並通過原版schema，內部指標／manifest／報告另存；正式資格仍false。
+- [x] **DPLAN-02／P0** 每個order引用decision→inference→observation→source；ID連續、唯一、無跳號／前導零。第 22 批引用閉包裁剪／重編，斷引用、ID、凍結事實篡改反例BLOCK。
+- [x] **DPLAN-03／P0** 原持股完整覆蓋，decisions與no_trade互斥；每檔續抱有相關證據與理由。人工全持股與換股測試通過；KEEP意圖BLOCK不可被no_trade掩蓋。
+- [x] **DPLAN-04／P0** 動作按起訖股數分類；orders ticker／方向／股數／decision_ref完全吻合。第 22 批驗證器對當前plan獨立重算，過期portfolio PASS不可替代。
+- [x] **DPLAN-05／P0** net_flow與increase／reduce／hold一致；現金宣告區間包含前收估算，不能事後隨便改姿態。第 22 批不符時BLOCK回報，不自動改姿態。
 - [ ] **DPLAN-06／P0** funding_for只指同日BUY／ADD；刪掉全部調度賣出後才真有現金缺口。
-- [ ] **DPLAN-07／P0** sources≤50、O≤100、I≤60、D≤30、orders≤30；每層refs數量／字數符合schema。
-- [ ] **DPLAN-08／P0** 正確檔名 `D-Plan_<真實team_id或demo編號>_<trade_date>.json`；內容一致、時間+08:00。
-- [ ] **VALID-01／P0** Draft202012Validator＋FormatChecker；另parse日曆與timestamp，不只比regex。
-- [ ] **VALID-02／P0** F08與F09的結構驗證；F09 I9由語意層抓到，F08不作缺完整庫存的端到端金標準。
+- [x] **DPLAN-07／P0** 第24批真實草稿引用閉包為2S／36O／35I／25D／25orders／10no_trade；F04引用數量／文字與本地語意通過，全部原持股完整覆蓋。
+- [x] **DPLAN-08／P0** 第23批封存 `D-Plan_DEMO_2025-10-01.json`，內容日期一致、真實執行時間+08:00；demo非正式提交。
+- [x] **VALID-01／P0** Draft202012Validator＋FormatChecker；另parse日曆與timestamp，不只比regex。第 22 批 jsonschema4.26.0，真實日期／+08時區／起訖檢查；台股相鄰交易日另待核實。
+- [x] **VALID-02／P0** F08與F09的結構驗證；F09 I9由語意層抓到，F08不作缺完整庫存的端到端金標準。第 22 批两例schema PASS、I9 BLOCK。
 - [ ] **VALID-03／P0** 設計§13 L01～L15逐項輸出機器可讀結果；LLM寫risk_check不算通過。
-- [ ] **VALID-04／P0** 超賣、非2330超10%、白名單外、cash／posture矛盾全部BLOCK。
-- [ ] **VALID-05／P0** demo／未知必要官方規則／未核對庫存，使submission_ready=false；不能進正式輸出目錄。
-- [ ] **VALID-06／P0** 本地較嚴檢查即使通過，也不宣稱完整官方server驗證通過。
+- [x] **VALID-04／P0** 超賣、非2330超10%、白名單外、cash／posture矛盾全部BLOCK。第 22 批純重算與人工反例驗收；新買僅packet demo候選，原持股不因缺價刪除。
+- [x] **VALID-05／P0** demo／未知必要官方規則／未核對庫存，使submission_ready=false；不能進正式輸出目錄。第 22 批所有報告固定demo／false，缺模型metadata保存候選BLOCK。
+- [x] **VALID-06／P0** 本地較嚴檢查即使通過，也不宣稱完整官方server驗證通過。報告固定dplan_local，明示正式資格、時間、取整及來源系列接受未確認。
+
+第 22 批：新增 account_agent 快照回報與完整資金／股數檢查，尚無預留款、成交入帳或官方額度；共享workspace把資料／檢討／帳戶／ETF主流程對到同一run。25 項新增核心檢查＋5 項受影響packet檢查通過。本機四角色輸入 `data/cache/decision_packets/2025-10-01/20261011T180724_e49e57e2/`，人工草稿計算候選 `data/cache/plans/2025-10-01/20261011T180729_491b495e/`：17買單／8續抱、買8698350元／fee12395.14875元，無模型metadata故schema BLOCK／exit4，未產有效D-Plan。不重抓、不刪舊快取、不讀10/1或呼叫投資模型。來源／正式通過、模型、壓力情境與自訂控制仍待完成，詳見 [工作流](docs/decision_workflow.md)。
 
 完成證據：________。
 
@@ -237,15 +245,21 @@ Git 保存授權（2026-10-11）：使用者另行要求「commit push」，保�
 
 - [ ] **LEDGER-01／P0** SQLite最小表；股數整數、Decimal以字串儲存、transaction一次完成。
 - [ ] **LEDGER-02／P0** projected／simulated／official_confirmed三狀態分開；提交成功不直接加股數。
-- [ ] **LEDGER-03／P0** 使用T日官方amount／volume算成交均價；買賣0.1425%手續費、賣另0.3%稅。
-- [ ] **LEDGER-04／P0** 只有實際filled才變cash與shares；無成交價not_filled，資訊不足unknown。
-- [ ] **LEDGER-05／P0** 期末NAV按期末持股×官方收盤＋cash；rounding未確認時標demo假設。
+- [ ] **LEDGER-03／P0** 使用T日官方amount／volume算成交均價；買賣0.1425%手續費、賣另0.3%稅。第25批隔離demo核心計算與10/1實跑完成；正式ledger／結算口徑仍未串接。
+- [ ] **LEDGER-04／P0** 只有實際filled才變cash與shares；無成交價not_filled，資訊不足unknown。第25批模拟filled才更動独立快照，缺均價不執行／原股保留；沒有實際主辦方成交入帳。
+- [ ] **LEDGER-05／P0** 期末NAV按期末持股×官方收盤＋cash；rounding未確認時標demo假設。第25批隔離模擬完成，缺價NAV／收益null且known市值另列；正式取整與ledger仍待核對。
 - [ ] **LEDGER-06／P0** 相同plan_hash重複settle不再次扣款；同日v1／v2不能都當成交。
 - [ ] **LEDGER-07／P0** reconcile逐股、cash、NAV；金額容差依確認規則，不任意放大。
 - [ ] **LEDGER-08／P0** 有差異儲存並阻擋隔日正式賣出；官方權威snapshot取代下單依據但不刪模擬證據。
-- [ ] **VERSION-01／P0** 每run獨立目錄；儲存raw／cleaned／features／packet／prompt／draft／orders／validation／report。
-- [ ] **VERSION-02／P0** 儲存source／account／outputs hash；schema與config／prompt修改也換code_version。
-- [ ] **VERSION-03／P0** git乾淨用commit；有dirty變更用已儲存的版本包hash，不能只記舊commit。
+- [x] **EVAL-01／隔離演示** 真實D-Plan封存後才取得T日單日報表，原決策／期初帳／九月資料不回寫。第25批成功2HTTPS；原73凍結檔hash前後不變；隔離輸出不能放入決策根目錄。
+- [x] **EVAL-02／隔離演示** 同一10億期初比較不交易與原25委託：10/1收盤不交易＋2462850、VWAP費稅後D-Plan−2402285.536556元；8份CSV與JSON可核對。
+- [x] **EVAL-03／隔離演示** SciPy／HiGHS搜尋全146候選整張配置；3260已知當日零成交保留0目標、145可成交。30單／20股、收益17594987.947368元；status0／gap0，前收與T收cash／caps及Decimal驗收通過。不是正式D-Plan或可預知策略。
+- [x] **EVAL-04／隔離演示** daily11＋evaluation12＋舊review4合計27測試通過：日期／NAV封存閘門、錯hash、禁同股雙向與超賣、缺成交保留、NAVnull、無邊際不交易、全池best、零成交禁建倉、求解限時不冒稱最優、CSV與隔離版本一致。沒有全套或掃所有cache。
+
+第25批隔離run `data/cache/evaluation_quarantine/2025-10-01/20261011T190922_e164811e/`：63產物hash（含41個程式／配置封存檔）、73原封存hash均通過，離線重播财務JSON一致，內容版本sha256:86f79658b6b5。正式flags仍false、0新模型呼叫；SQLite、重複入帳、主辦方核對及次日建議／帳戶串接未完成。詳見 [收益與最佳化](docs/evaluation.md)。
+- [x] **VERSION-01／P0** 第23批shared run保存全流程raw／CSV／features／ranking／四角色／packet／prompt／draft／plan／validation／summary，workspace相對路徑導航。
+- [x] **VERSION-02／P0** 第24批13輸入／15輸出hash及37個程式／配置／提示／schema封存檔hash獨立核對，11CSV檢查視圖亦納入版本。
+- [x] **VERSION-03／P0** 第24批dirty來源以內容版本sha256:61938e20777f封存，模型前後程式hash相同，不冒用舊HEAD。使用者明確不保留前批舊決策，故清除舊計畫與模型包，歷史紀錄標明已刪。
 - [ ] **VERSION-04／P0** metadata真實、不打包key；申報起訖不能晚於實際收件時刻。
 - [ ] **VERSION-05／P0** 內部日run_id與最終官方檔名分開；重繳保留兩版及最後有效plan／receipt對應。
 
@@ -253,14 +267,19 @@ Git 保存授權（2026-10-11）：使用者另行要求「commit push」，保�
 
 ## 11. T+7:00～8:00：整合與開會材料
 
-- [ ] **TEST-01／P0** 完整demo：真實Codex→配置→D-Plan→驗證→報告。
-- [ ] **TEST-02／P0** 無交易日全部持股覆蓋，orders=[]／decisions=[]仍合法。
+- [x] **DOC-26／閱讀導覽** 使用者要求先停功能、重整README。第26批以架構SVG、7步執行流程、結果導航與目錄表建立入口；docs/source_map逐檔索引94個實際檔案，docs/artifacts列各階段CSV／JSON內容與使用方式。278個本地連結／標題anchor、全檔coverage與SVG XML檢查通過，圖已本機預覽；没有指向ignored cache的GitHub導航。只文件，不改策略／程式或搬檔，未跑策略／程式測試、下載、投資模型或Git提交。
+- [x] **ARCH-27／角色整理** 第27批三角色各自成套件資料夾，22個既有Python檔搬到所属角色／decision；test_agent擁有下載與隔離評估，data_agent只讀行情／計算視窗因子排名，account_agent匯入／估值／回報。共用prices讀價、paths定位在外層，evidence組合維持packet1.0。明確指定的9/30輸入完全相同、版本decision-packet-v1-c871b82cf0cf不變，10/1原73封存hash不變；41個模組匯入、CLI help及115項不同重點測試通過。沒有新行情／模型／策略參數／Git提交。
+- [x] **DPLAN-MD-27／可讀計畫** 新compiled run自動生成同名Markdown（候選dplan_candidate.md），包含日期／市場理由、完整原→目標股數、委託、財務、原理由／反證／引用與問題；與JSON來源一致，不重算shares。MD列入manifest hash、compiled與shared workspace.files.plan_markdown；未知／BLOCK、特殊字元與假provider聯動驗收通過。既有10/1計畫另存唯讀閱讀副本，沒有回寫原run。[閱讀與產物](docs/daily_workflow.md#d-plan-markdown-怎麼閱讀)
+- [ ] **DAILY-27／後續批次** 上一交易日行情核對後增量併入歷史庫、原採用計畫由account_agent模擬入帳並避免重複、test_agent昨日檢討與data_agent最新因子接到下一日固定輸入。[每日圖與分批計畫](docs/daily_workflow.md)。目前尚未建立SQLite或每日循環，事後最佳帳戶不能替代原計畫帳戶。
+- [x] **DOC-28／會議講解** 使用者要求時間優先、確認README最新並commit／push。README最前加入目標每日Mermaid圖、四步可照講的順序、資料時間界線與目前實際歷史展示；保留架構／程式／操作導航，明示每日合併／跨日帳務仍待串接。沿用第27批已通過的115項測試，本批核對導航與提交內容，沒有新功能／行情／投資模型。
+- [x] **TEST-01／P0** 第24批：重用九月資料→人工弱期初→四角色／六CSV→一次真實gpt-5.6-sol→25委託→有效demo D-Plan／五CSV→驗證／run_summary，全部自動通過；不讀10/1。
+- [x] **TEST-02／P0** 第23批真模型選全部續抱，25原持股完整覆蓋、orders=[]／decisions=[]，schema／語意均通過。
 - [ ] **TEST-03／P0** 一筆錯誤引用（I9）確實被BLOCK。
 - [ ] **TEST-04／P0** 超賣／現金負／單股超限／非千股三類以上財務錯誤被BLOCK。
 - [ ] **TEST-05／P0** T日結算資訊誤入盤前輸入會被BLOCK。
 - [ ] **TEST-06／P0** funding_for缺口不存在與宣告reduce但淨買，兩者被BLOCK。
 - [ ] **TEST-07／P0** 結算無成交不加庫存；重跑不重複扣款；官方fixture差異能顯示。
-- [ ] **TEST-08／P0** 儲存draft離線replay，orders／費用／財務結果相同；不要求再次詢問LLM字句一致。
+- [x] **TEST-08／P0** 第23批保存真實草稿後離線純編譯，plan／portfolio完全一致、驗證仍PASS，沒有再次詢問模型。
 - [ ] **TEST-09／P0** 全部核心測試 `python -m pytest -q` 通過；記錄真實結果及失敗項，不寫預期當結果。
 - [ ] **MEETING-01／P0** 報告列資料日期、來源、active因子、每因子意義與排名、資料品質與缺項。
 - [ ] **MEETING-02／P0** 展示Agent選股／不交易理由、市場姿態、反方證據及baseline差異。
@@ -271,6 +290,8 @@ Git 保存授權（2026-10-11）：使用者另行要求「commit push」，保�
 - [ ] **MEETING-07／P0** 儲存可交給隊友的程式版本、啟動方式、demo RUN_ID與報告；準備約10分鐘演示。
 
 完成證據／測試結果：________。
+
+第24批當前證據：新期初为排名122～146的25檔、24負動能／22低於均線；cash107067500、NAV10億。真模型一次選15退出、10新買、10續抱，25單／目標20檔。新輸入 `decision_input/2025-10-01/20261011T184109_4a9529e8/`（14檔／13hash），有效計畫 `plans/compiled/2025-10-01/20261011T184409_51450818/`（16檔／15hash），兩者位於 `data/cache/integrated_runs/2025-10-01/20261011T181709_8585216a/`。27相關測試與所有11CSV／metadata／費稅／hash／離線重播核對通過，六角色CSV列數146／4／25／1／1／0，五主決策CSV35／25／35／1／247。完整聯集保留15退出股target0，不會從帳戶／人工表格消失；首日前績效未知、建議只表頭。正式false／尚未成交入帳。舊決策包／fixture權重草稿／原始模型回覆／D-Plan依明確授權刪除，不保留。九月原資料、四個缺件紀錄與40/25/35不變；未全套、不抓10/1、不commit／push。詳細入口見 [最新工作流](docs/decision_workflow.md#第-24-批弱期初重新決策實跑)。
 
 ## 12. 會議後再做：不佔這8小時
 

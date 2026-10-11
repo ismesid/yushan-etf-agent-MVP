@@ -7,7 +7,7 @@ from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 
-from etf_agent.agent.base import AgentResult
+from etf_agent.decision.providers.base import AgentResult
 from etf_agent.contracts import (
     AccountSnapshot,
     AgentDraft,

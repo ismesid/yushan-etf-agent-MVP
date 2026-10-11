@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1000" viewBox="0 0 1200 1000" role="img" aria-labelledby="title desc">
+  <title id="title">ETF Agent MVP 架構與資料截止邊界</title>
+  <desc id="desc">截至前日的行情、帳戶與檢視由三個程式角色組成證據包，主 ETF Agent 呼叫 Codex 提出權重，程式計算股數與驗證後封存 D-Plan。封存後才由 test_agent 在隔離區取得當日資料、模擬收益、搜尋事後配置。隔離帳戶與檢討接回下一日決策尚待串接。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569"/></marker>
+    <style>
+      text { font-family: 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', sans-serif; fill: #17243b; }
+      .title { font-size: 26px; font-weight: 700; }
+      .heading { font-size: 21px; font-weight: 700; }
+      .body { font-size: 18px; }
+      .small { font-size: 16px; fill: #475569; }
+      .arrow { fill: none; stroke: #475569; stroke-width: 2.5; marker-end: url(#arrow); }
+      .line { fill: none; stroke: #475569; stroke-width: 2.5; }
+      .pending { fill: none; stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 7 5; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1200" height="1000" fill="#ffffff"/>
+  <rect x="10" y="55" width="1180" height="627" rx="16" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="30" y="35" class="title">整體架構：決策前資料 → 真實模型 → 程式驗證 → 封存後評估</text>
+  <text x="30" y="90" class="heading">決策區｜本次資料截止 2025-09-30，交易日 2025-10-01</text>
+
+  <rect x="30" y="115" width="350" height="155" rx="12" fill="#ede9fe" stroke="#a78bfa"/>
+  <text x="50" y="146" class="heading">data_agent｜指標與排名</text>
+  <text x="50" y="178" class="body">只讀已保存的歷史行情</text>
+  <text x="50" y="207" class="body">21筆視窗 → 三因子與排名</text>
+  <text x="50" y="236" class="body">候選、來源、缺值與限制</text>
+
+  <rect x="425" y="115" width="350" height="155" rx="12" fill="#dcfce7" stroke="#4ade80"/>
+  <text x="445" y="146" class="heading">account_agent｜匯入與估值</text>
+  <text x="445" y="178" class="body">完整 AccountSnapshot JSON</text>
+  <text x="445" y="207" class="body">日期、現金、NAV、各股股數</text>
+  <text x="445" y="236" class="body">以前收核對估值與可用資金</text>
+
+  <rect x="820" y="115" width="350" height="155" rx="12" fill="#ffedd5" stroke="#fb923c"/>
+  <text x="840" y="146" class="heading">test_agent｜下載與檢討</text>
+  <text x="840" y="178" class="body">官方月報 → 歷史日表</text>
+  <text x="840" y="207" class="body">首日：prior_run_missing</text>
+  <text x="840" y="236" class="body">次日合併與回饋待串接</text>
+
+  <path class="line" d="M205 270 V292 H995 V270"/>
+  <path class="arrow" d="M600 270 V315"/>
+  <rect x="395" y="317" width="410" height="86" rx="12" fill="#e2e8f0" stroke="#94a3b8"/>
+  <text x="415" y="348" class="heading">evidence｜固定輸入與證據包</text>
+  <text x="415" y="378" class="body">角色報告、來源／觀察、提示、schema</text>
+  <path class="arrow" d="M600 403 V434"/>
+
+  <rect x="395" y="436" width="410" height="91" rx="12" fill="#dbeafe" stroke="#60a5fa"/>
+  <text x="415" y="468" class="heading">主 ETF Agent｜真實 Codex 決策</text>
+  <text x="415" y="498" class="body">市場姿態、目標權重、原持股理由</text>
+  <path class="arrow" d="M600 527 V545 H340 V568"/>
+
+  <rect x="185" y="570" width="310" height="89" rx="12" fill="#dbeafe" stroke="#60a5fa"/>
+  <text x="205" y="602" class="heading">portfolio｜股數與風控</text>
+  <text x="205" y="632" class="body">程式推導整張、費稅與現金</text>
+  <path class="arrow" d="M495 615 H701"/>
+  <text x="510" y="600" class="small">完整組合檢查</text>
+  <rect x="705" y="570" width="310" height="89" rx="12" fill="#dbeafe" stroke="#60a5fa"/>
+  <text x="725" y="602" class="heading">dplan／validation｜封存</text>
+  <text x="725" y="632" class="body">D-Plan JSON／MD、CSV、版本</text>
+
+  <rect x="10" y="741" width="1180" height="249" rx="16" fill="#fff7ed" stroke="#fdba74"/>
+  <path class="arrow" d="M860 659 V717 H20 V850 H26"/>
+  <rect x="350" y="693" width="498" height="42" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="368" y="720" class="body">閘門：真實計畫已驗收，核對原凍結hash</text>
+  <text x="30" y="775" class="heading">隔離評估區｜封存後才取得 2025-10-01 資料</text>
+  <rect x="30" y="797" width="350" height="107" rx="12" fill="#ffedd5" stroke="#fb923c"/>
+  <text x="50" y="828" class="heading">test_agent｜取得當日行情</text>
+  <text x="50" y="856" class="body">官方單日成交量／金額／收盤</text>
+  <text x="50" y="884" class="body">保存 raw 與來源，獨立目錄</text>
+  <path class="arrow" d="M380 850 H421"/>
+  <rect x="425" y="797" width="350" height="107" rx="12" fill="#ffedd5" stroke="#fb923c"/>
+  <text x="445" y="828" class="heading">evaluation／hindsight</text>
+  <text x="445" y="856" class="body">固定原股數 → 均價成交 → NAV</text>
+  <text x="445" y="884" class="body">不交易比較／全候選事後配置</text>
+  <path class="arrow" d="M775 850 H816"/>
+  <rect x="820" y="797" width="350" height="107" rx="12" fill="#ffedd5" stroke="#fb923c"/>
+  <text x="840" y="828" class="heading">隔離CSV／JSON／模擬帳</text>
+  <text x="840" y="856" class="body">收益、逐筆交易、事後最佳股數</text>
+  <text x="840" y="884" class="body">原D-Plan與期初帳維持封存</text>
+  <path class="pending" d="M995 904 V932 H641"/>
+  <rect x="30" y="927" width="607" height="43" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-dasharray="7 5"/>
+  <text x="48" y="955" class="body">待串接：以獨立模擬帳／檢討，準備下一日決策輸入</text>
+  <text x="665" y="956" class="small">所有目前產物仍為demo；正式帳務與核對待完成</text>
+</svg>

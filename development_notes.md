@@ -358,3 +358,155 @@ python -B -m unittest discover -s tests -p test_ranking.py -v
 - 範圍：19 檔，涵蓋 CSV／JSON 產物保存調整、排名模組與 CLI、40／25／35 設定、相關測試、README、docs 及開發紀錄。本機行情與排名快取仍由原忽略規則管理。
 - 提交前檢查：修改及未追蹤名單均屬上述範圍，`git diff --check` 通過；沿用第 18 批 4 項受影響測試、第 19 批 3 項排名測試及真實產物核對結果，本次沒有再跑測試或抓行情。
 - 保存目標：本機 `main` → `origin/main`，GitHub `ismesid/yushan-etf-agent-MVP`，一般 commit／push。暫存後檢查範圍與空白錯誤，推送後核對本機與遠端追蹤版本及工作目錄；最終 commit ID 與實際結果在本次回覆提供，亦可用 `git log -1`、`git status` 查閱。
+
+## 20｜含原持股的歷史帳戶匯入與市值核對（2026-10-11）
+
+- 授權：使用者明確表示不要全現金，要讓 Agent 考慮賣出；以九月份資料產出 2025-10-01 買賣與配置，最後才做效益驗證程式。重新規劃後，使用者回覆「你可以執行第一部分 記得總金額要符合比賽規則」。本批限於截至 9/30 的獨立 demo 帳戶、歷史估值、CLI、相關測試與文件，不涵蓋模型、配置合約、D-Plan、效益驗證或 commit／push。
+- 防止未來資料進入：Agent 交易決策與 D-Plan 生成、驗證及封存前，不下載或讀入 2025-10-01 行情；後續取得新授權後才接入驗證資料。此限制須沿用到候選／證據包與模型批次。此次只開啟既有 9/30 日表；測試中的 10/1 為不存在的人工 sentinel 路徑，不是真實行情。
+- 本金修正：上一輪 1 億元提案改為 **1,000,000,000.00 元（10 億）**。本輪回查 [W06 清大代轉公告](https://dsa.site.nthu.edu.tw/p/406-1266-314652,r6890.php?Lang=zh-tw)，正文載明 10 億虛擬本金；競賽官網仍 403，附件連結本次導回首頁，未讀到完整辦法。10 億作 demo 建構金額，正式期初流程與後台帳戶仍待核實。本輪網路查核僅查本金依據，沒有下載新行情。
+- 帳戶：新增 `tests/fixtures/account_demo_2025-09-30.json`，沿用舊 fixture 的 25 個代號，股數全部重建；舊 `contracts_demo.json` 的 2026-10-14、假價、1 億 NAV 保持原樣。人工期初建構為每股預算 `10億×90%÷25=36,000,000` 元，依 9/30 原始收盤 floor 到整張，再以 NAV 減全部市值得到現金；這不是模型選股或已定案配置參數，不計算不存在的建倉成交／費用。
+- 介面：新增 `src/etf_agent/account.py` 的 `load_account_json()`、`load_history_closes()`、`value_account()`、`analyze_account()`、`write_account_report()`。核心估值不讀檔／抓 API、不依賴模型 SDK；AccountSnapshot 1.0 合約保持不變。CLI 增加 `account-check --account --ranking-metadata --as-of`，可用 `--universe`／`--universe-manifest`／`--output`／`--json`。
+- 行情輸入：排名 metadata 截止日須等於明確 `--as-of`，日期先於 manifest／行情讀取檢查；再核對 F05 版本、manifest hash 與唯一日表路徑／hash，只讀指定日 CSV 4.0，不讀其他日、monthly 或 raw。重用 coverage 檢查日期、市場、重複與價格，對回 source_key／data_version／fetched_at／原始 hash 記錄；來源 hash 是沿 manifest 保存，未重新掃描原始檔。原持股無需出現在完整排名母體。
+- 計算與問題：價格轉元／股時數字與千元／張相同，持股用股，金額用元；Decimal 50 位／ROUND_HALF_EVEN，NAV 差額為「計算 NAV－輸入 NAV」。demo 身分式用零容差，不是正式結算 rounding／容差。缺行情保留原股數、價格／市值 null，完整股票合計／NAV／差額 null，已估值小計另列；日期／NAV 不符不改帳。基本期初只驗白名單、20～30 檔、2330≤25%／其他≤10%、cash 0～25%；現金比例以本地計算 NAV 為分母，正式 server 口徑未確認。此為資料輔助，不取代配置／完整 D-Plan 驗證。
+- 實際輸出：`data/cache/account_checks/2025-09-30/20261011T172216_f175f6cb/`，只有 account_snapshot.json／positions.csv／valuation.json。25 檔股票市值 **890,890,600.00** 元，現金 **109,109,400.00** 元，計算與輸入 NAV 均 **1,000,000,000.00** 元，差額 **0.00**，現金比例 **10.91094%**。白名單、檔數、個股上限及現金檢查皆通過；75 WARN 為 25 股各自的 known_at、公司行動與正式交易資格未核實，沒有 BLOCK。仍為 demo=true、reconciled=false、submission_ready=false。
+- 可讀歷史例子：2330 人工原持 **27,000 股×真實前收 1,305.00 元＝35,235,000.00 元**；5274 **7,000 股×5,050.00 元＝35,350,000.00 元**；2891 **839,000 股×42.90 元＝35,993,100.00 元**。這些是待模型檢視的期初部位，沒有產生 10/1 訂單。
+- 實際驗收：初測 **6 tests、OK（0.534s）**；短檢視發現錯日列可能覆寫診斷價格及零計算 NAV 除零，已修正指定日列篩選、沿用完整價格有效性欄位及正 NAV 才計現金比。補 1 個針對兩項問題的回歸案例後，最終 `test_account.py` **7 tests、OK（0.412s）**。涵蓋純估值／股元單位與 demo 保留、日期與 NAV -0.01 差額、缺行情／無效價仍保留原持股、日期／版本／hash／來源阻擋且讀檔限於 metadata／manifest／9/30、25 檔三產物保存與不覆寫、CLI 成功 0／NAV 失配 2 保存診斷／缺帳戶 2 不建產物。正常歷史 CLI 實跑 exit 0；另以不匯入估值模組的標準庫程式核對 25 股原日表收盤×股數、CSV 值、精確 10 億合計、三檔產物、UTF-8 BOM、輸入與 demo 身分及 artifact hash，全通過；最大單股權重 3.600%。沒有跑全套、掃所有快取或重新查核四檔缺件。
+- 文件與完成範圍：新增 `docs/account.md`、相關測試與歷史 fixture，修改 CLI、README、資料合約（1.20）、checklist 與本檔。README 連至 docs；快取純文字標本機路徑。DATA-14 與帳戶輔助 DATA-23 按本批驗收勾選，正式庫存／模擬結算 DATA-15 等項目仍未勾選；沒有新增依賴、改三因子配比、模型呼叫、實際交易、commit／push。
+- 收尾檢查：`git diff --check` 通過；只核對本批帳戶文件與新增入口的 11 個本機導航目標，全部存在且不被 Git 忽略，沒有掃所有快取或全專案連結。
+- 下一批：討論九月份候選資格／流動性與完整原持股的資料狀態；再做 10/1 決策、9/30 截止的凍結證據包。讓 Agent 提出每股目標權重涉及 AgentDraft 合約調整，另批同意後實作；由程式推最終股數、風控與 D-Plan。效益程式與 10/1 行情嚴格排在計畫封存後。
+
+重跑（PowerShell，專案根目錄；完全離線，另建結果版本）：
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path -LiteralPath 'src').Path
+python -B -m etf_agent.cli account-check --account tests/fixtures/account_demo_2025-09-30.json --ranking-metadata data/cache/rankings/2025-09-30/20261011T165509_b1899354/metadata.json --as-of 2025-09-30 --output data/cache/account_checks
+python -B -m unittest discover -s tests -p test_account.py -v
+```
+
+## 21｜sub_agents 分工介面與凍結歷史決策輸入（2026-10-11）
+
+- 授權：使用者希望 18:30 前先打通「10/1 歷史決策→股數／風控→可驗證 D-Plan」，三個 agent 用簡單介面串接，架構重整與檔案整理留在之後；對第一批「資料／檢討介面與凍結 packet、主 Agent 提目標權重、程式推股數」回覆「可以」。本批只實作第一批，沒有授權模型呼叫、股數、D-Plan、10/1 行情、commit／push。
+- 分工：新增 `sub_agents/data_agent.py`，重用排名與指定日收盤，組成完整帳戶／來源／因子資料；目前只支援歷史 replay，未實作最新下載、增量合併、流動性閾值或新因子。新增 `test_agent.py`，目前無前日已封存 D-Plan／成交，因此嚴格回傳 prior_run_missing、空建議、performance=null；實際績效與最佳化尚未完成。事後檢討只能影響下一日，不回改已封存決策。
+- 合約：新增 WeightedSelection／WeightedAgentDraft 2.0、strict schema；權重 Decimal 字串、每股上限、精確合計加現金等於1、完整原持股 review 與引用存在。keep／rebalance 必須選入，未選入只能明示 exit，避免調整意圖被默默全賣。AgentResult 支援兩版，PortfolioProposal 1.0 增列 agent_target_weights 方法識別；舊草稿與 fixture 不變，未實作該配置器或 shares。
+- 凍結：新增 `evidence.py`、`prompts/decision.md` 與 CLI `prepare-decision --account --ranking-metadata --as-of --trade-date`。決策日先驗晚於截止日，排名日期／scope／原價基礎／版本先驗再讀指定日行情；沿用 account 的 manifest／日表 hash 與來源核對。只讀帳戶、排名 metadata、manifest 與 9/30 日表，不重新掃快取；上游特徵引用沿排名保存，未重新讀取／驗收全部特徵來源。
+- 證據：依 TWSE／TPEx 相同 endpoint 月報系列建 S1／S2，保留 147 個實際 URL、資料版本、來源 hash 與取得時刻；獨立核對為 TWSE 99 個 `/rwd/zh/afterTrading/STOCK_DAY`、TPEx 48 個 `/www/zh-tw/afterTrading/tradingStock`。程式拒絕混合 endpoint；正式系列接受未知。內容只有描述日期、不填造 known_at／官方 timestamp。市場 O1 是分析股票池的正動能／均線廣度，不是 TAIEX／櫃買指數；個股 O 保留數值、來源及人工帳戶上下文。
+- 實際結果：`data/cache/decision_packets/2025-10-01/20261011T174640_396092d6/`，CLI exit 0；146 排名／146 demo 候選、25 全持股、4 原排除、2 S、147 內部 O，NAV 1,000,000,000.00、差額 0.00。demo_decision_ready=true 僅表示歷史 demo 輸入可用；real_agent_decision／formal_eligible／submission_ready=false。6 檔為 data_report.json、review_report.json、evidence_packet.json、manifest.json 及必要可執行 prompt/schema，沒有產物說明 Markdown。
+- 驗收：weighted 7 項通過（最終 0.230s），review 4 項通過（0.000s），packet 5 項通過（最終 1.154s；新增同 endpoint 反例後只重跑受影響檔）；舊 fixture 聚焦 3 項通過（0.137s）。合計 16 項新增與 3 項相容檢查。涵蓋權重、型別、完整 review、缺價不刪持股、日期先驗、來源／數值不一致、無假績效、允許讀檔邊界、hash、穩定輸入版本、不覆寫及 CLI 退碼。正常歷史 CLI exit 0；另以不匯入模組的標準庫核對 6 產物／5 hashes、完整帳戶、資料截止、所有 O→S 引用及 flags 全通過。不跑全套、不下載或讀入 10/1 行情、不呼叫投資模型、不改 40／25／35 或重查四檔缺件。
+- 文件：README 加第 12 個命令與簡單角色導航；新增 `docs/decision_workflow.md`，資料合約升 1.21；更新 checklist／本檔。EVIDENCE-05、演示輔助 EVIDENCE-06 與 AGENT-02 按本批證據勾選；官方證據、真實 provider／模型、股數／風控、D-Plan、帳務仍未勾選。
+- 收尾：`git diff --check` 通過；只核對新增工作流／提示與本批入口的 12 個本機導航目標，全存在且不被 Git 忽略。以標準庫查到本機 `jsonschema_available=False`，沒有安裝；下一批結構驗證須明確包含此依賴。既有第 20 批修改保留，工作樹尚未 commit／push。
+- 下一批：只討論並實作官方公式股數、完整組合／現金／姿態檢查與 D-Plan 編譯、結構及語意驗證；再以新授權接真實模型。147 內部 O 須依實際引用裁剪與重編，數值轉官方 JSON 型別；不得把此 packet 說成已符合 D-Plan。正式截止／公開時間、交易日相鄰、公司行動、費用取整及實際期初核對仍未確認，輸出限 demo；10/1 行情仍嚴格排在計畫生成、驗證與封存後。
+
+重跑（離線，專案根目錄；另建版本）：
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path -LiteralPath 'src').Path
+python -B -m etf_agent.cli prepare-decision --account tests/fixtures/account_demo_2025-09-30.json --ranking-metadata data/cache/rankings/2025-09-30/20261011T165509_b1899354/metadata.json --as-of 2025-09-30 --trade-date 2025-10-01 --output data/cache/decision_packets
+python -B -m unittest discover -s tests -p test_evidence.py -v
+```
+
+## 22｜account_agent、官方股數與前收風控、D-Plan 編譯／驗證（2026-10-11）
+
+- 授權：使用者對第二批與 jsonschema 安裝回覆「可以」，另要求新增 account_agent 每日回報現金／可用資金／完整股數，並在最後整合測試先刪已下載資料，由 agent 調用既有程式重抓，放在共用位置。後者排在最終測試，本批未刪／未抓；10/1 行情仍禁止在決策、驗證及封存前取得。真實模型呼叫仍待下一批同意，未 commit／push。
+- 依賴：pyproject 增 jsonschema>=4.0,<5；建立專案 `.venv`。首次 pip 被 sandbox WinError10013 擋連線，依已同意用途提出提升安裝後成功，實裝 jsonschema4.26.0。全域 Python 沒此套件；編譯／驗證使用 `.venv\Scripts\python.exe`。
+- 帳戶角色：新增 `sub_agents/account_agent.py`／4tests，純 AccountSnapshot＋估值核對，回報原現金、NAV、25全持股、來源hash、缺件／身份／日期／股數問題。demo估算可用現金等於cash，明示 reserve=0／not_implemented；正式 available_cash_twd=null，不假造可用額度，不扣款或更新股數。prepare-decision 增account_report與workspace索引，共8產物／7hashes。
+- 計算：新增 portfolio.py，WeightedAgentDraft目標由精確 Fraction／Decimal floor 成整張，再按原庫存產 BUY／ADD／TRIM／SELL_ALL、零delta續抱。完整組合費後NAV、現金／每股權重／檔數、千股／超賣、前收淨流向與宣告現金区間皆重算；費率用 F07，Decimal完整demo估算不取整。自訂產業／換手／壓力與實际成交未完成，未改三因子配比。
+- 編譯：新增 dplan.py／compile-plan，裁實際引用O／S並重編S/O/I/D，理由用原草稿不代寫；values轉官方JSON數字後重新檢查floor。歷史source content_as_of採日期末23:59:59描述截至當日，是明示demo政策，非公開known_at。模型metadata缺失就保存schema BLOCK，不塞範例模型。保存候選、完整投影、驗證、三角色報告／workspace、packet／draft、manifest及所有實跑src/config/prompt/schema／pyproject/F04/F07內容版本；dirty workspace不冒用舊HEAD。
+- 驗證：新增 validation.py，Draft202012Validator／FormatChecker及真實日期、時區、起訖；ID引用、完整持股、action/order/官方floor、數字序列化、超賣、費後組合／姿態及funding缺口。按當前plan獨立重算，portfolio BLOCK另保留，不能被KEEP/no_trade掩蓋。有完整凍結facts時，source URL／authority及O文字／數字／來源組合逐一比對；F08/F09只作schema／語意樣本，F09 I9確實BLOCK。正式server、台股相鄰日與全部設計L01～L15仍未完整實作。
+- 實跑：最新四角色packet `data/cache/decision_packets/2025-10-01/20261011T180724_e49e57e2/` exit0。另人工流程草稿（明標fixture，不是投資模型）25股各0.0364、cash0.09／rebalance，接真9/30價格，產 `data/cache/plans/2025-10-01/20261011T180729_491b495e/`：17買單／8續抱，買8,698,350元、fee12,395.14875000元、tax0、前收預估cash100,398,654.85125000、NAV999,987,604.85125000，portfolio_ok=true；缺全部真實模型metadata故schema BLOCK／exit4，只存dplan_candidate.json，未產有效D-Plan。帳戶不入帳、submission_ready=false。
+- 驗收：portfolio7（0.209s）、account_agent4（0.027s）、validation8（0.794s）、compiler6（最終0.920s），新增25；受影響packet5（最終0.813s），共30相關檢查，未全套。初次人工草稿命令漏PYTHONPATH，補上後正常。短review修正KEEP配置BLOCK串到validator gate；補數字序列化整張邊界及凍結O／來源篡改反例。對早期同値產物以不匯入模組的標準庫獨立核對四角色索引、7輸入hash／6初版編譯hash、程式版本包、所有股數／費用／現金與真實metadata缺失BLOCK全通過；最新計畫多3角色報告與workspace，10個artifact hashes。
+- 文件：README／account／decision_workflow／quickstart補四角色、共用位置、.venv與compile-plan；資料合約升1.22，更新checklist／本檔。真正完成的股數、前收風控／引用／驗證按證據勾選；真模型、有效DPlan、成交／帳務、壓力、正式資格與完整來源仍未完成。
+- 下一步：取得真實決策批次同意後接provider，先核對本機CLI／可用帳號／真實模型資訊；最後整合測試再安全清除指定九月下載快取、由data_agent重抓九月並重建同截止因子／排名，交四角色共享索引；不清除官方來源或帳戶輸入。重抓耗時與模型可用性需留緩衝，不因18:30目標填假metadata或使用10/1行情。
+
+重跑（人工草稿只驗流程，預期缺模型exit4；新run不覆寫）：
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path -LiteralPath 'src').Path
+.\.venv\Scripts\python.exe -B -m etf_agent.cli compile-plan --packet data/cache/decision_packets/2025-10-01/20261011T180724_e49e57e2/evidence_packet.json --draft data/cache/plan_examples/weighted_draft_fixture_2025-10-01.json --decision-source fixture --output data/cache/plans
+```
+
+## 23｜九月資料冷啟動、四角色共享與真實決策接線（2026-10-11）
+
+- 授權：使用者回覆「可以」，執行已討論的真實Codex決策初次及最多一次必要修正、最後清除指定九月下載快取後連動測試。只抓2025-09，截止9/30、決策10/1；10/1行情仍禁止。未授權commit／push、真正交易或提交。
+- 清除：先核對絕對路徑在本專案內，以PowerShell原生Remove-Item清除 `data/cache/history_universe/2025-09/`（舊run `20261011T145716_6e56c903`）。官方原文、帳戶、日曆及先前分析／決策封存保留；舊分析引用該raw目錄的重跑需改用本批新run，不能宣稱其raw還存在。
+- 接線：新增pipeline.refresh_prepare與refresh-decision入口，現有下載器→日表／月表→21筆視窗→三因子→同40/25/35排名→資料／前日檢討／帳戶回報→凍結證據包。各階段都在新的shared run，頂層workspace列四角色與相對路徑；帳戶與排名設定複製凍結。test_agent仍prior_run_missing，實際前日成果／最佳化建議未完成；account_agent仍快照回報，無成交入帳。
+- 已知缺件：3718／7769／7828依既有紀錄略過請求，不填raw／fetched_at／HTTP資料；7750正常重抓但仍無完整視窗，原四檔排除保留。額外下載失敗或視窗input_invalid阻擋model。
+- 實跑下載：沙箱內curl連線失敗，停止首個失敗run，不把它當正常下載；依環境權限提升重跑成功，shared root `data/cache/integrated_runs/2025-10-01/20261011T181709_8585216a/`。147請求、0cachehit、147成功、3已知略過、0新增失敗；coverage_complete=false／history.success=false如實保留。146排名、25持股、cash109109400.00、NAV1000000000.00、差額0.00；demo_decision_ready=true、formal／submission仍false。原失敗run保留诊斷，沒有恢復舊raw來假裝冷啟動。
+- Provider：依openai-docs技能與官方非互動／Structured Outputs文件及本機help核對，codex-cli0.145.0，node＋codex.js argv／shellFalse／STDIN、獨立cwd、忽略使用者MCP／開發文件與規則、關閉web／shell／apps／plugins等工具，發現工具或未知事件整次拒絕。220秒timeout殺自身程序樹；保存原始回覆、events／stderr、真實起訖／用量及完整輸入hash。原schema保留，本地完整驗證；遠端投影去未採用的uniqueItems／字串長度限制、const轉enum，仍獨立保存並hash，不放寬本地合約。
+- Runner：新增decision_runner／decide-plan，最多兩次；只有已完成但格式／合約或財務不符可修正，服務／工具／逾時錯誤停止。凍結全部7個輸入hash、模型前後程式內容版本核對；可信metadata加入deepcopy執行context，原packet不改。只通過者封存demo D-Plan，失敗候選／回覆保留且不入帳。
+- 本機模型設定不相容：首請求explicit gpt-6.1-sol被ChatGPT服務端400拒絕（unsupported），無草稿／用量，不算真實投資決策完成；失敗run `plans/2025-10-01/decision_20261011T182135_e508b83c/` 保留。只讀app-server model/list核對該登入實際預設gpt-5.6-sol，保存model_availability.json。用本次--model覆寫、不改全域設定；剩餘一次命令max-attempts=1完成如下，累計2個模型請求、1份成功決策，沒有第三次。
+- 聚焦驗收：history人工2新增＋2既有PASS（5.490s），pipeline3mock PASS（0.106s），provider6mock PASS（最後0.154s），runner5mock PASS（0.484s）。共18項相關檢查，沒有全套或掃舊快取。另獨立核對當次7輸入hash、147請求／0命中、150來源及四檔排除；行情日期全部在九月。讀取診斷腳本首次誤用manifest.month，改用requested_month後核對通過，未改行情或核心。
+- 真實結果：gpt-5.6-sol於18:23:14.797549～18:24:34.655385+08:00完成，input145146／output3976／reasoning232／cached0，服務端snapshot未知null，模型身份依据explicit CLI ID。25selections與25held_reviews全部keep、neutral／neutral／hold、cash_target0.1091094、區間0.105～0.115；模型自然選續抱，不強迫換股。1303理由為維持期初股數、首日未核實資料不貿然換股，反方指出動能轉負／排名118、續抱依據偏弱；保存原文供會議評估。
+- 封存修正：自動流程將compiled再嵌套日期／run，Windows長路徑使code archive失敗；模型草稿／events／AgentResult均已保存。沒有重叫模型，沿同raw_response＋真實metadata用既有compile-plan，短output `shared_root/final` 離線恢復成功。之後修runner compiled固定在output_dir/compiled，不再嵌套decision run；OSError保存archive_or_io_failed且不重試。新增必要IO失敗／布局回歸，runner最終6tests PASS（0.589s），本批共19項相關檢查。原自動失敗report先備份，再記離線恢復與0新增modelcalls；原始模型資料不改。
+- 最終計畫：`final/2025-10-01/20261011T182555_b8b2869e/D-Plan_DEMO_2025-10-01.json`，F04 schema／semantic／local全部true、issues空；2S／26O／25I、0decisions／0orders／25no_trade，cash109109400.00、NAV1000000000.00、fee／tax0。real_agent_decision=true／accepted_demo_plan=true，但formal_eligible=false／submission_ready=false，不是成交或正式資格通過。封存版本sha256:455d78cf0f69；其後runner路径修正不回寫已封存版本包。
+- 最終獨立核對：10產物hash、36程式／配置／schema封存檔hash、metadata與真實AgentResult／log／用量／起訖相等、provider全部輸入hash前後相同、全部原持股覆蓋／0委託通過。離線重編plan與portfolio完全一致，validation仍PASS；沒有新行情或模型。頂層workspace更新模型原始回覆／結果／驗證／D-Plan位置，run_summary.json保存可讀驗收摘要。文件與checklist同步，未跑全套、未commit／push。
+- 文件收尾：README／quickstart／工作流記錄真實結果與重跑方式；資料合約升1.23，更新實際provider與共享工作流，核心1.0／草稿2.0不變。git diff --check通過，README與新工作流未連到被忽略的快取；本機產物路徑以程式碼文字供IDE定位。
+- 下一批：先整理架構／檔案與會議展示；如需驗證10/1效益、實際成交與逐日帳務，另取得下載範圍授權後才能抓10/1，再實作settlement及test_agent成果回顧。正式候選／流動性、point-in-time、實際庫存／費用取整仍未完成。
+
+重跑入口（會重新呼叫模型，須留意本批額度已用完；不要當離線重播）：
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path -LiteralPath 'src').Path
+.\.venv\Scripts\python.exe -B -m etf_agent.cli decide-plan --packet data/cache/integrated_runs/2025-10-01/20261011T181709_8585216a/decision_input/2025-10-01/20261011T182031_5135f5cb/evidence_packet.json --output data/cache/integrated_runs/2025-10-01/20261011T181709_8585216a/plans --model gpt-5.6-sol --max-attempts 1
+```
+
+## 24｜弱期初持股、CSV檢查視圖與重新決策（2026-10-11）
+
+- 授權：使用者直接要求將初始持股改成較弱股票，明確撤回「保留既有決策」，刪除舊決策後让程式自主產生新決策，並要求sub_agent結果輸出CSV供人工檢查；後續「繼續」延續本批。包含同範圍必要真實決策初次／至多一次修正，不強迫交易。仍不下載或讀10/1行情，不改40/25/35、不commit／push。
+- 清理：先把7個絕對目標核對在專案data/cache內，以PowerShell原生Remove-Item刪 `decision_packets/2025-10-01`、`plans/2025-10-01`、`plan_examples/weighted_draft_fixture_2025-10-01.json`，以及cold shared root `20261011T181709_8585216a` 下的plans／final／decision_input／run_summary.json。沒有備份或保留舊模型回覆／D-Plan；九月market/windows/features/rankings、日曆、官方F08/F09與舊合約fixture保留。前面第21～23批是開發歷史，所列舊決策路徑現已不存在。
+- 弱期初：新增account.build_weak_demo_account／write_weak_demo_account及CLI build-demo-account。弱僅指9/30三因子綜合排名末25（第122～146），不用10/1表現挑股；每股人工預算3600萬元、整張floor、cash=10億減全部前收股票市值。不更換缺價股票或補值；完整白名單／檔數／單股／現金及NAV核對失敗即阻擋。人工建構90%股票預算只服務demo，不是投資策略／官方配置要求。
+- 實際新帳戶：覆寫同名 `tests/fixtures/account_demo_2025-09-30.json`，snapshot `DEMO_WEAK_20250930_NAV1B_03a1b24f856c`、日期9/30／demo／未reconciled。25股24檔動能負、22檔低於均線；股票892932500.00＋cash107067500.00＝NAV1000000000.00。建構、估值與初始CSV保存在sharedroot/initial_account/2025-09-30/20261011T183759_84fc3293/，初始CSV亦保留排名、三因子、價格、整張與來源版本。
+- CSV：新reports.write_csv_view統一UTF8BOM、Decimal字串、bool小寫、未知None空欄、JSON陣列／字典可重現。data_agent候選data_candidates.csv／原缺件data_issues.csv；account_agent完整account_positions.csv／一行account_summary.csv；test_agent review_status.csv／review_recommendations.csv。無前績效時status=prior_run_missing、績效未知、建議只有表頭。JSON仍是主資料；CSV不回寫權重、股數、帳戶或策略。
+- 主決策檢查：dplan writer另產agent_decisions.csv／orders.csv／portfolio_positions.csv／portfolio_summary.csv／validation_checks.csv，原持股與新股完整聯集、退出股target0保留、模型理由／反證／O引用、前收估金額／fee／sell tax及每項PASS/BLOCK可讀。無單亦產orders表頭，不造交易；5CSV納入最終15artifact hashes，JSON欄位合約不變。
+- 共用流程：pipeline.prepare_cached與prepare-decision --workspace-root重用明確shared root，不HTTP或重算因子，換新account copy並清理舊模型／計畫索引。新輸入 `decision_input/2025-10-01/20261011T184109_4a9529e8/`，14檔／13hash；六CSV實際列數146／4／25／1／1／0，全部BOM與13hash獨立核對。rootworkspace保留九月資料，指向新四角色報告與CSV；新demo ready、NAV差0。
+- 提示：原真實回覆把未核實正式資格當續抱的重要理由。明確澄清formal false阻擋正式提交，不單獨禁止demo買賣；每股需按价格因子與可替代候選比較，續抱須說明相對優勢／成本／反證，不指定一定換股或數量。禁止事後行情與工具的限制不變。
+- 相關測試：account9 PASS（0.469s）、packet8 PASS（1.622s）、compiler既有6 PASS（修CSV摘要兼容後1.246s）＋新增2CSV PASS（0.422s）、cached pipeline新增2 PASS（根代理實跑0.278s），合計27。首次CSV writer假設held_tickers使舊人工packet出錯，改以核心account_snapshot.positions計數，原6再驗通過；未全套或掃全部cache。CSV驗收包含跨行／逗號理由、費用精確一致、退出保留與無單表頭。
+- 執行：重新決策指定已核對可用gpt-5.6-sol、最多2次，只有新凍結資料／沒有舊決策輸入；初次即通過，沒有第二次。開發分工agent兩個在結束階段遭用量限制，由根代理接手完成測試／文件；開發工具狀態與投資provider實際回覆分開記錄。
+- 真實結果：`plans/2025-10-01/decision_20261011T184244_64a7bd3d/`，gpt-5.6-sol實報input145401／output4204／reasoning703／cached0；模型前後輸入／程式hash相同。25檔held_reviews=15exit＋10keep，selections20=10keep＋10新買。自主risk_on／neutral／hold、cash_target0.12、區間0.115～0.125；25orders=15SELL_ALL／10BUY，10no_trade。例：6919退出194000股、2330新買76000股，沒有人工指定交易名單或手改股數。
+- 封存：`plans/compiled/2025-10-01/20261011T184409_51450818/D-Plan_DEMO_2025-10-01.json`，版本sha256:61938e20777f，2S／36O／35I／25D／10no_trade／25orders。schema／semantic／local全部true、issues空，real_agent_decision／accepted_demo_plan=true，formal／submission=false。沒有再遇長路徑或離線人工恢復，沒有實際成交／入帳。
+- 前收demo估算：sell534806700.00／buy520423650.00、fees1503703.24875000、tax1604420.10000，cash_after118342426.65125000、projected_NAV996891876.65125000、cash比11.8711396314%。初始25→目標20；NAV下降為前收假設下交易費稅，不是已驗證10/1報酬。
+- 獨立核對：13輸入／15輸出／37程式封存檔hash、metadata對實際AgentResult／CLI log起訖與用量、11CSV的全部委託shares／價格／金額／逐筆費稅／現金、所有shared workspace路径存在、舊決策目標不存在全部通過。35列聯集包含15退出股target0，正持股20，首日建議header only；離線重編plan與portfolio完全一致。新run_summary.json與workspace更新初始持股CSV、模型、11CSV與新計畫，舊root摘要已替換。
+- 收尾：README／account／quickstart／workflow補新實跑與離線準備入口，資料合約升1.24（核心1.0／draft2.0不變），checklist更新當前證據。仍未抓或讀10/1行情、未全套、未commit／push。下一步待使用者指示架構整理或封存後成交／效益驗證，不自行下載10/1。
+
+## 25｜封存後test_agent隔離收益與全候選事後最佳化（2026-10-11）
+
+- 授權：使用者直接要求test_agent取得10/1資料、先放隔離區、計算收益與最佳決策；日期指2025-10-01。澄清後明選完整146候選重選股票／股數，接受較長實作，並另同意新增SciPy。只供封存後評估，不修改原D-Plan／40-25-35／期初帳、不新呼叫投資模型、不commit／push。前批不取得T日限制直到本批才針對隔離評估解鎖。
+- 閘門：核對rootworkspace real／accepted、兩manifest13＋15產物hash、37決策程式封存hash、模型／帳戶／workspace／兩manifest，合計73原檔；D-Plan與portfolio orders一致、日期相符、9/30股數×前收＋cash精確等於10億。原D-Plan仍為20261011T184409_51450818，不因事後結果回改。
+- 修改：providers/daily.py單日TWSE MI_INDEX／TPEx dailyQuotes adapter與嚴格日期／欄位／單位、兩市场不混、精確元／股量值、50位VWAP、rawhash；evaluation.py純模擬與封存閘門；hindsight.py整數配置；evaluation_runner.py隔離下載／重播／版本與8CSV；test_agent.evaluate_trade_day與CLI evaluate-plan。不改核心1.0／draft2.0或首日previous_trade_review，新增獨立isolated_post_decision_evaluation報告1.0。
+- 依賴：pyproject新增optional evaluation=[scipy>=1.13,<2]，本機經授權安装SciPy1.18.1／NumPy2.5.4。MILP文件以SciPy官方說明核對整數、time_limit、gap、求解狀態；不把先四捨五入線性解當作整數最優。
+- 下載：封存閘門後默認沙盒curl7無法連官方；按工具权限流程重跑需提升權限命令，成功取得TWSE1308列、TPEx12000列，保存兩份raw於隔離 `20261011T190144_d44c411d`，實際成功HTTP2次。第一次TPEx主table.date為ROC114/10/01、空管理table無date，parser原只接受YYYYMMDD而拒絕；新增ROC嚴格轉換與非空缺日阻擋，沒有重新HTTP。恢復raw manifest時fetched_at／content_type／effective_url未知留null、source_metadata_recovered=true，HTTP200由解析前程式閘門確認；之後請求即时保存source sidecar避免資訊丟失。
+- 可得資料：按原146候選篩选為98上市／48上櫃。3260官方T日收盤---／量0／金額0，不是一般missing；trading_status區分traded／no_trade／unknown，缺價均價仍null。完整候選146保留，3260原未持有所以MIP目標固定0、145可交易；不補价、不重查3718／7750／7769／7828。
+- 模擬：固定原25orders，以官方精確amount／shares算VWAP，買賣fee0.001425、sell tax0.003，50位Decimal未取整，T收估NAV。缺成交不執行、不扣款且保留原股；缺持股期末估價總NAV／profit=null，known stock value另列。canonical fixture及原account_agent回報不改；另存AccountSnapshot1.0 status=simulated/demo=true/reconciled=false。
+- 最佳化：全146 q/b/s整張整数与持有／買單／卖单binary，目標費後T收NAV；限制20–30正持股、≤30orders、同股不能双向、卖出≤初持、現金0–25%、233025%其餘10%。前收費後與T收費後兩種cash/caps均檢，前收目標股市值75–100%期初NAV、股數可由前收權重公式達成。最佳方案自选現金比例，不繼承原12%目標，沒有改策略；不含正式資格／流動性／證據鏈／投資主題的官方完成保證。HiGHS time_limit120、mip_rel_gap1e-8，status0且精確重驗才optimal_to_solver_tolerance，限時可行另標，其他solver失敗與Decimal違規拒絕。
+- 實跑：先 `20261011T190347_89d2e89b` 得原收益但3260當一般缺價使全池best阻擋，補zero-trade狀態後 `20261011T190528_028cf8c1` 首次完整成功。補齊評估程式封存後最終 `data/cache/evaluation_quarantine/2025-10-01/20261011T190922_e164811e/` 離線重播，network_requests0/new_model_calls0；兩種simulation與best JSON同首成功完全一致。不掃其他快取、沒有重下載。
+- 收益：不交易cash107067500、stock895395350、NAV1002462850、profit2462850、return0.00246285。原25筆全部有VWAP，20持股、cash118610864.463443753743596947、stock878986850、NAV997597714.463443753743596947、profit−2402285.536556246256403053、return−0.002402285536556246；fee1517797.867621913556、tax1619703.264310868547。相對不交易差−4865135.536556246256元；所有本批原plan財務檢查通過。
+- Best：HiGHS status0/gap0/1node，146候選145可交易、30orders／20holdings；cash20337.947368109472、stock1017574650、NAV1017594987.947368109472、profit17594987.947368109472、return0.017594987947368109，solver上界1017594987.9473682、Decimal微差屬float表示。前收fee後cash比約2.636897%、implied cash target3.07359%，T收現金約0.00199863%。部分原股只留1張满足20檔，為事後數學解，不是可預測建議；無替代D-Plan。與原計畫NAV差19997273.483924355729元。
+- CSV：8份UTF8BOM，market_quotes146／performance3／fills25／end_positions35／hindsight_ranking146／hindsight_orders30／hindsight_positions33／review_recommendations25。原退出及最佳退出0股仍在聯集；146 targetshares含3260=0保留best JSON。欄位為元／股／元金額與股，與舊行情閱讀CSV張／千元分開。
+- 驗收：daily11 PASS（0.011s）＋evaluation12 PASS（2.347s）＋舊review4 PASS（0.001s），27相關檢查。正常VWAPfee/tax/NAV與逐單skip貢獻、缺交易仍保股／缺估值NAVnull、未封存/坏hash、跨日期／超賣／同股雙向拒絕、隔離目錄禁決策root、全池最佳／平價不交易／未知不縮池／no_trade保持0、求解限時不冒稱最優及8CSV／JSON／hash一致。獨立子代理核對首完整run所有量值與fee/tax、雙取價caps/cash、股數；根代理核對最終63產物hash含41評估程式／配置封存檔及原73hash、8CSV列數、財務JSON重播一致。版本sha256:86f79658b6b5，git diff --check PASS，未全套。
+- 文件：新增docs/evaluation.md含實際收益、公式、8CSV、來源精度／恢復限制與offline重跑；README／quickstart／workflow改為封存後隔離現況，data_contracts1.25，checklist本批EVAL勾完成、正式LEDGER保持待辦。下一批可討論把10/1獨立simulated帳與檢討接到10/2決策，或按使用者需求架構整理；需另達成共識，不自動下載下一日、不回流改原決策。SQLite／重複入帳／官方核對、公司行動與正式取整仍未完成，formal／submission始終false。
+
+## 26｜README架構、流程與逐檔閱讀入口（2026-10-11）
+
+- 授權：使用者要求「這個先停在這」，改為整理README，須看見整體架構圖、連到說明文件的執行流程、每個檔案存什麼及怎麼用。本批只文件與必要本機預覽／導航核對，沒有繼續收益／交易功能、修改原始碼／參數／資料、搬移檔案、下載行情、投資模型呼叫或commit／push。
+- README改為目的與狀態→架構圖／四角色→7步流程與輸入輸出→常用結果導航→專案目录與設定→環境→完成／待辦。過去第22～25批詳細故事從README移除，既有docs及development_notes仍保留原驗收紀錄。例：9/30排名／帳戶→凍結packet→真Codex權重→程式股數／D-Plan→封存後10/1隔離收益；沒有回流舊決策。
+- 新docs/assets/architecture.svg提供可直接嵌入、放大與會議使用的圖；決策區與隔離評估區分開，標明日期、模型／程式責任、驗收hash閘門及待串接的下一日。sub_agents目前是函式分工，不冒稱各自真LLM；前日review首日仍missing，封存後evaluation另入口。
+- 新docs/source_map.md逐檔說明94個實際檔案，包括34src Python、22tests、2fixtures、9官方、2internal schema、設定／提示／白名單、根目錄文件與docs／SVG；每檔有內容、CLI或呼叫者、對應說明。新docs/artifacts.md按市場／日曆／視窗／因子／排名／帳戶／packet／model／compiled／evaluation分列所有產物模式與用途，拆清相同metadata／workspace／manifest／review名稱及單位。
+- 核對修正：日曆來源hash在calendar.json.sources，不造manifest；行情raw／monthly stem含月份；run_summary.json與model_availability.json是本次另存，不承諾CLI固定生成；fixture即使本地驗證通過亦只保存candidate；workspace scope可相同，需要stage／目錄判別。所有GitHub導航只連專案文件或原始碼，cache只示範目錄／檔名。
+- 驗收：README／source_map／artifacts共278個本地連結與章節anchor無錯、94檔coverage無遺漏、無ignored cache導航；SVG XML有效、36文字節點、無script。以無畫面Edge將本機SVG轉暫存PNG檢查字體／箭頭，初次沙盒啟動失敗，依工具權限流程在沙盒外預覽成功，修正閘門文字上方箭頭線穿越。沒有安裝繪圖依賴或使用外部圖資；沒有新增無效測試或跑程式測試。
+- 收尾：checklist DOC-26僅勾文件導覽，原功能待辦保留。使用者可用IDE Markdown預覽開README、點完整SVG放大、沿source_map／artifacts看逐檔說明；git diff --check核對後收尾。後续功能或實體目錄重整另待使用者指示。
+
+## 27｜三角色資料夾、責任分離與 D-Plan Markdown（2026-10-11）
+
+- 授權：使用者同意上一輪「先搬清楚歸屬模組／更新import／保持CLI與計算結果」整理批次，另指定test_agent負責新行情與昨日檢討、data_agent只算指標、account_agent估值，要求D-Plan除JSON亦有可讀MD。本批完成角色整理、離線介面分離與MD；每日增量庫／跨日入帳／次日回饋另列待辦，沒有新增外部依賴、行情下載、投資模型呼叫、策略／風控參數或commit／push。
+- 歸屬：22既有Python檔搬到三角色與decision。data_agent/含agent、history_windows、features、ranking；account_agent/含agent與account；test_agent/含agent、history、evaluation／runner、hindsight、月／日官方providers。decision/含主模型providers、runner、portfolio、dplan、validation及新markdown。外層保留contracts／universe／coverage／calendar／reports／HTTP與主pipeline／evidence，新prices共用截止日讀價、paths統一專案根目錄；移除舊agent目錄三個生成pyc，沒有清理任何行情或封存快取。
+- 介面：data.prepare_data(rankingpath,as_of,universe,price_context=None)不讀帳戶、不估NAV、不下載；account.prepare_account(accountpath,price_context,as_of)獨佔匯入／value_account／report_account。evidence讀同份行情上下文後組合，才補回packet1.0既有account_snapshot／account_valuation／held_positions與排名held／shares／weight欄位。九月重抓wrapper移到test_agent，pipeline及日期限制同步更新；官方schema／provider prompt／評估封存改用paths.project_root，避免搬檔後parents深度錯誤。
+- MD：render_plan_markdown(result,packet,draft)為純閱讀視圖，原JSON金額／股數／權重直接渲染，含市場原理由／反證、完整持股／EXIT／KEEP、官方及原O引用、日期／demo／fixture／BLOCK與資料問題。writer保存同JSON基名.md，新增manifest.plan_markdown_file與workspace.files.plan_markdown，hash與CSV／JSON同列；renderer沒有新模型、IO或股份重算。新compiled共17檔／16產物hash；舊decision.md仍是模型提示。獨立子代理審查發現MD被套上_csv後綴的假索引，已改成只對.csv生成CSV索引並補斷言。
+- 實際例：用明確指定的既有9/30排名／25原股／10億帳戶，比對整理前後packet逐欄完全相同，packet版本decision-packet-v1-c871b82cf0cf。固定舊模型草稿在記憶體離線重編，plan／portfolio／validation三份JSON與原值全相同；未產生新模型決策或回寫舊run。既有15退出／10新買／10續抱的10/1原計畫另產生 `data/cache/refactor_checks/batch27/D-Plan_DEMO_2025-10-01.md` 閱讀副本，25orders／35原新股票聯集；同目錄markdown_view_manifest記錄原來源hash、view_only=true、0網路／0新模型。原73凍結hash最後仍一致。
+- 驗收：首次15個受影響測試模組111項PASS（31.847s）；搬價格視窗及新增shared MD聯動後，6個聚焦模組31項中30PASS，新增1項因測試用假code_version與writer真實封存版本不同而被metadata檢查阻擋。改為實際程式封存／仍用假provider後，僅重跑該項PASS（0.630s）；合計115項不同重點檢查皆通過，未重跑全套。41個模組匯入與CLI17命令help PASS；65份Python AST有效。正常估值、日期／NAV、缺行情保股與未知NAV、來源／hash、角色不讀帳戶、股數／風控、MD原理由／未知／BLOCK／escaping／hash／workspace皆有證據。沒有使用真模型替測試。
+- 文件：README角色／目錄與SVG同步，source_map重整為主流程／每角色／共用表，104個实际倉庫檔案全有索引（42src／23tests）；新docs/daily_workflow有每日Mermaid、VWAP成交與收盤NAV、事後解只供檢討、共享資料與分批待辦。README／source_map／artifacts／daily_workflow共299個本地連結與anchor有效，無ignored cache導航；SVG XML有效／36文字節點／無script。更新account／workflow1.5／data_contracts1.26／quickstart與相關程式連結，官方來源不改。
+- 下一批建議：離線使用既有10/1隔離行情併入共用歷史庫，並由account_agent承接原10/1計畫的simulated帳戶；建議SQLite（標準庫）＋JSON／CSV檢查視圖，合約與持久化另先確認。尚缺open／high／low輸出、跨月份視窗、去重／重複入帳防護、ready前日回顧與10/2固定輸入；不自動下載10/2、不把最佳化帳戶當原帳、不另呼叫模型。正式帳務／資格／提交仍false。
+
+## 28｜README會議講解與版本提交（2026-10-11）
+
+- 授權：使用者要求先把README整理成可看著講解設計，並明確要求commit／push、確認README最新。本批提交自3637d9f後累積且已授權的帳戶／真實決策／隔離評估／角色整理／文件與測試；不續作每日合併或跨日帳務，不新下載行情或呼叫投資模型。
+- README：最前加入每日設計Mermaid圖、四步講解顺序（昨日檢討→更新指標與帳戶→主Agent決策→JSON／Markdown／CSV檢查）、10/2只能讀截至10/1的時間界線，以及目前9月資料→10/1真模型→25委託的實際展示。目標設計與已完成範圍分別標明，既有架構SVG／docs／檔案索引／使用方式保留。
+- 驗收與提交：沿用第27批115項已通過的重要檢查、固定草稿plan／portfolio／validation完全相同與原73封存hash不變；本批不重跑策略或全套測試，只核對最新README、導航、diff與提交範圍。data/cache、.venv、金鑰與本機設定保持忽略，不納入提交。Git提交／推送結果以本批收尾的實際commit與遠端main核對回報為準。

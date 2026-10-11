@@ -5,12 +5,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal, Protocol
 
-from etf_agent.contracts import AgentDraft, Contract, ContractError
+from etf_agent.contracts import AgentDraft, Contract, ContractError, WeightedAgentDraft
 
 
 @dataclass(frozen=True)
 class AgentResult(Contract):
-    draft: AgentDraft
+    draft: AgentDraft | WeightedAgentDraft
     provider: Literal["openai", "anthropic", "fixture"]
     actual_model_version: str | None
     started_at: datetime | None

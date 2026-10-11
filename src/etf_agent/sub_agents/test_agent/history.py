@@ -17,9 +17,9 @@ from uuid import uuid4
 
 from etf_agent.contracts import PriceBar
 from etf_agent.coverage import check_daily_prices
-from etf_agent.providers import tpex, twse
+from etf_agent.sub_agents.test_agent.providers import tpex, twse
 from etf_agent.providers.http import DownloadError, HttpResponse, get_https
-from etf_agent.providers.monthly import HistoryDataError, month_start
+from etf_agent.sub_agents.test_agent.providers.monthly import HistoryDataError, month_start
 from etf_agent.universe import Universe
 
 
@@ -172,9 +172,15 @@ def download_history_universe(
     month: str, output: Path | str, *, universe: Universe,
     cache_manifest: Path | None = None, transport: str = "auto", fetcher=None,
     request_interval_seconds: float = 1.0, sleeper=None, progress=None,
+    known_unavailable_tickers: tuple[str, ...] = (),
 ) -> dict:
     """單線取得 F05 一個已完成月份；每兩個 HTTP 請求間隔至少一秒。"""
     requested = month_start(month)
+    if (type(known_unavailable_tickers) is not tuple
+            or len(set(known_unavailable_tickers)) != len(known_unavailable_tickers)
+            or not set(known_unavailable_tickers) <= {"3718", "7769", "7828"}
+            or (known_unavailable_tickers and month != "2025-09")):
+        raise HistoryDataError("已知無行情略過只適用2025-09的3718／7769／7828，不重新查核")
     if requested >= datetime.now(timezone(timedelta(hours=8))).date().replace(day=1):
         raise HistoryDataError("全股票歷史下載只接受已完成月份")
     if (len(universe.stocks) != 150 or len(universe.allowed_tickers) != 150
@@ -189,13 +195,14 @@ def download_history_universe(
     return _export_month(month, Path(output), transport=transport, fetcher=fetcher or get_https,
                          universe=universe, cached=cached, cache_reuse=reuse,
                          request_interval_seconds=request_interval_seconds,
-                         sleeper=sleeper or time.sleep, progress=progress)
+                         sleeper=sleeper or time.sleep, progress=progress,
+                         known_unavailable_tickers=known_unavailable_tickers)
 
 
 def _export_month(month: str, output: Path, *, transport: str, fetcher, reexport_of: dict | None = None,
                   universe: Universe | None = None, cached: dict | None = None,
                   cache_reuse: dict | None = None, request_interval_seconds: float = 0,
-                  sleeper=None, progress=None) -> dict:
+                  sleeper=None, progress=None, known_unavailable_tickers: tuple[str, ...] = ()) -> dict:
     requested = month_start(month)
     now = datetime.now(timezone(timedelta(hours=8)))
     if requested >= now.date().replace(day=1):
@@ -223,6 +230,22 @@ def _export_month(month: str, output: Path, *, transport: str, fetcher, reexport
         if universe is not None:
             entry["source_key"] = f"H{index}"
             entry["name"] = universe.lookup(ticker).name
+        if ticker in known_unavailable_tickers:
+            entry.update({"error": "known_unavailable_preserved_no_request", "network_requested": False,
+                          "previous_availability_record": "docs/history_availability_2025-09.md"})
+            entries.append(entry)
+            _write_json(run_dir / "manifest.json", {
+                "format_version": "1.0", "scope": "universe_monthly_history",
+                "status": "in_progress", "run_id": run_id, "requested_month": month,
+                "created_at": now.isoformat(), "success": False,
+                "universe_version": universe.universe_version, "source_count": len(symbols),
+                "network_requests": network_requests, "cache_hits": cache_hits,
+                "known_unavailable_tickers": list(known_unavailable_tickers),
+                "sources": entries, "submission_ready": False,
+            })
+            if progress is not None:
+                progress(index, len(symbols), entry)
+            continue
         time_field = "reexported_at" if reexport_of else "requested_at"
         entry[time_field] = datetime.now(timezone(timedelta(hours=8))).isoformat()
         try:
@@ -295,6 +318,7 @@ def _export_month(month: str, output: Path, *, transport: str, fetcher, reexport
                 "universe_version": universe.universe_version,
                 "network_requests": network_requests, "cache_hits": cache_hits,
                 "sources": entries, "submission_ready": False,
+                **({"known_unavailable_tickers": list(known_unavailable_tickers)} if known_unavailable_tickers else {}),
             })
         if progress is not None:
             progress(index, len(symbols), entry)
@@ -375,6 +399,8 @@ def _export_month(month: str, output: Path, *, transport: str, fetcher, reexport
         })
         if cache_reuse is not None:
             manifest["cache_reuse"] = cache_reuse
+        if known_unavailable_tickers:
+            manifest["known_unavailable_tickers"] = list(known_unavailable_tickers)
     _write_json(run_dir / "manifest.json", manifest)
     result = {"success": success, "run_dir": str(run_dir.resolve()),
             "daily_dir": str((run_dir / "daily" / month).resolve()),

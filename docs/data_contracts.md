@@ -1,6 +1,6 @@
 # 共用資料合約與功能導覽
 
-文件版本：1.19｜更新：2026-10-11｜內部合約版本：1.0｜歷史閱讀 CSV 格式版本：4.0｜對應設計：[design1001.md v0.3](../design1001.md)
+文件版本：1.26｜更新：2026-10-11｜內部核心合約版本：1.0；目標權重草稿：2.0｜歷史閱讀 CSV 格式版本：4.0｜對應設計：[design1001.md v0.3](../design1001.md)
 
 本文件說明各模組吃什麼資料、交出什麼結果，以及目前程式實際能做什麼。**資料合約**是模組共用的欄位、單位與檢查規則；定義合約不等於已完成抓取、計算或交易功能。六種核心合約集中在 [contracts.py](../src/etf_agent/contracts.py)，金額使用 `Decimal`，以 Python 標準庫的 `dataclass` 定義資料。HTTP、模型 SDK、檔案與資料庫操作留在各自模組。
 
@@ -322,7 +322,7 @@ TPEx 5274 同日收盤價為 `5015` 千元／張；報表揭示量 `356` 張、�
 | `amount_ktwd` | `reported_amount_ktwd` | 前者由精確元金額除以 1000；後者保存報表金額換成千元，換單位不恢復已省略的小數 |
 | `avg_price_ktwd_per_lot` | `reported_avg_price_ktwd_per_lot` | 前者由精確量值相除；後者由報表量值相除，來源縮位時只代表估算均價 |
 
-目前 TWSE 月報提供股／元量值，因此兩組數字相同。TPEx 月報只提供整數張／仟元，沒有足夠資料核實底層的逐股、逐元數值；[monthly.py](../src/etf_agent/providers/monthly.py) 的 `parse_table()` 因而採**本專案的保守精度政策**，將核心精確股數／元金額留空，精確均價也隨之留空。[history.py](../src/etf_agent/history.py) 仍把報表量值輸出至 `reported_*`，沒有丟掉成交資訊。這是目前 TPEx 月報來源的限制，不是所有上櫃資料都不精確。
+目前 TWSE 月報提供股／元量值，因此兩組數字相同。TPEx 月報只提供整數張／仟元，沒有足夠資料核實底層的逐股、逐元數值；[monthly.py](../src/etf_agent/sub_agents/test_agent/providers/monthly.py) 的 `parse_table()` 因而採**本專案的保守精度政策**，將核心精確股數／元金額留空，精確均價也隨之留空。[history.py](../src/etf_agent/sub_agents/test_agent/history.py) 仍把報表量值輸出至 `reported_*`，沒有丟掉成交資訊。這是目前 TPEx 月報來源的限制，不是所有上櫃資料都不精確。
 
 以 5274 的 2025-09-01 原表為例：`成交張數=356`、`成交仟元=1785269`。閱讀 CSV 保存 `reported_volume_lots=356`、`reported_amount_ktwd=1785269`，估算均價為 `1785269 ÷ 356 = 5014.80056180` 千元／張。前三個精確欄位空白表示「此來源不足以提供精確值」，**不代表零成交、股票不能交易或 CSV 換算失敗**。也不要把空欄填 0，或直接複製 reported 值至精確欄。
 
@@ -377,7 +377,7 @@ CSV 的兩個均價欄位使用 `Decimal`、50 位計算精度，再以 `ROUND_H
 | 大盤行情 | 市場研判與市場因子 | 尚未接入 |
 | 法人、營收等資料表 | 新增這些因子時才加入，依公告與版本時間取用 | 未實作 |
 | `FeatureTable`／排名產物 | 模型接收計算後的因子、排名與證據；研究模型另需標籤與時間切分 | 原價三因子與加權排名已有歷史分析產物，尚未接入正式合約；來源／觀察證據鏈及訓練待完成 |
-| `AccountSnapshot`／帳戶 JSON | 策略、配置及風控需知道完整持股與現金 | 僅有人工 demo／合約，尚無正式帳務 |
+| `AccountSnapshot`／帳戶 JSON | 策略、配置及風控需知道完整持股與現金 | 已有獨立 JSON 匯入、歷史收盤市值核對與 10 億元 demo；正式帳務待實作 |
 
 先前已同意將**每日表作後續核心讀取入口**，每股每月表作歷史查閱視圖，並完成兩種視圖的匯出。同一批 raw 經同一清洗結果產生兩種表，不重複抓取；後續讀取器只用一種入口，不把兩種表同時合併，避免同股同日重複。日表方便每日更新及橫斷面排名，但 20 日動能仍須讀同股 21 個有效交易日，不能只讀單日日檔。
 
@@ -399,7 +399,7 @@ source_csv/2025-09/*_source.csv              # 原報表字串與單位，供來
 
 上述快取由 `.gitignore` 排除，連結是本機產物導覽；新 clone 沒有這些檔案，需先取得對應原始資料才能重輸出。它不是已建好的帳務資料庫或研究資料集。
 
-**下載、匯出與解析程式：** [history.py](../src/etf_agent/history.py) 的 `download_history_sample()` 負責兩檔樣本，`download_history_universe()` 負責 F05 全股票與快取核對，`_export_month()` 共用來源保存及日／月匯出，`export_history_sample()` 負責已存樣本的離線重輸出，`_write_prices()` 負責閱讀 CSV 單位轉換；[providers/http.py](../src/etf_agent/providers/http.py) 負責 HTTPS；[providers/twse.py](../src/etf_agent/providers/twse.py)、[providers/tpex.py](../src/etf_agent/providers/tpex.py) 各自建立官方歷史 URL 與讀取報表；[providers/monthly.py](../src/etf_agent/providers/monthly.py) 做日期、逗號、空值、單位及重複／價格檢查。這些來源原始欄位不進六種核心合約。
+**下載、匯出與解析程式：** [history.py](../src/etf_agent/sub_agents/test_agent/history.py) 的 `download_history_sample()` 負責兩檔樣本，`download_history_universe()` 負責 F05 全股票與快取核對，`_export_month()` 共用來源保存及日／月匯出，`export_history_sample()` 負責已存樣本的離線重輸出，`_write_prices()` 負責閱讀 CSV 單位轉換；[providers/http.py](../src/etf_agent/providers/http.py) 負責 HTTPS；[providers/twse.py](../src/etf_agent/sub_agents/test_agent/providers/twse.py)、[providers/tpex.py](../src/etf_agent/sub_agents/test_agent/providers/tpex.py) 各自建立官方歷史 URL 與讀取報表；[providers/monthly.py](../src/etf_agent/sub_agents/test_agent/providers/monthly.py) 做日期、逗號、空值、單位及重複／價格檢查。這些來源原始欄位不進六種核心合約。
 
 **程式位置：** [contracts.py](../src/etf_agent/contracts.py) 的 `PriceBar`（第 160 行）、`MarketSnapshot`（第 199 行）。
 
@@ -485,7 +485,7 @@ python -B -m etf_agent.cli history-universe --month 2025-09 --universe data/univ
 
 `--month` 必填；`--universe` 預設 `data/universe.csv`，可用 `--universe-manifest` 指定白名單來源紀錄。未提供 `--cache-manifest` 時請求全部 150 檔；部分成功快取只減少已成功來源，完整成功快取才可零 HTTP 重輸出。`--output` 預設 `data/cache/history_universe`，`--transport` 支援 auto／curl／urllib 且保留憑證驗證。
 
-**程式位置：** [history.py](../src/etf_agent/history.py) 的 `download_history_universe()`、`_read_cached_month()`、`_export_month()`；[cli.py](../src/etf_agent/cli.py) 的 `history-universe` 命令；逐日核對重用 [coverage.py](../src/etf_agent/coverage.py)。實際執行與驗收證據統一記於 [development_notes.md](../development_notes.md)。
+**程式位置：** [history.py](../src/etf_agent/sub_agents/test_agent/history.py) 的 `download_history_universe()`、`_read_cached_month()`、`_export_month()`；[cli.py](../src/etf_agent/cli.py) 的 `history-universe` 命令；逐日核對重用 [coverage.py](../src/etf_agent/coverage.py)。實際執行與驗收證據統一記於 [development_notes.md](../development_notes.md)。
 
 ## 官方排程日曆與價格視窗
 
@@ -529,7 +529,7 @@ python -B -m etf_agent.cli history-window-check --manifest data/cache/history_un
 
 第 13 批實際通過一項日曆年度測試與三項價格視窗測試，未重跑全套。後續原價因子分析見下方「因子與排名」；視窗完整不能替代公司行動、歷史可知時間或正式快照核實。
 
-**程式位置：** [calendar.py](../src/etf_agent/calendar.py) 的 `download_calendar()`／`load_calendar()`；[history_windows.py](../src/etf_agent/history_windows.py) 的 `check_history_windows()`／`write_window_report()`；命令由 [cli.py](../src/etf_agent/cli.py) 組合。
+**程式位置：** [calendar.py](../src/etf_agent/calendar.py) 的 `download_calendar()`／`load_calendar()`；[history_windows.py](../src/etf_agent/sub_agents/data_agent/history_windows.py) 的 `check_history_windows()`／`write_window_report()`；命令由 [cli.py](../src/etf_agent/cli.py) 組合。
 
 ## 帳戶與庫存
 
@@ -552,13 +552,21 @@ python -B -m etf_agent.cli history-window-check --manifest data/cache/history_un
 
 現金不得為負或大於 NAV，NAV 必須大於零；持股代碼不得重複，持股股數必須為正整數。`demo` 必須標記 `demo=true`、`reconciled=false`；`official_confirmed` 必須是非 demo、已核對且附 `origin_ref`。程式只檢查欄位一致性，沒有登入官方後台或確認該引用的真實性。
 
-### 已有 demo 與待完成
+`account-check` 載入一份獨立的 AccountSnapshot 1.0 JSON；股數用股、價格用元／股、現金／市值／NAV 用新臺幣元，Decimal 以十進位字串保存。它透過指定排名 metadata 的來源索引，只讀截至日期的一份歷史日表；核對輸入 hash、帳戶／排名／行情日期、白名單、市場、重複資料、有效收盤及來源／版本對應，不讀下一交易日行情。
 
-現有 fixture 是 25 檔人工測試帳：2891 為 60,000 股×假價格 50 元＝300 萬元；其餘 24 檔各 58,000 股×假價格 62.50 元，合計 8,700 萬元。股票 9,000 萬＋現金 1,000 萬＝NAV 1 億元。
+逐股市值為股數乘當日原始收盤；全持股可估值時，計算 NAV＝現金＋全股票市值、差額＝計算 NAV－輸入 NAV。缺行情持股仍保留代號與股數，該股價格／市值為 null；已估值小計可閱讀，完整股票市值、計算 NAV 與差額為 null，並列 BLOCK。帳戶日期或 NAV 不符保存診斷、exit 2；正常核對且基本期初限制通過為 exit 0。額外檢查持股 20～30 檔、2330 權重不超過 25%、其他個股不超過 10%、現金比 0～25%；這只是基本期初檢查，沒有完成 D-Plan 的全組合、委託或成交驗證。原持股合約允許零股，匯入時保留；本次 demo 建構採整張，委託整張限制留待交易批次。
 
-CLI 會使用 fixture 的前收重新核對這個等式，但 `AccountSnapshot` 本身沒有行情，因此不會自己重算 NAV。正式帳戶匯入、SQLite 帳本、成交／費用入帳、庫存更新、每日核對與重複入帳保護均尚待實作。SQLite 保存帳務／必要索引、JSON／CSV 保存行情與執行產物，是目前的儲存方向，還不是已建立的資料庫。
+每次另存 `account_snapshot.json`、`positions.csv`、`valuation.json`，保存帳戶、逐股估值、輸入與來源版本及資料問題。無法載入帳戶或行情來源的 scope／日期／hash／來源身分不符時，直接 exit 2，不建立估值報告；可解析的日表列錯誤則保存 BLOCK 診斷。即使 demo 算式相符，也維持 `demo=true`、`reconciled=false`、`submission_ready=false`。歷史原價的 `known_at` 尚未核實，不因核對成功就構造正式 MarketSnapshot。欄位、命令、實跑數值與限制見 [帳戶匯入與歷史市值核對](account.md)。
 
-**程式位置：** [contracts.py](../src/etf_agent/contracts.py) 的 `Position`（第 224 行）、`AccountSnapshot`（第 234 行）；[cli.py](../src/etf_agent/cli.py) 的 `load_demo()` 負責跨合約檢查及 demo NAV 核對。
+### demo 日期與待完成
+
+新 [account_demo_2025-09-30.json](../tests/fixtures/account_demo_2025-09-30.json) 沿用舊 fixture 的 25 個代號，以 9/30 歷史收盤與人工整張股數建構 10 億元期初 demo。每股 3,600 萬元預算、整張向下取整、餘額歸現金，是這份測試帳戶的建構方法；不代表模型已選股或採用等權投資策略。金額來源及基本限制依據見 [帳戶說明](account.md#demo-的日期與資金)。
+
+舊 [contracts_demo.json](../tests/fixtures/contracts_demo.json) 保持 2026-10-14 的人工假價與 1 億元 NAV，只供六種合約串接展示；與本次歷史帳戶分開。`AccountSnapshot` 本身沒有行情，不自行重算 NAV；跨資料估值由帳戶模組負責。
+
+正式帳戶來源核實、SQLite 帳本、成交／費用入帳、庫存更新、每日核對與重複入帳保護仍待實作。SQLite 保存帳務／必要索引、JSON／CSV 保存行情與執行產物，是儲存方向，還不是已建立的資料庫。後續決策以 2025-10-01 為演示決策日、9/30 為資料截止；在 Agent 決策與 D-Plan 生成並封存前，不下載或讀入 10/1 行情，效益驗證另列批次。
+
+**程式位置：** [contracts.py](../src/etf_agent/contracts.py) 的 `Position`、`AccountSnapshot`；[account.py](../src/etf_agent/sub_agents/account_agent/account.py) 的 `load_account_json()`、`load_history_closes()`、`value_account()`、`analyze_account()`、`write_account_report()`；[cli.py](../src/etf_agent/cli.py) 的 `account-check` 組合匯入／估值／匯出，`load_demo()` 另保留舊合約示例。
 
 ## 因子與排名
 
@@ -591,7 +599,7 @@ CLI 會使用 fixture 的前收重新核對這個等式，但 `AccountSnapshot` 
 
 每次另建 `data/cache/features/<as_of>/<執行版本>/`，只保存 `features.csv` 與 `metadata.json`，解釋集中在 docs。`feature_version` 按固定公式與輸入內容辨識，相同輸入可重算相同版本，執行時間與目錄另行保存。現有版本截至 2025-09-30 分析 146 檔、排除既有四檔；實際產物入口與重跑方式見 [專屬說明](factor_analysis.md#先看哪個檔案)。
 
-核心純計算為 [features.py](../src/etf_agent/features.py) 的 `calculate_price_features()`；`analyze_history_features()` 核對既有輸入並讀日表，`write_feature_analysis()` 保存產物。後續歷史排名讀取這份 metadata，見下一節。這份歷史分析尚未接入正式 `MarketSnapshot`／`FeatureTable`、完整 source→observation 證據鏈或投資模型。公司行動、歷史 `known_at` 與臨時休市未全面核實，原行情的 `return_close` 留空、`adjustment_status=unresolved` 與 `tradable=false` 維持原狀；缺失處理另列 checklist DATA-22。
+核心純計算為 [features.py](../src/etf_agent/sub_agents/data_agent/features.py) 的 `calculate_price_features()`；`analyze_history_features()` 核對既有輸入並讀日表，`write_feature_analysis()` 保存產物。後續歷史排名讀取這份 metadata，見下一節。這份歷史分析尚未接入正式 `MarketSnapshot`／`FeatureTable`、完整 source→observation 證據鏈或投資模型。公司行動、歷史 `known_at` 與臨時休市未全面核實，原行情的 `return_close` 留空、`adjustment_status=unresolved` 與 `tradable=false` 維持原狀；缺失處理另列 checklist DATA-22。
 
 ### 原價歷史加權排名
 
@@ -606,7 +614,7 @@ CLI 會使用 fixture 的前收重新核對這個等式，但 `AccountSnapshot` 
 | 來源與設定 | `input_feature_metadata`、`input_profile` 保留路徑／SHA-256，`profile` 保存完整設定；沿用 `feature_version`、`universe_version`、`calendar_version` 及每股 `source_metadata`，保存 `ranking_version`、單位及限制。 |
 | 股票集合／正式狀態 | 本次 146 檔排序，`excluded_stocks` 原樣保留四檔；已排名列 `analysis_included=true`、`formal_eligible=false`，共同 `submission_ready=false`。分析納入不能當成已確認可交易。 |
 
-每次另建 `data/cache/rankings/<as_of>/<執行版本>/`，保存 `rankings.csv` 與 `metadata.json`，相同輸入／設定可重算相同數值與排名版本。核心 [ranking.py](../src/etf_agent/ranking.py) 分為 `calculate_factor_rankings()` 純計算、`analyze_history_rankings()` 輸入組合與 `write_ranking_analysis()` 保存。排名器不依賴資料 adapter 或模型 SDK，正式資格與候選池仍需後續模組提供。
+每次另建 `data/cache/rankings/<as_of>/<執行版本>/`，保存 `rankings.csv` 與 `metadata.json`，相同輸入／設定可重算相同數值與排名版本。核心 [ranking.py](../src/etf_agent/sub_agents/data_agent/ranking.py) 分為 `calculate_factor_rankings()` 純計算、`analyze_history_rankings()` 輸入組合與 `write_ranking_analysis()` 保存。排名器不依賴資料 adapter 或模型 SDK，正式資格與候選池仍需後續模組提供。
 
 ### 待完成
 
@@ -644,11 +652,23 @@ generate(packet, draft_schema, run_dir) -> AgentResult
 
 `packet` 是凍結的輸入資料包，`draft_schema` 是內部草稿格式，`run_dir` 是這次執行的紀錄目錄。`AgentResult` 保存草稿、`provider`、實際模型版本、起訖時間、用量，以及原始回應／日誌路徑。未知資訊留 `null`；fixture 不可冒稱真實模型版本或用量。
 
-尚無實際 Codex／Claude provider、模型呼叫、完整決策 prompt 或凍結證據包。未來接 Claude 時實作新的 provider，維持 AgentDraft 輸出與相同下游風控；不把模型 SDK 放入配置或帳務。
+第 21 批新增 [WeightedAgentDraft 2.0 schema](../specs/internal/weighted_agent_draft.schema.json)：選股改為 `target_weight` 十進位字串，例如 `"0.04"` 是 NAV 的 4%；保留市場提案及完整原持股 review。每股須正權重、2330≤25%／其他≤10%，全部權重加現金精確等於 1；keep／rebalance 須列入選股，未選入的原持股須明示 exit。`validate_context()` 檢查候選、完整持股 review 及引用存在；第 22 批配置器另要求每股引用其凍結觀察，市場引用 O1，再機械推最終股數。`AgentResult` 同時接受兩版；舊 AgentDraft、conviction 與 fixture 格式保持相容。
 
-**程式位置：** [contracts.py](../src/etf_agent/contracts.py) 的 `MarketProposal`（第 296 行）、`Selection`（第 316 行）、`HeldReview`（第 331 行）、`AgentDraft`（第 345 行）；[agent/base.py](../src/etf_agent/agent/base.py) 的 `AgentResult`（第 12 行）與 `AgentProvider`（第 31 行）。
+`sub_agents/data_agent/` 只處理已保存歷史的視窗、因子、排名與來源，不讀帳戶、不抓資料。`test_agent/` 擁有行情下載、adapter與隔離評估；`review_previous_day` 在首日仍明示前績效缺失，封存後另有 `evaluate_trade_day` 核算T日收益與事後配置，兩種scope／日期分開。`account_agent/` 負責完整帳戶匯入、估值與回報；demo 可用現金估算假設保留額零，正式額度為null，跨日入帳待接。共用 [prices.py](../src/etf_agent/prices.py) 供應相同截止日行情。為維持packet1.0，`evidence.py` 組裝時才接回data_report的account_snapshot／account_valuation／held_positions及排名列持股欄位。既有輸入數值與schema不改；介面與每日設計見 [決策資料包](decision_workflow.md)／[每日流程](daily_workflow.md)。
 
-**JSON 格式位置：** [agent_draft.schema.json](../specs/internal/agent_draft.schema.json) 只描述上述草稿，不是六種合約合集，也不是官方 D-Plan。已檢查 JSON 可讀與結構內容；目前示例執行 Python 合約檢查，未安裝／執行 JSON Schema 驗證套件。
+第23批已接入 [CodexProvider](../src/etf_agent/decision/providers/codex_cli.py)，真實gpt-5.6-sol回覆25檔完整續抱草稿；CLI明確選用模型ID與服務端未知snapshot分開記錄，用量取實際事件。完整內部schema與候選／全持股／O引用在本地驗證，遠端schema投影不取代本地限制。Claude仍未實作，未來沿同一草稿與下游風控介面接入，不把模型SDK放入配置或帳務。
+
+[pipeline](../src/etf_agent/pipeline.py) 重新取得九月行情並重建四角色輸入；[decision_runner](../src/etf_agent/decision/runner.py) 只接凍結packet，控制初次及最多一次必要修正，不取得10/1行情。shared workspace以同run相對路徑指向資料、帳戶、回顧、真實模型回覆與計畫。核心1.0及WeightedAgentDraft2.0合約不變；實際流程、封存計畫与19項相關檢查見 [決策工作流](decision_workflow.md#第-23-批刷新實跑與模型狀態)。
+
+第24批新增檢查視圖，JSON及上述核心合約不變：[reports.write_csv_view](../src/etf_agent/reports.py) 保存UTF-8 BOM、Decimal原字串、未知空欄。準備階段附六CSV（候選／缺件／原持股／資金／檢討狀態／建議），共14檔／13artifact hashes；編譯階段附五CSV（原持股與新股決策／委託／完整投影／財務／驗證），共16檔／15hash。各層workspace列相對路徑，CSV不回寫股數、因子權重或帳務。空建議／空委託僅表頭，退出股在投影仍保留target0。
+
+第27批新增D-Plan Markdown檢查視圖：新compiled run在上述JSON／CSV之外保存與計畫同名的`.md`（候選為dplan_candidate.md），共17檔／16artifact hashes。`workspace.files.plan_markdown`與`manifest.plan_markdown_file`列出相對檔名，Markdown hash亦在artifact_sha256。內容直接讀同份計畫／配置／驗證與原草稿，保留精確字串、未知與BLOCK，不改官方JSON／股數／策略或再呼叫模型；舊凍結run不回寫。
+
+同日弱期初由build-demo-account取9/30综合末25名、每股3600萬元整張预算，總NAV10億元；這是明示人工輸入情境，不是新投資策略或績效證據。prepare-decision --workspace-root只重用指定九月shared run、替換新帳戶並重新凍結角色輸入，禁止讀舊決策或10/1行情。最新真模型15退出／10新買／10續抱與檢查結果見 [第24批](decision_workflow.md#第-24-批弱期初重新決策實跑)；前批的舊模型產物按使用者明確要求刪除，歷史文件不代表檔案仍存在。
+
+**程式位置：** [contracts.py](../src/etf_agent/contracts.py) 的 `MarketProposal`（第 296 行）、`Selection`（第 316 行）、`HeldReview`（第 331 行）、`AgentDraft`（第 345 行）；[agent/base.py](../src/etf_agent/decision/providers/base.py) 的 `AgentResult`（第 12 行）與 `AgentProvider`（第 31 行）。
+
+**JSON 格式位置：** [agent_draft.schema.json](../specs/internal/agent_draft.schema.json) 只描述舊草稿，不是六種合約合集或官方 D-Plan；新草稿使用 2.0 schema。第 22 批已在 `.venv` 安裝 jsonschema 4.26.0；`compile-plan` 同時執行凍結草稿 schema、Python 合約及官方 D-Plan schema 檢查，旧 `contracts-demo` 保持純合約展示。
 
 ## 配置與風控
 
@@ -662,11 +682,11 @@ generate(packet, draft_schema, run_dir) -> AgentResult
 
 各股內部權重在 0～1 且代碼不重複，股票權重加現金須**精確等於 1**。`validate_context()` 要求配置股票集合恰好等於「全部原持股∪本次選股」，退出股亦不可漏列。
 
-`allocation_method` 可記錄 `fixture`、`equal_weight`、`capped_score_inverse_vol`；列有方法名稱不代表計算器已完成。目前示例固定是 `fixture`。
+`allocation_method` 可記錄 `fixture`、`equal_weight`、`capped_score_inverse_vol`、`agent_target_weights`。第 22 批 [portfolio.py](../src/etf_agent/decision/portfolio.py) 已實作 agent_target_weights：包含全部原持股／選入股／退出股，精確官方 floor、delta、四種 action 與零差額續抱。keep 保留原股數且要求提案推導股數相符；意圖不符或零股 BLOCK，不手改股數。
 
 ### 待完成
 
-真正的等權／受限制配置、單股／產業／換手風控、最終持股數、費用、賣出可用股數、官方股數公式與委託生成都尚未實作。內部權重 0～1 的檢查不能替代官方個股上限。最終股數須由程式依前收、NAV、目標權重與實際庫存計算，模型不得覆寫。
+基本風控已計算費用後 cash／NAV、完整正持股數、每股權重與現金比、超賣、千股、委託數量、淨流向及宣告現金區間。買賣手續費 0.1425%、賣出稅 0.3%；Decimal 精確 demo 估算不取整，現金與權重分母為費後預估 NAV，正式取整／server 口徑仍未確認。不是 10/1 實際成交，不更新原帳戶。分數／波動配置、自訂產業／換手、壓力情境、有限模型修訂与帳務仍待完成。
 
 以 demo NAV 1 億、假前收 50 元、目標 4% 手算，2891 目標為 80,000 股，比原先 60,000 股多 20,000 股；這只是解讀例子，現有示例不執行該股數推導、費用或成交。
 
@@ -678,7 +698,9 @@ generate(packet, draft_schema, run_dir) -> AgentResult
 
 `ValidationReport` 是**檢查結果單**，不是交易計畫本身。每筆 `ValidationCheck` 保存檢查 ID、`PASS/WARN/BLOCK`、是否通過、說明及相關資料 ID。報告另外保存檢查範圍、demo／formal 模式、官方規則確認、帳戶核對、真實 Agent 決策與 `submission_ready`。
 
-`scope=contract_only` 表示只檢查內部合約；`dplan_local` 預留本地 D-Plan 檢查；`official` 預留官方檢查結果。後兩個名稱只是格式可接受的值，尚未有相應驗證器。
+`scope=contract_only` 表示只檢查內部合約；第 22 批 [validation.py](../src/etf_agent/decision/validation.py) 已提供 dplan_local demo 檢查，與 `ValidationReport` 的舊展示區分；official 仍待主辦方驗證器。官方 schema／真實日期／時區、連續 ID／引用、完整持股、股數與序列化後整張邊界、超賣、財務／姿態與 funding 缺口都由程式重算。portfolio BLOCK 會保留，舊 PASS 不能取代當前 plan 重驗；有完整凍結事實時，O 數字／文字／來源身份也逐一對回資料包。
+
+[dplan.py](../src/etf_agent/decision/dplan.py)／`compile-plan` 保存 D-Plan 候選、投影、驗證、共享角色索引與實跑程式內容 hash；沒有真實模型資訊時 schema BLOCK，不能填造模型名稱。人工流程檔保留 dplan_candidate.json，真實模型與本地驗證皆通過才命名有效 demo D-Plan；仍保持 submission_ready=false。source content_as_of 使用日表日期末 23:59:59 描述截至當日，是明示 demo 政策，不能充作歷史 published_at／known_at。
 
 ### 已實作檢查
 
@@ -689,6 +711,14 @@ generate(packet, draft_schema, run_dir) -> AgentResult
 D-Plan 編譯器、[F04 官方 schema](../specs/official/04_D-Plan.schema_v4.2.json) 的套件驗證，以及完整引用鏈、股數、超賣、資金調度、現金／姿態、全組合限制等語意檢查尚未完成。實作依據是 [F07 D-Plan 指南](../specs/official/07_D-Plan_guide_v4.2.md)；內部合約不能任意加進官方 JSON 的欄位。
 
 **程式位置：** [contracts.py](../src/etf_agent/contracts.py) 的 `ValidationCheck`（第 397 行）、`ValidationReport`（第 406 行）。
+
+## 隔離的收益評估
+
+第25批新增獨立 `isolated_post_decision_evaluation` 報告1.0，沒有變更 AccountSnapshot 1.0、WeightedAgentDraft 2.0 或已封存的首日 previous_trade_review 報告。`decision_as_of` 為9/30，報告 `as_of/data_through` 為10/1，`decision_input_allowed=false`；輸出只能位於原決策根目錄以外，原hash前後核對。
+
+`providers/daily.py` 統一指定單日行情：`ticker/market/trade_date`、`close_twd_per_share`、`volume_shares`、`amount_twd`、`vwap_twd_per_share`、`trading_status`與來源hash。價格／金額十進位字串、股數整數，零成交由status保留，未知值為null；不使用網站顯示的取整均價。閱讀CSV亦使用股與元，與歷史閱讀CSV4.0的張／千元不同，欄名明示。
+
+`evaluation.simulate` 接收完整期初AccountSnapshot與固定委託，按官方當日量值均價計费稅，收盤估NAV；缺成交不執行，缺持股估價總NAV／收益為null，原股保留。成功另輸出 `status=simulated/demo=true/reconciled=false` 的AccountSnapshot，不回寫期初或正式庫存。三種情境與8份UTF8BOM CSV、全候選整數最佳化及浮點／Decimal重驗，見 [隔離評估合約與操作](evaluation.md)。SQLite、重複入帳、官方成交／股數／cash/NAV核對尚未實作。
 
 ## 研究切分與資料版本
 
@@ -741,6 +771,8 @@ fixture 的示例計畫如下：
 它會檢查行情／帳戶／因子的日期與快照 ID、資料版本、完整持股 review、配置覆蓋，以及「現金＋持股前收市值＝NAV」。這是共用格式的離線串接，不是因子→真實模型→D-Plan 的完整投資流程。
 
 fixture 假設決策日為 2026-10-15、前日為 2026-10-14，截止時間是自訂測試值，尚未核對真實市場日曆。26 列行情是 25 檔前收，加上 2891 的 2026-10-13 一列，用來展示多日格式；沒有完整 21 日序列。帳戶、因子、草稿都是人工測試值；模型版本與用量為 `null`，沒有真實投資模型呼叫。下載的歷史 CSV 不會自動取代此 fixture。
+
+獨立帳戶另用 `account-check`，以既有排名的來源索引接指定截止日的收盤價；輸入不含 fixture 的其他七種資料。它與舊合約示例的日期、假價及資金分開，命令與輸出說明集中在 [帳戶匯入](account.md#執行方式)。
 
 ### 重跑與驗收
 

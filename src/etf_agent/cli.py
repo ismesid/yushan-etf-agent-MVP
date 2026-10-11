@@ -8,18 +8,22 @@ import sys
 from decimal import Decimal
 from pathlib import Path
 
-from etf_agent.agent.base import AgentResult
+from etf_agent.sub_agents.account_agent.account import AccountError, analyze_account, write_account_report
+from etf_agent.decision.providers.base import AgentResult
 from etf_agent.calendar import CalendarError, download_calendar, load_calendar
 from etf_agent.contracts import (
     AccountSnapshot, AgentDraft, ContractError, DatasetSplitPlan, FeatureTable,
-    MarketSnapshot, PortfolioProposal, ValidationReport,
+    MarketSnapshot, PortfolioProposal, ValidationReport, WeightedAgentDraft,
 )
 from etf_agent.coverage import PriceCoverageError, check_daily_prices, write_coverage_report
-from etf_agent.features import FeatureAnalysisError, analyze_history_features, write_feature_analysis
-from etf_agent.history import download_history_sample, download_history_universe, export_history_sample
-from etf_agent.history_windows import HistoryWindowError, check_history_windows, write_window_report
-from etf_agent.providers.monthly import HistoryDataError
-from etf_agent.ranking import RankingError, analyze_history_rankings, write_ranking_analysis
+from etf_agent.evidence import EvidenceError, prepare_decision, write_decision_packet
+from etf_agent.sub_agents.data_agent.features import FeatureAnalysisError, analyze_history_features, write_feature_analysis
+from etf_agent.sub_agents.test_agent.history import download_history_sample, download_history_universe, export_history_sample
+from etf_agent.sub_agents.data_agent.history_windows import HistoryWindowError, check_history_windows, write_window_report
+from etf_agent.sub_agents.test_agent.providers.monthly import HistoryDataError
+from etf_agent.sub_agents.data_agent.ranking import RankingError, analyze_history_rankings, write_ranking_analysis
+from etf_agent.sub_agents.data_agent import DataAgentError
+from etf_agent.sub_agents.test_agent import ReviewReportError
 from etf_agent.universe import UniverseError, load_universe
 
 
@@ -157,8 +161,41 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
-    parser = argparse.ArgumentParser(description="玉山 ETF MVP：資料合約、官方白名單、歷史資料與因子排名")
+    parser = argparse.ArgumentParser(description="玉山 ETF MVP：資料合約、歷史分析與帳戶市值核對")
     commands = parser.add_subparsers(dest="command", required=True)
+    evaluate = commands.add_parser("evaluate-plan", help="test_agent封存後隔離取得交易日行情，核算收益與全候選事後最佳化")
+    evaluate.add_argument("--workspace", type=Path, required=True, help="真實決策已驗收的共用workspace.json")
+    evaluate.add_argument("--output", type=Path, default=Path("data/cache/evaluation_quarantine"))
+    evaluate.add_argument("--market-manifest", type=Path, help="重播明確指定的隔離行情，不新下載")
+    evaluate.add_argument("--transport", choices=("auto", "urllib", "curl"), default="auto")
+    evaluate.add_argument("--time-limit", type=float, default=120, help="事後整數配置求解秒數上限")
+    evaluate.add_argument("--json", action="store_true")
+    refresh = commands.add_parser("refresh-decision", help="重新下載九月資料並建立四個角色共用的歷史決策輸入")
+    refresh.add_argument("--month", default="2025-09")
+    refresh.add_argument("--as-of", default="2025-09-30")
+    refresh.add_argument("--trade-date", default="2025-10-01")
+    refresh.add_argument("--account", type=Path, required=True)
+    refresh.add_argument("--calendar", type=Path, required=True)
+    refresh.add_argument("--profile", type=Path, default=Path("config/ranking.json"))
+    refresh.add_argument("--universe", type=Path, default=Path("data/universe.csv"))
+    refresh.add_argument("--universe-manifest", type=Path)
+    refresh.add_argument("--output", type=Path, default=Path("data/cache/integrated_runs"))
+    refresh.add_argument("--json", action="store_true")
+    decide = commands.add_parser("decide-plan", help="以凍結資料呼叫真實Codex，驗證並封存demo計畫")
+    decide.add_argument("--packet", type=Path, required=True)
+    decide.add_argument("--output", type=Path, required=True)
+    decide.add_argument("--team-id", default="DEMO")
+    decide.add_argument("--max-attempts", type=int, choices=(1, 2), default=2)
+    decide.add_argument("--model", help="本次明確選用的模型ID；不更改本機全域設定")
+    decide.add_argument("--json", action="store_true")
+    demo_account = commands.add_parser("build-demo-account", help="以九月三因子末25名建立10億元人工期初帳戶與檢查CSV")
+    demo_account.add_argument("--ranking-metadata", type=Path, required=True)
+    demo_account.add_argument("--as-of", default="2025-09-30")
+    demo_account.add_argument("--universe", type=Path, default=Path("data/universe.csv"))
+    demo_account.add_argument("--universe-manifest", type=Path)
+    demo_account.add_argument("--output", type=Path, default=Path("data/cache/account_demo"))
+    demo_account.add_argument("--account-output", type=Path, help="明確指定要寫入或替換的demo帳戶JSON")
+    demo_account.add_argument("--json", action="store_true")
     demo = commands.add_parser("contracts-demo", help="讀取fixture、檢查合約並展示demo帳")
     demo.add_argument("--fixture", type=Path, default=Path("tests/fixtures/contracts_demo.json"))
     demo.add_argument("--json", action="store_true", help="以JSON輸出示例摘要")
@@ -206,7 +243,210 @@ def main(argv: list[str] | None = None) -> int:
     rankings.add_argument("--feature-metadata", required=True, type=Path, help="history-features 保存的 metadata.json")
     rankings.add_argument("--profile", type=Path, default=Path("config/ranking.json"), help="統一因子方向與權重設定")
     rankings.add_argument("--output", type=Path, default=Path("data/cache/rankings"))
+    account_check = commands.add_parser("account-check", help="離線匯入獨立帳戶 JSON，以指定歷史收盤核對市值與 NAV")
+    account_check.add_argument("--account", required=True, type=Path, help="AccountSnapshot 1.0 JSON；非整包合約 fixture")
+    account_check.add_argument("--ranking-metadata", required=True, type=Path, help="既有排名 metadata 的日表來源與驗收 hash")
+    account_check.add_argument("--as-of", required=True, help="明確指定估值日 YYYY-MM-DD；只讀該日日表")
+    account_check.add_argument("--universe", type=Path, default=Path("data/universe.csv"))
+    account_check.add_argument("--universe-manifest", type=Path)
+    account_check.add_argument("--output", type=Path, default=Path("data/cache/account_checks"))
+    account_check.add_argument("--json", action="store_true", help="以 JSON 輸出完整核對報告與產物路徑")
+    prepare = commands.add_parser("prepare-decision", help="離線整合資料與前日檢視，凍結主 Agent 的歷史 demo 輸入")
+    prepare.add_argument("--account", required=True, type=Path)
+    prepare.add_argument("--ranking-metadata", required=True, type=Path)
+    prepare.add_argument("--as-of", required=True, help="市場資料截止日，不讀較晚行情")
+    prepare.add_argument("--trade-date", required=True, help="預定決策日，須晚於資料截止日")
+    prepare.add_argument("--universe", type=Path, default=Path("data/universe.csv"))
+    prepare.add_argument("--universe-manifest", type=Path)
+    prepare.add_argument("--output", type=Path, default=Path("data/cache/decision_packets"))
+    prepare.add_argument("--workspace-root", type=Path, help="重用指定shared run九月資料，替換帳戶並更新共用索引")
+    prepare.add_argument("--json", action="store_true")
+    compile_plan = commands.add_parser("compile-plan", help="將權重草稿編譯為前收估算與D-Plan候選，執行本地驗證")
+    compile_plan.add_argument("--packet", required=True, type=Path)
+    compile_plan.add_argument("--draft", required=True, type=Path)
+    compile_plan.add_argument("--agent-metadata", type=Path, help="實際模型執行資訊；缺少時保存BLOCK，不填假模型")
+    compile_plan.add_argument("--decision-source", choices=("fixture", "real"), default="fixture")
+    compile_plan.add_argument("--team-id", default="DEMO")
+    compile_plan.add_argument("--output", type=Path, default=Path("data/cache/plans"))
+    compile_plan.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
+    if args.command == "build-demo-account":
+        from etf_agent.sub_agents.account_agent.account import build_weak_demo_account, write_weak_demo_account
+        try:
+            universe = load_universe(args.universe, manifest_path=args.universe_manifest)
+            report = build_weak_demo_account(args.ranking_metadata, as_of=args.as_of, universe=universe)
+            outputs = write_weak_demo_account(report, args.output)
+            if args.account_output is not None:
+                args.account_output.parent.mkdir(parents=True, exist_ok=True)
+                args.account_output.write_bytes(Path(outputs["account_json"]).read_bytes())
+                outputs["fixture_account_json"] = str(args.account_output.resolve())
+        except (AccountError, UniverseError, OSError, ValueError) as exc:
+            print(f"弱期初帳戶建立失敗：{exc}", file=sys.stderr)
+            return 2
+        print(json.dumps({"construction": report["construction"],
+                          "account": report["account_snapshot"], "outputs": outputs},
+                         ensure_ascii=False, indent=2, allow_nan=False))
+        return 0
+    if args.command == "evaluate-plan":
+        from etf_agent.sub_agents.test_agent import evaluate_trade_day
+        try:
+            result = evaluate_trade_day(args.workspace, output_dir=args.output,
+                                        cache_manifest=args.market_manifest, transport=args.transport,
+                                        time_limit=args.time_limit,
+                                        progress=lambda message: print(message, file=sys.stderr, flush=True))
+        except ImportError:
+            print('缺少隔離評估套件，使用 .venv 安裝專案的 evaluation 額外依賴。', file=sys.stderr)
+            return 2
+        except (OSError, ValueError, KeyError) as exc:
+            print(f"隔離評估未完成：{exc}", file=sys.stderr)
+            return 2
+        print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
+        return 0 if result["hindsight_status"] in ("optimal", "feasible_limit_reached") else 4
+    if args.command == "decide-plan":
+        from etf_agent.decision.providers.codex_cli import CodexProvider, CodexProviderError
+        from etf_agent.decision.runner import DecisionRunError, decide_plan
+        try:
+            result = decide_plan(args.packet, output_dir=args.output,
+                                 project_root=Path(__file__).resolve().parents[2],
+                                 team_id=args.team_id, max_attempts=args.max_attempts,
+                                 provider=CodexProvider(model=args.model) if args.model else None,
+                                 progress=lambda message: print(message, file=sys.stderr, flush=True))
+        except (CodexProviderError, DecisionRunError, OSError, ValueError) as exc:
+            print(f"真實決策未完成：{exc}", file=sys.stderr)
+            return 2
+        print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
+        return 0 if result["accepted_demo_plan"] else 4
+    if args.command == "refresh-decision":
+        from etf_agent.pipeline import PipelineError, refresh_prepare
+        def refresh_progress(completed, total, entry):
+            print(f"[{completed}/{total}] {entry['market']} {entry['ticker']} {entry['status']}",
+                  file=sys.stderr, flush=True)
+        try:
+            universe = load_universe(args.universe, manifest_path=args.universe_manifest)
+            result = refresh_prepare(month=args.month, as_of=args.as_of, trade_date=args.trade_date,
+                                     account_path=args.account, output_dir=args.output, universe=universe,
+                                     calendar_path=args.calendar, profile_path=args.profile,
+                                     progress=refresh_progress)
+        except (PipelineError, UniverseError, OSError, ValueError) as exc:
+            print(f"重新取得決策資料失敗：{exc}", file=sys.stderr)
+            return 2
+        print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
+        return 0 if result["demo_decision_ready"] else 2
+    if args.command == "compile-plan":
+        from etf_agent.decision.dplan import DPlanError, compile_dplan, load_prepared_packet, write_compiled_plan
+        from etf_agent.decision.portfolio import PortfolioError
+        try:
+            from jsonschema import Draft202012Validator, FormatChecker
+            packet = load_prepared_packet(args.packet)
+            schema_file = args.packet.parent / "weighted_agent_draft.schema.json"
+            manifest = json.loads((args.packet.parent / "manifest.json").read_text(encoding="utf-8"))
+            import hashlib
+            schema_body = schema_file.read_bytes()
+            if hashlib.sha256(schema_body).hexdigest() != manifest["artifact_sha256"][schema_file.name]:
+                raise DPlanError("凍結草稿schema hash不一致")
+            schema = json.loads(schema_body.decode("utf-8"))
+            raw = json.loads(args.draft.read_text(encoding="utf-8-sig"))
+            errors = sorted(Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(raw), key=lambda e: str(e.path))
+            if errors:
+                raise DPlanError(f"草稿schema錯誤：{errors[0].message}")
+            draft = WeightedAgentDraft.from_dict(raw)
+            metadata = json.loads(args.agent_metadata.read_text(encoding="utf-8-sig")) if args.agent_metadata else None
+            if metadata is not None and type(metadata) is not dict:
+                raise DPlanError("模型metadata須為JSON object")
+            result = compile_dplan(packet, draft, agent_metadata=metadata, team_id=args.team_id,
+                                   decision_source=args.decision_source)
+            outputs = write_compiled_plan(result, args.output, project_root=Path(__file__).resolve().parents[2],
+                                           packet=packet, draft=draft)
+        except ImportError:
+            print("缺少jsonschema；請使用已安裝依賴的 .venv\\Scripts\\python.exe。", file=sys.stderr)
+            return 2
+        except (DPlanError, PortfolioError, ContractError, OSError, ValueError, KeyError) as exc:
+            print(f"計畫編譯錯誤：{exc}", file=sys.stderr)
+            return 2
+        if args.json:
+            print(json.dumps({"result": result, "outputs": outputs}, ensure_ascii=False, indent=2, allow_nan=False))
+        else:
+            finance, validation = result["portfolio"], result["validation"]
+            print(f"{packet['trade_date']} 歷史demo；委託 {len(finance['orders'])} 筆、續抱 {len(finance['no_trade_tickers'])} 檔。")
+            print(f"前收預估買進 {finance['buy_notional_twd']} 元、賣出 {finance['sell_notional_twd']} 元；"
+                  f"手續費 {finance['fees_twd']} 元、稅 {finance['tax_twd']} 元。")
+            print(f"預估現金 {finance['cash_after_twd']} 元、NAV {finance['projected_nav_twd']} 元。")
+            print(f"官方結構：{'PASS' if validation['schema_ok'] else 'BLOCK'}；"
+                  f"本地語意：{'PASS' if validation['semantic_ok'] else 'BLOCK'}；submission_ready=false。")
+            for issue in validation.get("issues", []):
+                if issue.get("severity") == "BLOCK":
+                    print(f"BLOCK {issue.get('code', '')} {issue.get('message', '')}")
+            print(f"候選／demo計畫：{outputs['plan_json']}")
+            print(f"可讀決策說明：{outputs['plan_markdown']}")
+            print(f"驗證與版本：{outputs['validation_json']}；{outputs['manifest_json']}")
+            print(f"四個 agent 的計畫階段共用索引：{outputs['workspace_json']}")
+            print("未計算實際成交或績效，帳戶股數與現金沒有入帳更新。")
+        return 0 if result["validation"]["local_validation_ok"] else 4
+    if args.command == "prepare-decision":
+        try:
+            universe = load_universe(args.universe, manifest_path=args.universe_manifest)
+            if args.workspace_root is not None:
+                from etf_agent.pipeline import prepare_cached
+                outputs = prepare_cached(account_path=args.account, ranking_metadata_path=args.ranking_metadata,
+                                         as_of=args.as_of, trade_date=args.trade_date,
+                                         shared_run_root=args.workspace_root, universe=universe)
+                packet = json.loads(Path(outputs["packet_json"]).read_text(encoding="utf-8"))
+            else:
+                packet = prepare_decision(args.account, args.ranking_metadata, as_of=args.as_of,
+                                          trade_date=args.trade_date, universe=universe)
+                outputs = write_decision_packet(packet, args.output,
+                                                project_root=Path(__file__).resolve().parents[2])
+        except (AccountError, DataAgentError, EvidenceError, ReviewReportError, UniverseError, OSError, ValueError) as exc:
+            print(f"決策資料準備錯誤：{exc}", file=sys.stderr)
+            return 2
+        if args.json:
+            print(json.dumps({"packet": packet, "outputs": outputs}, ensure_ascii=False, indent=2, allow_nan=False))
+        else:
+            data = packet["data_report"]
+            print(f"決策日 {packet['trade_date']}；市場資料截止 {packet['as_of']}；離線 historical demo。")
+            print(f"data_agent：{len(data['rankings'])} 檔排名；{len(packet['allowed_tickers'])} 檔 demo 候選；"
+                  f"完整保留 {len(packet['held_tickers'])} 檔原持股；{len(data['excluded_stocks'])} 檔排除沿用原紀錄。")
+            print(f"test_agent：{packet['review_report']['status']}；尚無前日交易績效，建議為空。")
+            print(f"account_agent：現金 {packet['account_report']['cash_twd']} 元；"
+                  f"估算可用資金 {packet['account_report']['estimated_available_cash_twd']} 元；完整股數已保存。")
+            print(f"NAV {data['account_valuation']['input_nav_twd']} 元；差異 {data['account_valuation']['nav_difference_twd']} 元。")
+            print(f"內部來源系列 {len(packet['sources'])} 組；觀察 {len(packet['observations'])} 筆；"
+                  "執行 compile-plan 時會裁取引用並檢查官方上限。")
+            print(f"demo 決策輸入：{'可用' if packet['demo_decision_ready'] else '未通過'}；尚未呼叫模型或產生 D-Plan。")
+            print(f"凍結資料包：{outputs['packet_json']}")
+            print(f"版本與 hash：{outputs['manifest_json']}")
+            print(f"四個 agent 的共用索引：{outputs['workspace_json']}")
+            print("說明：docs/decision_workflow.md；formal_eligible=false、submission_ready=false。")
+        return 0 if packet["demo_decision_ready"] else 2
+    if args.command == "account-check":
+        try:
+            universe = load_universe(args.universe, manifest_path=args.universe_manifest)
+            report = analyze_account(args.account, args.ranking_metadata, as_of=args.as_of, universe=universe)
+            outputs = write_account_report(report, args.output)
+        except (AccountError, UniverseError, OSError) as exc:
+            print(f"帳戶匯入／歷史估值錯誤：{exc}", file=sys.stderr)
+            return 2
+        success = report["valuation_ok"] and report["initial_constraints"]["passed"]
+        if args.json:
+            print(json.dumps({"report": report, "outputs": outputs}, ensure_ascii=False, indent=2, allow_nan=False))
+        else:
+            print(f"截至 {report['as_of']}：完整保留 {report['holdings_count']} 檔原持股；帳戶狀態 {report['account_status']}。")
+            print(f"現金 {report['cash_twd']} 元；股票總市值 {report['stock_value_twd'] or '未知'} 元；"
+                  f"已估值小計 {report['known_stock_value_twd']} 元。")
+            print(f"輸入 NAV {report['input_nav_twd']} 元；計算 NAV {report['calculated_nav_twd'] or '未知'} 元；"
+                  f"差異 {report['nav_difference_twd'] if report['nav_difference_twd'] is not None else '未知'} 元。")
+            print(f"算術核對：{'PASS' if report['valuation_ok'] else '未通過'}；"
+                  f"基本期初組合檢查：{'PASS' if report['initial_constraints']['passed'] else '未通過'}。")
+            for issue in report["issues"]:
+                if issue["severity"] == "BLOCK":
+                    print(f"BLOCK {issue.get('ticker') or ''} {issue['message']}")
+            warnings = sum(issue["severity"] == "WARN" for issue in report["issues"])
+            print(f"資料限制 {warnings} 項；完整原因保存於 JSON。")
+            print(f"獨立帳戶 JSON：{outputs['account_json']}")
+            print(f"逐股市值 CSV：{outputs['positions_csv']}")
+            print(f"核對報告 JSON：{outputs['report_json']}")
+            print("使用說明：docs/account.md；僅歷史估值，未確認官方庫存，submission_ready=false。")
+        return 0 if success else 2
     if args.command == "history-rankings":
         try:
             report = analyze_history_rankings(args.feature_metadata, profile_path=args.profile)

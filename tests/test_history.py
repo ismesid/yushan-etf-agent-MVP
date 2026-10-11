@@ -13,10 +13,10 @@ from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError
 
-from etf_agent.history import _write_prices, download_history_sample, export_history_sample
-from etf_agent.providers import tpex, twse
+from etf_agent.sub_agents.test_agent.history import _write_prices, download_history_sample, export_history_sample
+from etf_agent.sub_agents.test_agent.providers import tpex, twse
 from etf_agent.providers.http import HttpResponse, get_https
-from etf_agent.providers.monthly import HistoryDataError
+from etf_agent.sub_agents.test_agent.providers.monthly import HistoryDataError
 
 
 FETCHED_AT = datetime.fromisoformat("2026-10-11T15:00:00+08:00")
@@ -648,7 +648,7 @@ class HistoryOutputTests(unittest.TestCase):
             original_files = {path.relative_to(original_run): path.read_bytes()
                               for path in original_run.rglob("*") if path.is_file()}
             manifest_digest = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
-            with patch("etf_agent.history.get_https", side_effect=AssertionError("離線匯出不可發出 HTTP")) as fetch:
+            with patch("etf_agent.sub_agents.test_agent.history.get_https", side_effect=AssertionError("離線匯出不可發出 HTTP")) as fetch:
                 exported = export_history_sample(manifest_path, output)
             fetch.assert_not_called()
             self.assertTrue(exported["success"])
@@ -697,7 +697,7 @@ class HistoryOutputTests(unittest.TestCase):
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             raw_path = Path(original["run_dir"]) / manifest["sources"][0]["raw_path"]
             raw_path.write_bytes(raw_path.read_bytes() + b" ")
-            with patch("etf_agent.history.get_https", side_effect=AssertionError("不可重新抓取來掩蓋證據變動")) as fetch:
+            with patch("etf_agent.sub_agents.test_agent.history.get_https", side_effect=AssertionError("不可重新抓取來掩蓋證據變動")) as fetch:
                 with self.assertRaises(HistoryDataError):
                     export_history_sample(manifest_path, output)
             fetch.assert_not_called()
@@ -711,7 +711,7 @@ class HistoryOutputTests(unittest.TestCase):
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             del manifest["sources"][0]["raw_sha256"]
             manifest_path.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
-            with patch("etf_agent.history.get_https", side_effect=AssertionError("不可外部補齊缺漏證據")) as fetch:
+            with patch("etf_agent.sub_agents.test_agent.history.get_https", side_effect=AssertionError("不可外部補齊缺漏證據")) as fetch:
                 with self.assertRaises(HistoryDataError):
                     export_history_sample(manifest_path, output)
             fetch.assert_not_called()
@@ -731,7 +731,7 @@ class HistoryOutputTests(unittest.TestCase):
             raw_path.write_bytes(changed_body)
             source["raw_sha256"] = hashlib.sha256(changed_body).hexdigest()
             manifest_path.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
-            with patch("etf_agent.history.get_https", side_effect=AssertionError("不可外部補齊行情欄位")) as fetch:
+            with patch("etf_agent.sub_agents.test_agent.history.get_https", side_effect=AssertionError("不可外部補齊行情欄位")) as fetch:
                 try:
                     exported = export_history_sample(manifest_path, output)
                 except HistoryDataError:

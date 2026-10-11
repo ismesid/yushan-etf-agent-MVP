@@ -11,13 +11,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 from etf_agent.coverage import PRICE_CSV_COLUMNS
-from etf_agent.features import (
+from etf_agent.sub_agents.data_agent.features import (
     FeatureAnalysisError,
     analyze_history_features,
     calculate_price_features,
     write_feature_analysis,
 )
-from etf_agent.history_windows import check_history_windows, write_window_report
+from etf_agent.sub_agents.data_agent.history_windows import check_history_windows, write_window_report
 from etf_agent.universe import Stock, Universe
 
 

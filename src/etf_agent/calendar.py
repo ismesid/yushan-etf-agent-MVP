@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 from uuid import uuid4
 
 from etf_agent.providers.http import DownloadError, get_https
-from etf_agent.providers.monthly import HistoryDataError, month_start
+from etf_agent.sub_agents.test_agent.providers.monthly import HistoryDataError, month_start
 
 
 class CalendarError(ValueError):

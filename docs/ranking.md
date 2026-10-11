@@ -28,7 +28,7 @@
 
 [config/ranking.json](../config/ranking.json) 集中設定，`factor_profile=price_only_v1`，啟用 `mom20`、`trend20`、`lowvol20`；權重以十進位字串保存，合計須為 1。此版只處理這個三因子組合；新增因子須同步計算與輸入合約，不能僅在設定寫入任意名稱。
 
-[ranking.py](../src/etf_agent/ranking.py) 的 `calculate_factor_rankings()` 是純計算，與讀檔及匯出分開。`analyze_history_rankings()` 讀取特徵 JSON／設定並保存輸入版本與 SHA-256；`write_ranking_analysis()` 建立新的結果目錄。[CLI](../src/etf_agent/cli.py) 組合這三步。全程使用 Python 標準庫，不抓行情、不呼叫投資模型，也不改帳戶。
+[ranking.py](../src/etf_agent/sub_agents/data_agent/ranking.py) 的 `calculate_factor_rankings()` 是純計算，與讀檔及匯出分開。`analyze_history_rankings()` 讀取特徵 JSON／設定並保存輸入版本與 SHA-256；`write_ranking_analysis()` 建立新的結果目錄。[CLI](../src/etf_agent/cli.py) 組合這三步。全程使用 Python 標準庫，不抓行情、不呼叫投資模型，也不改帳戶。
 
 ## 執行與重算
 
