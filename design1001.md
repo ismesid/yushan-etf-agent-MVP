@@ -198,13 +198,17 @@ ticker,name,market,industry,theme_tag
 
 `industry` 取官方公司基本資料，保存來源；沒有則用 `UNKNOWN`，不是叫模型猜。所有 UNKNOWN 視為同一產業桶，不能用未知分類繞過分散限制。若產業資料暫時全部缺失，40% 產業上限會使正常配置不可行：先補官方分類；只做流程演示時，可明確設定 `sector_check_enabled=false` 並在報告標示未實作分散，不能把該 run 說成通過了產業風控。正式策略若承諾產業分散，未補分類不得關閉後放行。
 
-`prices.csv`（長表，所有價格用元，數量用股，金額用新臺幣元）：
+內部價量合約（長表，價格用元／股，數量用股，金額用新臺幣元）：
 
 ```text
 trade_date,ticker,market,open,high,low,close_raw,volume_shares,amount_twd,source_key,price_valid,tradable
 ```
 
-內部另存 `return_close`（因子用）、`adjustment_status`、`known_at`、`fetched_at`、`raw_sha256`、資料版本。用原價計算因子的 P0 必須標示；如果 20 日區間有未處理除權息／分割，該股不新建倉，不把斷點當作價格訊號。既有持股須用已核實的公司行動與結算狀態管理，不能刪掉。
+2026-10-11 第 03 批同意閱讀 CSV 2.0 用張，後續依使用者選擇改為千元／張，目前為 **CSV 4.0**：上市／上櫃以 `market` 區分，每個交易日合併成一個日檔，另產生個股月表供查閱。`volume_lots`／`reported_volume_lots` 用張並保留小數，`*_ktwd_per_lot` 價格用千元／張，`*_ktwd` 成交金額用千元。例如 1165 元／股＝1165 千元／張，數字相同、單位不同；價格×張數直接得到千元金額。保留精確日均價及報表近似日均價；CSV 不放 `raw_sha256` 或原來源單位欄，來源網址、完整雜湊與原單位留在 manifest，以同批市場、股票與 `data_version` 回查。CSV 格式 4.0 共 22 欄，與內部合約 1.0 分開；內部 `volume_shares`、持股與官方 D-Plan 的 `shares` 仍用股，內部價格／金額仍用元／股與元。原始來源／原欄位 CSV 分開保存，逐欄解讀詳見 [價量 CSV 說明](docs/data_contracts.md#如何解讀-pricescsv)。
+
+內部另存 `return_close`（報酬計算用價格，不是報酬率）、`adjustment_status`、`known_at`（有證據的公開可知時間）、`fetched_at`（實際取得時間）、`raw_sha256`、資料版本。未知公開時間及未核實的報酬計算用價格留空，不以抓取時刻代填；雜湊用於來源一致性及版本核對，不是選股因子。用原價計算因子的 P0 必須標示；如果 20 日區間有未處理除權息／分割，該股不新建倉，不把斷點當作價格訊號。既有持股須用已核實的公司行動與結算狀態管理，不能刪掉。
+
+原報表 CSV 已依使用者要求改為 `source_csv/<YYYY-MM>/<market>_<ticker>_<YYYY-MM>_source.csv`，內容維持原樣。CSV 4.0 已產生 `daily/<YYYY-MM>/<YYYY-MM-DD>_prices.csv` 與 `monthly/<YYYY-MM>/<market>_<ticker>_<YYYY-MM>.csv`：兩種視圖由同一清洗結果生成，日表作後續核心入口、月表供查閱，讀取時不把兩者疊加。當前只有 2330／5274 的 42 列歷史樣本，21 個日檔每天 2 列；因子讀取器、150 檔覆蓋與真實每日排程尚未完成。另提議 `usable_from_trade_date` 表示自訂政策允許開始使用的交易日，不能取代真實 `known_at`；此日期欄位、真實日曆及計算仍未實作，不以固定加一天或檔案日期代替公開時點核實。詳見 [資料入口與日／月檔案](docs/data_contracts.md#資料使用入口與每日每月檔案)。
 
 `account_snapshot.json`（內部格式，不放進官方 D-Plan）：
 
@@ -227,7 +231,7 @@ trade_date,ticker,market,open,high,low,close_raw,volume_shares,amount_twd,source
 1. ticker 一律保留四位字串、market 分開；白名單外列不進候選池。
 2. ROC 日期加 1911；統一 ISO 日期，資料日與抓取時刻分開。
 3. 清除千分位逗號、空白；`--`、空字串等轉 null，不轉 0。
-4. 由 provider 對照單位後把張→股、千元→元。單位不明直接失敗，成交均價須以元／股得元。
+4. 由 provider 對照單位後把張→股、千元→元，供核心合約計算；閱讀 CSV 才轉為張、千元／張與千元。單位不明直接失敗，核心成交均價用元金額÷成交股數得到元／股；閱讀 CSV 用千元金額÷張數得到千元／張，兩者數字相同但單位不同。
 5. 日期×股票唯一；相同重複可去重，衝突値保留原始證據並 BLOCK，不能任選最新。
 6. close／OHLC 合理且價格 >0；有 OHLC 時 high≥low、open／close 在範圍內。缺欄位不得假造。
 7. 量值不可負；有量無金額、日期錯配、金額／股數所得均價明顯與原始範圍不符，列資料錯誤。
@@ -639,6 +643,8 @@ NAV_T      = cash_T + Σshares_T * official_close_raw_T
 ```
 
 買賣同用「官方成交金額÷成交股數」，不是 OHLC 的平均、也不是你自行把分鐘K加總的 VWAP。計算前嚴格檢查官方量值單位與統計口徑。
+
+閱讀 CSV 4.0 的 `avg_price_ktwd_per_lot` 採精確千元金額÷精確張數；TPEx 月報只提供縮位張／仟元，精確量值計算的均價留空，另列 `reported_avg_price_ktwd_per_lot` 供近似閱讀。CSV 均價用 Decimal 50 位精度計算，以 `ROUND_HALF_UP` 顯示 8 位小數；此為閱讀格式，不是官方結算取整規則。後續帳務須從原始精確量值重算，並核實交易範圍；T 日均價不能作 T 日盤前因子。
 
 無量、無金額、停牌／無有效價→訂單 `not_filled`，不改變股數與現金，儲存原因；實際平臺規則若不同須更新 adapter。缺行情／缺成交記錄是 `unknown`，不能假設未成交已確認。
 

@@ -1,4 +1,4 @@
-"""離線合約示例；正式行情、配置、D-Plan 與帳本尚待後續批次。"""
+"""離線合約示例、官方歷史下載與快取重新匯出；正式完整流程尚待後續批次。"""
 
 from __future__ import annotations
 
@@ -13,6 +13,8 @@ from etf_agent.contracts import (
     AccountSnapshot, AgentDraft, ContractError, DatasetSplitPlan, FeatureTable,
     MarketSnapshot, PortfolioProposal, ValidationReport,
 )
+from etf_agent.history import download_history_sample, export_history_sample
+from etf_agent.providers.monthly import HistoryDataError
 
 
 DEMO_TYPES = {
@@ -118,17 +120,63 @@ def _show_summary(summary: dict):
     print(f"驗證範圍：{summary['validation_scope']}；submission_ready=false")
 
 
+def _show_history_summary(result: dict, *, offline: bool = False):
+    if offline:
+        print("已保存官方歷史資料離線重新匯出（無新下載；fetched_at 保留原資料取得時間）")
+    else:
+        print("官方歷史資料下載樣本（真實價量；未核實公司行動／歷史已知時間，不是正式提交或回測結果）")
+    for source in result["sources"]:
+        if source["status"] == "success":
+            print(f"{source['market']} {source['ticker']}：{source['row_count']}列，"
+                  f"{source['first_trade_date']}～{source['last_trade_date']}；"
+                  f"原單位={source['units']['source_volume']}/{source['units']['source_amount']}；"
+                  f"精確量值={str(source['exact_volume_amount']).lower()}")
+            if source.get("fetched_at"):
+                print(f"原資料取得時間：{source['fetched_at']}")
+        else:
+            print(f"{source['market']} {source['ticker']}：失敗，{source.get('error')}", file=sys.stderr)
+    print(f"每日價量：{len(result['daily_prices'])}個日檔，共{result['row_count']}列；{result['daily_dir']}")
+    if result["daily_prices"]:
+        print(f"首個日檔：{result['daily_prices'][0]['prices_csv']}")
+    print(f"個股月表：{result['monthly_dir']}")
+    print(f"來源網址與原始資料索引：{result['manifest']}")
+    print("CSV成交量以張表示並保留小數；價格／均價為千元／張，金額為千元；原單位、網址與hash保存在manifest。")
+    print("日表與月表來自同一清洗結果；日表作讀取入口，月表供查閱，勿同時合併兩者。")
+    print("均價=成交金額÷成交量，顯示8位小數；TPEx reported均價是報表估算，精確量值／均價留空。")
+    print("CSV空欄代表未知，不能當成0；當日均價供收盤後參考，不可用於當日盤前決策。")
+
+
 def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
-    parser = argparse.ArgumentParser(description="玉山 ETF MVP：離線資料合約示例")
+    parser = argparse.ArgumentParser(description="玉山 ETF MVP：資料合約示例與官方歷史樣本")
     commands = parser.add_subparsers(dest="command", required=True)
     demo = commands.add_parser("contracts-demo", help="讀取fixture、檢查合約並展示demo帳")
     demo.add_argument("--fixture", type=Path, default=Path("tests/fixtures/contracts_demo.json"))
     demo.add_argument("--json", action="store_true", help="以JSON輸出示例摘要")
+    history = commands.add_parser("history-sample", help="連網下載2330與5274的一個已完成月份，保存原始資料與CSV")
+    history.add_argument("--month", required=True, help="歷史月份 YYYY-MM，如2025-09")
+    history.add_argument("--output", type=Path, default=Path("data/cache/history_sample"))
+    history.add_argument("--transport", choices=("auto", "urllib", "curl"), default="auto",
+                         help="HTTPS工具：auto優先使用既有curl，否則Python urllib；都保留憑證驗證")
+    export = commands.add_parser("history-export", help="以已保存官方原始JSON離線重新匯出CSV，不連網")
+    export.add_argument("--manifest", required=True, type=Path, help="既有歷史樣本的manifest.json")
+    export.add_argument("--output", type=Path, default=Path("data/cache/history_sample"))
     args = parser.parse_args(argv)
+    if args.command in ("history-sample", "history-export"):
+        offline = args.command == "history-export"
+        try:
+            if offline:
+                result = export_history_sample(args.manifest, args.output)
+            else:
+                result = download_history_sample(args.month, args.output, transport=args.transport)
+        except (HistoryDataError, OSError, json.JSONDecodeError) as exc:
+            print(f"歷史{'重新匯出' if offline else '樣本'}錯誤：{exc}", file=sys.stderr)
+            return 2
+        _show_history_summary(result, offline=offline)
+        return 0 if result["success"] else 2
     try:
         summary = demo_summary(load_demo(args.fixture))
     except (ContractError, OSError, json.JSONDecodeError) as exc:

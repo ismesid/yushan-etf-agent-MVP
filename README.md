@@ -2,7 +2,7 @@
 
 GitHub：[ismesid/yushan-etf-agent-MVP](https://github.com/ismesid/yushan-etf-agent-MVP)（私有倉庫），主要分支為 `main`。名稱中的 `MVP` 表示目前是測試版。
 
-目標是在約 8 小時內完成可供開會檢查的 ETF 決策流程，並方便增加資料源、因子、模型與 UI。目前完成第一批：共用資料合約與離線示例，完整投資流程仍在開發。
+目標是在約 8 小時內完成可供開會檢查的 ETF 決策流程，並方便增加資料源、因子、模型與 UI。目前有共用資料合約、離線示例及兩檔官方歷史下載樣本，完整投資流程仍在開發。
 
 ## 目前功能
 
@@ -10,9 +10,11 @@ GitHub：[ismesid/yushan-etf-agent-MVP](https://github.com/ismesid/yushan-etf-ag
 - `AgentProvider` 共同介面與 `AgentResult`，保留實際模型資訊及用量欄位。
 - `DatasetSplitPlan`：按時間保留訓練、驗證、測試期間，檢查日期順序與不重疊。
 - 含 25 檔既有持股的人工測試帳，以及離線 CLI 合約展示。
-- 30 項 `unittest`；第一批驗收結果為全部通過，證據見 [開發紀錄](development_notes.md)。
+- 官方歷史月報樣本：2330／5274，各 21 筆 2025-09 資料，保存原始資料與品質紀錄。
+- CSV 4.0：21 份每日股票表、2 份個股月表，支援從本機快取離線重新匯出；目前仍只有兩檔樣本。
+- 標準庫 `unittest` 檢查共用合約及歷史解析，實際驗收結果見 [開發紀錄](development_notes.md)。
 
-**示例的行情、因子、帳戶與 Agent 草稿都是人工測試資料。** 沒有真實行情下載或投資模型呼叫；示例固定為 `submission_ready=false`，未知模型版本與用量為 `null`。
+**contracts-demo 的行情、因子、帳戶與 Agent 草稿都是人工測試資料。** history-sample 另行下載真實歷史行情，沒有取代 fixture 或呼叫投資模型；兩者都不是正式可提交的 D-Plan。
 
 ## 執行方式
 
@@ -24,7 +26,7 @@ GitHub：[ismesid/yushan-etf-agent-MVP](https://github.com/ismesid/yushan-etf-ag
 $env:PYTHONPATH = (Resolve-Path 'src').Path
 python -B -m etf_agent.cli --help
 python -B -m etf_agent.cli contracts-demo --fixture tests/fixtures/contracts_demo.json
-python -B -m unittest discover -s tests -p test_contracts.py -v
+python -B -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
 設定只影響目前的 PowerShell 工作階段。示例預期顯示：
@@ -39,6 +41,24 @@ NAV：100,000,000 元
 submission_ready：false
 ```
 
+要試下載兩檔歷史 CSV，可在上述 Python 路徑設定後執行（此指令會連網）：
+
+```powershell
+python -B -m etf_agent.cli history-sample --month 2025-09 --output data/cache/history_sample
+```
+
+下載使用標準庫與系統既有 curl，沒有新增 Python 依賴。產物存於本機 `data/cache/`，每次新建版本目錄，Git 不追蹤。
+
+已有原始資料時，可完全離線重新匯出 CSV：
+
+```powershell
+python -B -m etf_agent.cli history-export --manifest data/cache/history_sample/2025-09/20261011T125021_603f0054/manifest.json --output data/cache/history_sample
+```
+
+資料欄位、單位、清洗方式、上櫃空值與報表精度，請看 [資料說明](docs/data_contracts.md)；README 只提供專案概況與執行入口。
+
+現有樣本可查看 [2025-09-01 日表](data/cache/history_sample/2025-09/20261011T125021_603f0054/daily/2025-09/2025-09-01_prices.csv)、[2330 月表](data/cache/history_sample/2025-09/20261011T125021_603f0054/monthly/2025-09/TWSE_2330_2025-09.csv)、[5274 月表](data/cache/history_sample/2025-09/20261011T125021_603f0054/monthly/2025-09/TPEX_5274_2025-09.csv)。這些是本機快取連結，新 clone 需先下載；離線重新匯出也會建立另一版本目錄。
+
 ## 文件與程式導覽
 
 | 路徑 | 內容 |
@@ -46,12 +66,12 @@ submission_ready：false
 | [AGENTS.md](AGENTS.md) | 分批討論、實作與驗收的合作規則 |
 | [design1001.md](design1001.md) | 架構與策略草案；其中待建立的命令不代表已實作 |
 | [checklist.md](checklist.md) | 待辦、完成證據與正式輸出阻擋條件 |
-| [diary.md](diary.md) | 簡明的討論、決定及原因 |
-| [development_notes.md](development_notes.md) | 各批授權、實際修改、驗收與下一步 |
-| [docs/data_contracts.md](docs/data_contracts.md) | 共用欄位、單位、時間、研究切分與示例說明 |
+| [development_notes.md](development_notes.md) | 簡明記錄討論、決定及原因，並保存各批授權、實際修改、驗收與下一步 |
+| [docs/data_contracts.md](docs/data_contracts.md) | 資料欄位、清洗與精度說明，以及各模組合約與程式位置 |
 | [src/etf_agent/contracts.py](src/etf_agent/contracts.py) | 核心合約及輸入檢查 |
 | [src/etf_agent/agent/base.py](src/etf_agent/agent/base.py) | 模型 provider 介面與結果格式 |
-| [src/etf_agent/cli.py](src/etf_agent/cli.py) | 已實作的離線合約展示命令 |
+| [src/etf_agent/cli.py](src/etf_agent/cli.py) | 離線合約展示、歷史樣本下載與快取離線匯出命令 |
+| [src/etf_agent/history.py](src/etf_agent/history.py) | 兩檔歷史樣本下載、每日／個股月 CSV 與快取離線匯出 |
 | [tests/fixtures/contracts_demo.json](tests/fixtures/contracts_demo.json) | 人工測試行情、帳戶、草稿與研究設定 |
 | [tests/test_contracts.py](tests/test_contracts.py) | 合約測試 |
 | [specs/internal/agent_draft.schema.json](specs/internal/agent_draft.schema.json) | 內部 AgentDraft 格式，與官方 D-Plan 分開 |
@@ -63,7 +83,7 @@ submission_ready：false
 
 fixture 的切分是說明用設定：2020～2023 訓練、2024 驗證、2025～2026-09 測試，並沒有對應的長期歷史資料。真正的交易日隔離、標籤跨界檢查、公司行動處理、回測與訓練尚未實作。
 
-其他尚未完成：F05 白名單讀取、TWSE／TPEx 行情抓取與清洗、因子計算、真實 Codex／Claude 決策、配置與風控、官方股數與費用計算、D-Plan 結構／語意驗證、SQLite 帳務、成交與官方庫存核對。後續依合作規則逐批討論和驗收。
+其他尚未完成：F05 白名單讀取、150 檔行情取得與完整清洗、精確且一致成交口徑、因子計算、真實 Codex／Claude 決策、配置與風控、官方股數與費用計算、D-Plan 結構／語意驗證、SQLite 帳務、成交與官方庫存核對。後續依合作規則逐批討論和驗收。
 
 ## 日常版本管理
 
@@ -72,7 +92,7 @@ fixture 的切分是說明用設定：2020～2023 訓練、2024 驗證、2025～
 ```powershell
 git status
 git diff
-git add src/etf_agent/contracts.py docs/data_contracts.md diary.md development_notes.md checklist.md
+git add src/etf_agent/contracts.py docs/data_contracts.md development_notes.md checklist.md
 git commit -m "Update contracts and development notes"
 git push
 ```

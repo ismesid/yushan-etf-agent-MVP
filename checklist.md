@@ -2,7 +2,7 @@
 
 對應設計：`design1001.md` v0.3、`AGENTS.md` v1.0｜日期：2026-10-11
 
-**本清單按實際驗收記錄，未勾選項目仍未完成。** 2026-10-11 已完成第 01 批：標準庫共用資料合約、含既有持股的離線 demo、CLI 示例及 30 項合約測試。真實行情、因子、投資模型、配置、D-Plan、SQLite 帳務與回測仍待逐批實作；詳見 `development_notes.md`、`diary.md`。
+**本清單按實際驗收記錄，未勾選項目仍未完成。** 2026-10-11 已完成第 01 批合約／離線 demo、第 02 批兩檔官方歷史月報下載、第 03 批張數顯示／離線重輸出、第 04 批千元／張與當日均價、第 05 批原報表 CSV 按月整理，以及第 06 批每日／每股月視圖。2330、5274 各 21 筆 2025-09 行情，已輸出 21 個日檔（每日 2 列）及 2 個股月檔；本次 Git 提交前重跑全套 66 項（30 核心合約＋36 歷史資料），全部通過。CSV 4.0 不逐列放網址／hash／原來源單位，成交量用張保留小數、價格／均價用千元／張、成交金額用千元；核心合約仍用股與元。150 檔完整資料、真實每日更新、因子、投資模型、配置、D-Plan、SQLite 帳務與回測仍待逐批實作；討論、決定及進度統一記錄於 `development_notes.md`。
 
 第 01 批證據：`src/etf_agent/contracts.py`、`agent/base.py`、`cli.py`、`specs/internal/agent_draft.schema.json`、`tests/fixtures/contracts_demo.json`、`tests/test_contracts.py`、`docs/data_contracts.md`。PowerShell 先設定 `$env:PYTHONPATH = (Resolve-Path 'src').Path`；`python -B -m etf_agent.cli contracts-demo --fixture tests/fixtures/contracts_demo.json` 成功，25 檔持股市值 90,000,000.00 元＋現金 10,000,000.00 元＝NAV 100,000,000.00 元；`python -B -m unittest discover -s tests -p test_contracts.py` 為 30 tests、OK。全部為人工測試資料，`submission_ready=false`。
 
@@ -12,13 +12,13 @@
 
 合作規則已提供於 `AGENTS.md`，下列項目用來檢查開發過程是否遵守，不代表本次已經建立 Python 專案。三份 Markdown 放在專案根目錄，九份來源依設計 §2.1 放在 `specs/official/`；再貼 `design1001.md` §20.1 的新 prompt，取代舊版直接開工要求。
 
-- [x] **COOP-01** 第一回合僅讀設計、來源與必要專案指示，先解釋流程與第一批方案；不改檔、不安裝、不執行專案程式或付費呼叫。證據：2026-10-11 首輪九份來源盤點；`diary.md`。
+- [x] **COOP-01** 第一回合僅讀設計、來源與必要專案指示，先解釋流程與第一批方案；不改檔、不安裝、不執行專案程式或付費呼叫。證據：2026-10-11 首輪九份來源盤點；`development_notes.md`。
 - [ ] **COOP-02** 每批約10～30分鐘，只處理一個可展示結果的小任務；討論與驗收算進8小時。
 - [ ] **COOP-03** 事前講清目的、輸入輸出、修改檔案、指令、連網／模型用量與驗收方式。
 - [ ] **COOP-04** 用具體例子與1～2個關鍵問題確認理解；回答疑問後等待明確同意，不把沉默或詢問當授權。
 - [ ] **COOP-05** 同意只涵蓋列出的本批實作／驗證；同範圍修正可繼續，擴大範圍、加依賴、改合約／參數或付費服務則重新討論。
 - [ ] **COOP-06** 完成後展示輸出、實際測試、如何重跑與未完成項目，再討論下一批；不一次做完全部清單。
-- [x] **COOP-07** 確認已讀取根目錄提供的AGENTS.md；在同意的首批範圍內建立簡短development_notes.md，之後保存已同意決定、授權範圍與完成證據。第 01 批已建立 `development_notes.md`、使用者另要求的 `diary.md`；後續仍逐批更新。
+- [x] **COOP-07** 確認已讀取根目錄提供的AGENTS.md；在同意的首批範圍內建立簡短development_notes.md，之後保存已同意決定、授權範圍與完成證據。第 01 批已建立 `development_notes.md`；原另建日記，依使用者最新指示已整併，後續只更新 `development_notes.md`。
 - [ ] **COOP-08** 先確認共用資料格式與模組介面，再寫各adapter；官方規則、自訂參數與假設分開。
 - [ ] **COOP-09** 驗證擴充方式：加法人因子沿用orders／ledger、換Claude沿用風控、加UI沿用核心流程。
 - [ ] **COOP-10** 區分開發助手與每日投資決策模型；教學／批准對話不放進AgentDraft或D-Plan。
@@ -94,24 +94,36 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 - [ ] **DATA-01／P0** 從 F05 擷取 `universe.csv`：四位字串代碼、名稱、TWSE／TPEX。
 - [ ] **DATA-02／P0** 逐頁對照並測試 150 檔、100 上市、50 上櫃、無重複；抽查上市 2330／上櫃 5274。
 - [ ] **DATA-03／P0** 取得官方交易日曆；前一交易日不以日期減 1 算，週末／休市也不造新資料。
-- [ ] **DATA-04／P0** TWSE 至少下載一個真實回應／CSV，檢查欄位、日期、量值單位、錯誤頁。
-- [ ] **DATA-05／P0** TPEx 同樣實測；若 API 不可用則取官方 CSV／快取，不漏 50 檔上櫃。
-- [ ] **DATA-06／P0** 核對 OpenAPI 是否真的支援歷史日期；不能把 latest 回應存成請求的歷史日。
+- [x] **DATA-04／P0** TWSE 至少下載一個真實回應／CSV，檢查欄位、日期、量值單位、錯誤頁。第 02 批 `history-sample --month 2025-09` 實際 HTTP 200，2330 共 21 筆；JSON／原表 CSV／統一格式 CSV 已保存，股／元欄位及原始 SHA-256 核對通過；HTML 與 HTTP 拒絕的離線測試通過。
+- [ ] **DATA-05／P0** TPEx 同樣實測；若 API 不可用則取官方 CSV／快取，不漏 50 檔上櫃。第 02 批 5274 月報 HTTP 200、21 筆，但尚未覆蓋 50 檔。月報為整數張／仟元且不含鉅額，核心精確股數／金額留空，reported 欄位僅換算；正式精確量值與成交口徑仍待接入。
+- [ ] **DATA-06／P0** 核對 OpenAPI 是否真的支援歷史日期；不能把 latest 回應存成請求的歷史日。第 02 批確認兩市場個股月報查詢回傳指定 2025-09 並拒絕錯月；latest OpenAPI 加日期的能力未測試，不宣稱可查歷史。
 - [ ] **DATA-07／P0** 每檔核心因子用至少 21 個連續有效市場交易日；建議初次查 90 個日曆日。
-- [ ] **DATA-08／P0** 每個 provider 加 timeout／限速／最多 2 次重試及快取；儲存所有原始資料、實際 URL、抓取時刻與 hash。
-- [ ] **DATA-09／P0** 清理逗號／空白、ROC 日期；null 不填 0；所有量轉股、金額轉新臺幣元。
-- [ ] **DATA-10／P0** 檢查 OHLC、日期、交易金額／股數、重複與價格異常；衝突不任選一列。
+- [ ] **DATA-08／P0** 每個 provider 加 timeout／限速／最多 2 次重試及快取；儲存所有原始資料、實際 URL、抓取時刻與 hash。第 02 批小量兩請求有 10 秒 timeout、每次獨立版本目錄及 manifest；TLS 維持驗證，403 不繞過。第 03 批已可由 manifest／raw 完全離線重新匯出，先核對 hash 並保留原 fetched_at；尚無自動重試、批次限速或 HTTP 快取命中／過期管理。
+- [ ] **DATA-09／P0** 清理逗號／空白、ROC 日期；null 不填 0；所有量轉股、金額轉新臺幣元。月報樣本已實作上述內部轉換，單位／精度不符會停止；第 03 批閱讀 CSV 另用張顯示，不影響內部股數。上櫃核心量值暫留空，不把張／仟元縮位值當精確資料。全市場清洗仍未完成。
+- [ ] **DATA-10／P0** 檢查 OHLC、日期、交易金額／股數、重複與價格異常；衝突不任選一列。月報樣本已檢查日期／股票／OHLC／非負與零成交量值／重複衝突；完整成交均價口徑與異常政策仍未完成。
 - [ ] **DATA-11／P0** 儲存停牌／無成交／公司行動狀態；無調整資料的事件區間股票不新建倉。
 - [ ] **DATA-12／P0** 取得 TAIEX 歷史；市場級判斷有實際大盤資料，不能只靠單股平均。
-- [ ] **DATA-13／P0** 把資料日／known_at／fetched_at 分開；盤前 packet 不含 T 日結算量值。
+- [ ] **DATA-13／P0** 把資料日／known_at／fetched_at 分開；盤前 packet 不含 T 日結算量值。第 02 批保留真實 fetched_at、trade_date、hash，無證據的 known_at 留空；未建真實盤前 packet 或核實歷史發布版本。
 - [ ] **DATA-14／P0** 建 `account_snapshot` 匯入：cash、NAV、ticker／shares、結算日、origin、reconciled。
 - [ ] **DATA-15／P0** 區分測試全現金帳、simulated、official_confirmed；測試 10 億本金不冒充實際官方期初帳。
-- [ ] **DATA-16／P0** 產 `data_quality.json`，列可選股數、缺資料、單位確認、資料日期、demo旗標與阻擋原因。
+- [ ] **DATA-16／P0** 產 `data_quality.json`，列可選股數、缺資料、單位確認、資料日期、demo旗標與阻擋原因。第 02 批已有兩檔下載範圍的品質報告與限制，尚未有全股票池可選股數、完整覆蓋率或正式阻擋檢查。
 - [ ] **DATA-17／P0** 不足20檔或缺NAV／庫存，回可讀失敗；不要硬補數字繼續。
 - [ ] **DATA-18／P0** 如果改用 fixture，記錄切換原因；資料流程與報告中明確顯示 demo。
 - [ ] **DATA-19／P0** 取得官方產業分類，讓40%產業上限可驗；全缺失時不能拿UNKNOWN繞過限制。僅demo明示關閉則報告列「產業分散未實作」。
 
-完成證據／資料來源狀態：________。
+第 02 批樣本證據：首次下載的舊目錄已依使用者要求刪除；兩份原始 JSON／原表 CSV 及下載 manifest 原文保存於第 03 批 `data/cache/history_sample/2025-09/20261011T125021_603f0054/`（manifest 原文在 `provenance/original_manifest.json`）。檔案由 Git 忽略。`src/etf_agent/history.py`／`providers/`／CLI 已能重跑；當時 `tests/test_history.py` 25 項及原 30 項合約測試合計 55 tests、OK。功能與現存產物連結見 `docs/data_contracts.md`；這不代表本節其他未勾選項已完成。
+
+第 03 批格式驗收：`data/cache/history_sample/2025-09/20261011T125021_603f0054/` 的合併／個股 CSV 顯示 `volume_lots`／`reported_volume_lots`，不放 source_url；網址、精度及來源版本仍在 manifest。離線 `history-export` exit 0，42 列保留原價量、時間與 hash，股張換算可回復；TWSE 23,022,319 股＝23,022.319 張，TPEx 報表 356 張但精確值仍空。manifest 為 network_requests=0、CSV 2.0，核心合約1.0；59 tests（30＋29）OK，舊版與原始證據不覆寫。此批沒有勾選任何新的全市場資料／交易功能。
+
+後續清理：使用者要求直接刪除舊樣本，已移除 `20261011T122548_f1b87c04` 資料夾；刪除前確認新版原始檔與舊版相同、保留舊 manifest 原文及 hash，刪除後確認新版 42 列仍完整。README／功能文件及重跑指令改指向現存新版；程式仍按原方式每次建立新匯出目錄，此次清理沒有修改程式。
+
+第 04 批格式驗收：依使用者選擇，現存 `20261011T125021_603f0054/` 三份閱讀 CSV 已就地替換為 3.0，仍 42 列。價格欄 `_ktwd_per_lot` 表示千元／張，成交金額 `_ktwd` 表示千元；移除 CSV raw_sha256，保留 manifest 完整 hash／data_version 與核心合約。新增精確量值推算與 reported 估算均價，TPEx 精確均價空；均價顯示 8 位小數僅供閱讀，零量／缺值不補。63 tests（30 合約＋33 歷史）OK，逐列換算／時間／版本與原始檔 hash 核對通過，新版 manifest CLI 離線重輸出成功且零 HTTP。CSV 2.0 manifest 原文保存在 `provenance/csv_v2_manifest.json`；原始 JSON／原欄位 CSV 不變。正式結算、公司行動及防洩漏缺項未完成，因此未勾選新的交易／回測功能。
+
+第 05 批來源檔整理：兩份原欄位 CSV 已移到同 run 的 `source_csv/2025-09/`，檔名改為 `TWSE_2330_2025-09_source.csv`／`TPEX_5274_2025-09_source.csv`，移動前後 SHA-256 相同、舊同名來源檔不存在；產生器與 manifest 路徑同步。新增一項行為測試，歷史 34 tests、OK；既有離線重輸出測試亦確認不依賴手動改動的 source_csv。三份閱讀 CSV 仍為格式 3.0。每日／每股月視圖、可使用交易日及移除閱讀表原單位欄僅討論，尚未實作，不勾選日曆或防洩漏功能。
+
+第 06 批視圖驗收：使用者同意日／月結構及移除閱讀表原單位欄。現存 run 的 `daily/2025-09/` 已有 21 個日期 CSV、每檔 2 列；`monthly/2025-09/` 有 2330／5274 各 21 列。CSV 4.0 共 22 欄，日／月來源相同；來源單位只在 manifest／source_csv。逐列比對舊 42 列，除刪除兩個來源單位欄之外所有值、時間與版本相同，42 個日期×股票唯一鍵，日／月資料一致；原始 JSON／source_csv／既有 provenance 共 7 檔 hash 不變。舊根目錄合表及兩個股閱讀 CSV 已刪除，前 manifest 保存為 `provenance/daily_monthly_manifest.json`。36 tests 歷史驗收 OK，新版 manifest CLI 離線重新匯出成功且零 HTTP。每日檔案是歷史資料視圖，不是每日抓取排程或 150 檔覆蓋；known_at／usable_from 日期規則仍未實作，不勾選正式快照／回測功能。
+
+第 07 批文件補充：data_contracts 1.7 解釋 TPEx 精確欄空值與 reported 報表量值的差別，評估後保留 exact_volume_amount（品質資訊，非打分或選股開關）；README 移除詳細清洗說明，連至資料說明。CSV 4.0／程式及既有測試證據不變，本批只驗文件與本機連結；未實作因子／流動性估算政策或正式結算，不勾選新資料功能。
 
 ## 6. T+2:00～3:00：特徵、排名與證據包
 
