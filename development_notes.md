@@ -6,6 +6,7 @@
 
 - 目標：約 8 小時完成可開會討論的 ETF MVP，模組保留資料、因子、模型與 UI 的擴充邊界。
 - 每批約 10～30 分鐘，先說明與討論，使用者明確同意後實作；每批完成展示結果，再討論下一批。第一批同意不授權後續階段。
+- 文件維護：依使用者第 16 批要求，README 作快速理解專案架構、現況與執行的入口；完整參數、輸入輸出、續接與失敗處理連到各功能專屬文件。各批更新 README 的功能狀態與入口，測試流水帳留本檔／checklist，避免持續堆進 README。
 - 已讀根目錄 `AGENTS.md` v1.0、`design1001.md` v0.3、`checklist.md`（2026-10-11），首輪已閱讀 F01～F09 九份官方來源，來源內容未修改。
 - 官方要求以對應原文為準；策略權重、風控閾值仍待討論。下列 demo 數值與時間切分是專案示例，不能當成官方規則。
 
@@ -17,8 +18,9 @@
 | 模型如何參與 | AgentDraft 只提出選股與理由，不接受 shares／orders；最終股數由程式計算 | 已實作合約與 provider 介面，未接模型 |
 | 含既有持股的 demo 是什麼 | 模擬帳已持有 25 檔股票，股票市值 9,000 萬＋現金 1,000 萬＝NAV 1 億；可展示續抱與加減碼 | 已建人工測試帳，不是正式期初帳 |
 | 帳務與行情如何保存 | 規劃 SQLite 保存帳務／索引，JSON／CSV 保存原始資料、清洗行情、因子與執行產物；方便本機檢查與備份 | 第 02 批已保存歷史樣本；SQLite／完整存檔流程尚未完成 |
-| 股市資料如何取得 | TWSE／TPEx 各自的官方月報 adapter 記錄來源、單位、資料日與取得時間；不能把 latest 當成指定歷史日 | 第 02 批兩檔已連網實測成功，150 檔取得尚未完成 |
-| 官方股票範圍如何共用 | F05 衍生 CSV 只保存 ticker／name／market，讀取時核對來源與內容；後續模組共用 allowed_tickers | 第 08 批已實作 150 檔白名單與獨立 CLI，尚未串接行情／投資流程 |
+| 股市資料如何取得 | TWSE／TPEx 各自的官方月報 adapter 記錄來源、單位、資料日與取得時間；不能把 latest 當成指定歷史日 | 第 10 批已處理 150 檔，2025-09 有行情 147 檔；第 13 批另保存官方排程及價格視窗診斷 |
+| 官方股票範圍如何共用 | F05 衍生 CSV 只保存 ticker／name／market，讀取時核對來源與內容；後續模組共用 allowed_tickers | 已接入全股票月報、覆蓋、價格視窗及原價分析，排名／投資流程未實作 |
+| 分析如何呈現 | 每個截止日另存六欄因子 CSV、共同日期／公式／來源 JSON 與閱讀摘要；內部比率小數，CSV 用百分數 | 第 15 批已實作歷史原價三因子分析，正式快照／FeatureTable 尚未串接 |
 | 未來如何回測 | 保留原價／因子價格、資料日、known_at、fetched_at、hash 與版本；按時間切成 train／validation／test，留出較新測試期 | 已預留格式與切分檢查，未訓練或回測 |
 | 討論紀錄如何維護 | 依使用者最新指示只保留本檔，合併原日記必要決定，避免重複維護 | 本次整併 |
 | 上市／上櫃表格如何整理 | 原始來源分開，整理後以 market 區分的長表合併，便於因子分組與日期切片 | 第 03 批已同意並完成樣本匯出 |
@@ -232,3 +234,72 @@ fixture 的價量、帳戶、因子與草稿皆為人工測試值；實際模型
 - 此批驗收：完成上述必要唯讀依賴與重複資料檢查、刪除目標／結果確認；沒有改程式、行情、官方來源或交易規則，因此未跑 Python 全套測試、未建立額外雜湊報告或新測試，沒有外部請求。
 - 說明例子：交易日曆列市場實際開市日期，用來找前一交易日與分辨休市／漏資料。21 筆價格視窗取同股、截至指定日期連續 21 個市場交易日的有效收盤價，得到 20 段漲跌；假設首筆 100 元、末筆 110 元，20 日動能為 110／100－1＝10%，這是說明用數字。
 - 若後續同意日曆／視窗功能，先驗收三組案例：完整 21 筆；跨週末／休市；缺一天或新掛牌只有 9 筆。既有格式、重複、價格合理性檢查沿用既有測試，不另建重複驗證。日曆、公司行動與歷史公開時間仍未核實，不因這份說明標記完成。
+
+## 13｜先提交推送，再實作官方排程與價格視窗（2026-10-11）
+
+- 授權：使用者要求「commit push後 執行你下一步工作」，接續前述 2025-09 官方交易日曆與 21 筆價格視窗提案。範圍為先保存累積修改，再實作日曆來源、離線逐股視窗、CSV／JSON／閱讀報告、CLI、必要測試及文件；沿用第 12 批縮減驗證的偏好。
+- Git 結果：先將第 08～12 批累積的 14 個程式／資料／文件檔案提交為 `72a885b`（`Add universe history downloads and coverage reports`），一般 `git push origin main` 成功，遠端由 `9fd1127` 更新至 `72a885b`。提交前 diff 檢查及唯讀範圍檢視通過，原始快取仍由 Git 忽略，未重跑前批全套。本批接著新增的日曆／視窗功能尚未提交或推送。
+- 修改：新增 `src/etf_agent/calendar.py`、`history_windows.py`、`tests/test_calendar.py`、`test_history_windows.py`；CLI 加 `calendar-download`／`history-window-check`。README、資料合約文件 1.13、checklist 與本檔同步實測；沒有新增依賴或更改六種核心合約、CSV 4.0／22 欄、F01～F09 或既有行情／下載報告。
+- 日曆來源與方法：保存 TWSE／TPEx 官方年度開休市排程，核對回應年份，按例行週一至週五及官方事件建立月份日曆。TWSE 用 `date=20250101`；探查時僅傳 `queryYear=2025` 實際回傳 2026，故加入錯年拒絕。TPEx 依網頁表單找到 `bulletin/tradingDate?date=2025&response=json`，解析 `data.html` 的民國 114 年標題，排除債券專屬列並保留股票封關後休市；`endDate=20260101` 是可查範圍，不拿它當回應年份。
+- 實際排程：下載命令 exit 0，本次下載本身 2 次 HTTPS；另有來源探索請求，不宣稱整輪只有 2 次。產物為 `data/cache/calendar/2025-09/20261011T154421_1306c9a4/` 的 calendar.json、UTF-8 BOM calendar.csv 及兩份 raw JSON，保存 URL、實際取得時間、SHA-256 和排程版本。兩市場各 21 個排程交易日，9/29 休市；`calendar_basis=official_schedule`、`schedule_verified=true`，臨時全市場休市未全面查核，`actual_sessions_verified=false`。
+- 視窗介面：`--as-of` 是已完成歷史行情的資料截止日，並非該日盤前決策。依各市場截至該日最近 21 個排程日期只讀 daily，不讀未來日或疊加 monthly；缺整日日表、缺股票及無效價格各自記錄，不縮窗、不補零。本版只支援同月份，當月不足 21 日列 calendar_window_shortfall，跨月讀取仍待擴充。
+- 真實歷史例子與結果：截至 2025-09-30，150 檔中 146 檔都有所需 21 筆有效價格；7750 自 9/17 起只有 9 筆，缺前 12 日；3718／7769／7828 各 0 筆、缺 21 日。沒有缺整日日表，input_valid=true，CLI exit 0。輸出在 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/`：14 欄、150 列的 UTF-8 BOM window_coverage.csv，以及 window_report.json／.md；逐檔缺日期可直接查閱。
+- 實際驗收：本批 4 項重點測試通過（0.195s），涵蓋完整 21 筆、跨週末／休市且拒讀未來日、缺整日日表／新掛牌 9 筆不補值、官方回應年份核對。兩個 CLI 實跑成功，產物必要核對確認 150 個唯一代號、146／4 與 JSON 一致、兩市場 21 日、9/29 排除、CSV BOM、缺日表 0、正式旗標 false。另作短程式檢視，未發現影響日期或筆數的重要問題；未重跑全套、全快取 hash 或全文件連結掃描。前批 132 項通過仍屬先前證據。
+- 限制：window_complete 僅表示提供排程下價格齊全，不證明公司行動、return_close、歷史 known_at、個股停牌、歷史股票池、正式截止或帳戶已核實。所有新報告 submission_ready=false；原行情與下載 manifest 的未核實旗標維持原文。沒有呼叫投資模型、付費服務、變動庫存或實際交易。
+- 重跑：在專案根目錄執行下列 PowerShell；第一條下載會連網，第二條使用本批保存日曆完全離線、另建版本，新下載日曆則換用 CLI 顯示的 calendar.json 路徑。
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path -LiteralPath 'src').Path
+python -B -m etf_agent.cli calendar-download --month 2025-09 --output data/cache/calendar --transport curl
+python -B -m etf_agent.cli history-window-check --manifest data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json --calendar data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json --as-of 2025-09-30 --output data/cache/history_windows
+python -B -m unittest discover -s tests -p 'test_*.py' -k CalendarTests -k HistoryWindowTests -v
+```
+
+- 下一批建議：約 20～30 分鐘，先討論以既有 146 檔完整原價視窗產生動能、均線與波動的歷史分析示範 CSV；公式、單位及未調整價格限制先達成共識，正式資格保持阻擋。驗收重點為可手算的動能例子、不足視窗排除與不讀未來日；公司行動／return_close 核實另列批次。因子尚未實作，本批收尾後等待下一批共識。
+
+## 14｜精簡視窗 CSV，暫緩缺失處理（2026-10-11）
+
+- 授權與方向：使用者要求移除大家重複的 expected_dates，日期只寫有缺失的；目前缺失原因合理，先記錄後續處理，下一步先討論。本批只調整閱讀匯出、目前 CSV 與文件／待辦，沒有開始因子或新增資料查核。
+- 修改：`history_windows.py` 的 CSV 欄位移除 expected_dates，更新既有匯出測試的欄位預期；目前 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv` 同步改為 13 欄、150 列。完整股票的 missing_dates／invalid_price_dates 留空，有缺才列日期；JSON 與日曆保留共同預期日期。README、資料說明 1.14、checklist 同步，既有行情、JSON／MD 報告及六種核心合約保持原樣。
+- 歷史例子與驗收：7750 仍有 9 筆，missing_dates 列前 12 個交易日；3718／7769／7828 各列 21 個缺失日期，其餘 146 檔沒有價格日期缺口。重寫時逐列確認只刪該欄、其餘值完全相同及 BOM／150 列。僅跑受影響的既有 CSV 匯出測試，1 test、OK（0.114s）；未新增測試、重跑全套或掃全快取，沒有連網、模型或 Git 操作。
+- 後續缺失工作：checklist DATA-22 維持未勾選，待日後擴期間／正式用途再處理掛牌前與新股不足政策、跨月視窗、停牌／無成交、意外資料遺漏及必要續抓；臨時休市、公司行動／報酬用調整價與歷史公開時間沿原待辦保留。對現有四檔不再查核、不補零、不尋找其他市場資料來填當期缺口。
+- 下一批提案（尚未授權）：約 20～30 分鐘，用截至 2025-09-30 的現有 146 檔完整原價視窗，產生三因子分析 CSV 及共用 metadata JSON。沿 design1001.md §7.1：mom20＝最後／最早收盤−1；trend20＝最後收盤／最後 20 筆平均−1；vol20＝20 個日簡單報酬的樣本標準差（分母 19）×√252。內部比率用小數，閱讀欄 mom20_pct／trend20_pct／vol20_annual_pct 用百分數（10 表示 10%）；252 為設計的年化約定。
+- 提案範圍：新增 `features.py` 的純因子計算與離線資料組合，CLI、少量重要測試、文件；保留截止日／資料版本／公式／原價標記，共同日期集中 metadata。產物為歷史原價分析示範，未核實公司行動與 known_at，正式資格保持 false；不假造正式 MarketSnapshot 或 observation 引用。三因子表完成後再討論排名與模型輸入。
+- 提案驗收：用可手算及固定價格例子驗三個公式；實際輸出 146 檔、四檔不足沿用既有紀錄；相同輸入重算一致、只用截止日以前 daily 且來源可追溯。說明用例子為首筆 100、後 20 筆 110，mom20=10%、trend20=0%、年化 vol20 約 35.4965%。待使用者確認原價分析方向後才實作。
+- 本批重跑：先 `$env:PYTHONPATH = (Resolve-Path -LiteralPath 'src').Path`，執行 `python -B -m unittest discover -s tests -p test_history_windows.py -k test_complete_21_price_window_reports_each_stock_and_writes_readable_bom_csv -v`。一般重新匯出仍用第 13 批的 history-window-check 命令，之後新 CSV 都不再輸出 expected_dates。
+
+## 15｜146 檔歷史原價三因子分析（2026-10-11）
+
+- 授權：使用者先詢問分析的保存、呈現與運用，在明列 `data/cache/features/<截止日>/<執行版本>/` 的 features.csv、metadata.json、analysis.md 與後續排名／模型流程後回覆「好」。本批完成原價因子分析、離線 CLI、重要驗收與文件；缺失工作繼續留在 DATA-22，排名／權重另列下一批。
+- 修改：新增 `src/etf_agent/features.py`、`tests/test_features.py`；CLI 加 `history-features --window-report --output`。README、資料文件 1.15、checklist 與本檔同步。計算函式、讀檔組合與產物保存分開，後續排名可重用同一計算；六種核心合約、官方來源、白名單及既有行情／視窗報告未變更。
+- 公式與單位：21 筆原價得 mom20＝末／首−1；trend20＝末／最後 20 筆平均−1；vol20＝20 個相鄰日簡單報酬的樣本標準差（分母 19）×√252。固定 34 位 Decimal、內部 ROUND_HALF_EVEN；JSON 將比率保存為十進位文字，CSV mom20_pct／trend20_pct／vol20_annual_pct 用百分數、6 位小數 ROUND_HALF_UP。252 是設計年化約定；原閱讀價格的千元／張在比率中抵消。
+- 輸入與界線：沿用第 13 批 window_report.json 的完整股票及分市場日期，直接讀需要的 daily；不重讀月表、不讀截止日之後、不重新查核四檔缺失。對本來就要讀的 manifest／21 個日表核對既有驗收 hash，防止用到已修改資料，未掃描 raw 或其他快取。每股保留來源 key／資料版本／取得時間，共同日期與來源集中 metadata；未建立正式 MarketSnapshot、FeatureTable 或 S/O 引用。
+- 實際執行：離線 CLI exit 0；產物在 `data/cache/features/2025-09-30/20261011T160349_3b42fa16/`，features.csv 為 6 欄 UTF-8 BOM、146 檔；metadata.json 保存內部數值／公式／來源／四檔排除紀錄；analysis.md 顯示各因子最小／中位／最大值與依代號排列的前五檔閱讀例子。特徵版本 `price-features-v1-c9e2191b62ec`，所有 146 檔都用 21 價格／20 日報酬；3718／7750／7769／7828 沿用既有不足紀錄。
+- 真實歷史例子：2330 原價首 1165、末 1305（千元／張），mom20=12.017167%、trend20=4.337398%、vol20=23.192445%；5274 首 5015、末 5050，三值依序 0.697906%、0.934393%、37.658959%。這是從已保存官方行情計算的原價分析，不是測試假值，也沒有帳戶或投資模型參與。
+- 實際驗收：3 tests、OK（1.505s）。案例為可手算與固定價格、完整視窗／離線日表／百分數與來源／重算一致及新版本不覆寫、日表被修改後 hash 不一致阻擋。實際產物只做必要核對：146 唯一股票與原報告完整集合相同、6 欄／BOM、4 排除、21 日不超截止、CSV 全值與 JSON 六位百分數一致；另用獨立標準庫公式核對 2330／5274 通過。未重跑全套或全文件連結／raw hash。
+- 限制與下一步：原價未調整除權息，公司行動、known_at、臨時休市與正式候選資格仍未核實，submission_ready=false。下一批可討論百分位排名、低波動反向及綜合權重；設計草案 40%／25%／35% 僅是提案，不因本批變成已同意設定。沒有安裝依賴、連網、付費或投資模型呼叫、帳務交易、Git commit／push。
+- 自行重跑：在專案根目錄執行下列 PowerShell，會另建執行版本，沿用相同輸入時數值與特徵版本一致。
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path -LiteralPath 'src').Path
+python -B -m etf_agent.cli history-features --window-report data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.json --output data/cache/features
+python -B -m unittest discover -s tests -p test_features.py -v
+```
+
+## 16｜補齊指標意義，整理 README 與專屬操作文件（2026-10-11）
+
+- 授權：使用者要求 analysis.md 說明為何使用三種指標及代表什麼，並明確要求更新 README，讓它能快速理解整個專案架構與使用方式、各項執行細節連專屬文件。本批限於解說、文件導覽與摘要產生器的同範圍同步，沒有開始排名或改策略參數。
+- 原說明位置：design1001.md §3／§7.1 已有主題、公式、用途與兩種價格面向；資料合約文件有公式／單位，但當時 analysis.md 只列計算方式，未完整說明選用理由。此次將理由、數值意義與後續運用補進現有摘要。
+- 摘要修改：`features.py` 把 Markdown 呈現分成 `_render_feature_analysis()`，未變動因子計算；之後每次匯出自帶「為什麼先使用」「各指標代表什麼」「計算方式」「後續如何運用」。由現存 metadata 重建 `20261011T160349_3b42fa16/analysis.md`，沒有重新讀行情或重新算因子。現有 features.csv 與 metadata.json 已逐位元確認不變。
+- 解說例子：動能 10% 表示窗口原價上漲 10%；均線偏離 3% 表示末價高於最近 20 筆平均 3%；年化波動反映近期日報酬起伏換到年尺度。三指標用現有價格、約一月視窗及可追溯公式作 MVP 起點，動能／均線偏離相關，主要是趨勢與波動兩面向；未宣稱官方指定、回測最佳或保證未來表現。
+- 必要驗收：受影響的既有匯出／重算測試 1 test、OK（0.130s），無新增測試，未重跑全套、行情下載或數值全套驗收；現有摘要已人工閱讀確認理由／含義／未來用途與原分布數值存在，數值 CSV／JSON 保持原版。
+- 文件整理：README 精簡為 75 行，集中目標／現況、架構與完成邊界、最短執行、九個 CLI 的用途入口及成果連結。新增 `docs/quickstart.md`（環境／合約／白名單／必要測試）、`history_data.md`（下載／快取續接／匯出／覆蓋）、`calendar_windows.md`（排程／截止日／視窗）、`factor_analysis.md`（指標理由／意義／用途／分析操作）；`data_contracts.md` 升 1.16，保留因子欄位與單位合約，詳細操作轉連專屬文件。
+- 文件驗收：只核對 README 與本批四份新操作文件的 84 個本機連結目標均存在、九個 CLI 均有操作入口，並人工對照各入口章節名稱與已實作參數。沒有掃全專案連結或外部網址；git diff --check 通過。本批不連網、安裝、呼叫模型、改帳戶、commit 或 push；排名／權重仍待下一批共識。
+- 重跑：一般 `history-features` 命令維持不變，會在新版本摘要自帶解說，完整用法見 `docs/factor_analysis.md#執行與重算`。本批只更新當前 MD 解說，沒有產生另一份數值分析；必要匯出測試為 `python -B -m unittest discover -s tests -p test_features.py -k test_complete_stock_only_daily_inputs_percent_csv_and_repeatable_new_runs -v`，先按 quickstart 設定 PYTHONPATH。
+
+## Git｜日曆、價格視窗、三因子與文件提交（2026-10-11）
+
+- 授權：使用者明確要求「COMMIT PUSH」，提交第 13～16 批已完成修改並推送目前倉庫。此操作沒有授權新的排名／策略功能。
+- 範圍：15 檔，包括 calendar／history_windows／features 三個模組、三份對應測試、CLI、README、資料合約、四份專屬操作文件、checklist 與本檔；行情快取與生成分析保留本機，提交摘要產生器及重算說明。
+- 提交前檢查：git diff --check 通過，變更名單與 CLI 所需模組一致；.gitignore 已排除 cache、帳戶、金鑰及本機設定，沒有額外未授權檔案。沿用第 13～16 批的必要測試與實際產物驗收證據，不重跑全套或抓行情。
+- 保存目標：本機 main → origin/main，GitHub `ismesid/yushan-etf-agent-MVP`；以一般 git commit／git push 保存。最終 commit ID 與推送／同步結果在本次回覆提供，也可用 git log -1 與 git status 查看。

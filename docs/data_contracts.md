@@ -1,6 +1,6 @@
 # 共用資料合約與功能導覽
 
-文件版本：1.12｜更新：2026-10-11｜內部合約版本：1.0｜歷史閱讀 CSV 格式版本：4.0｜對應設計：[design1001.md v0.3](../design1001.md)
+文件版本：1.16｜更新：2026-10-11｜內部合約版本：1.0｜歷史閱讀 CSV 格式版本：4.0｜對應設計：[design1001.md v0.3](../design1001.md)
 
 本文件說明各模組吃什麼資料、交出什麼結果，以及目前程式實際能做什麼。**資料合約**是模組共用的欄位、單位與檢查規則；定義合約不等於已完成抓取、計算或交易功能。六種核心合約集中在 [contracts.py](../src/etf_agent/contracts.py)，金額使用 `Decimal`，以 Python 標準庫的 `dataclass` 定義資料。HTTP、模型 SDK、檔案與資料庫操作留在各自模組。
 
@@ -13,6 +13,7 @@
 - [每日行情覆蓋與缺件報告](#每日行情覆蓋與缺件報告)
 - [行情與清洗](#行情與清洗)
 - [F05 全股票歷史月報](#f05-全股票歷史月報)
+- [官方排程日曆與價格視窗](#官方排程日曆與價格視窗)
 - [如何解讀 prices.csv](#如何解讀-pricescsv)
 - [帳戶與庫存](#帳戶與庫存)
 - [因子與排名](#因子與排名)
@@ -122,7 +123,7 @@ python -B -m unittest discover -s tests -p test_universe.py -v
 
 檢查成功回傳 exit code 0，顯示總數、市場分布、來源版本與抽查股票；`--json` 輸出機器可讀摘要。缺檔、CSV／manifest 或雜湊錯誤回傳 exit code 2。實際驗收結果統一記於 [development_notes.md](../development_notes.md)。
 
-白名單已接入下方的離線每日行情覆蓋檢查與 `history-universe` 全股票月報下載，尚未串接因子、Agent 或風控。`history-sample` 仍只下載 2330／5274，`contracts-demo` 的候選池仍來自人工 fixture 行情。後續應由組合流程明確傳入這份白名單；不會只因存在 `allowed_tickers` 就自動完成全流程限制。
+白名單已接入下方的離線每日行情覆蓋檢查、`history-universe` 全股票月報下載，以及沿用價格視窗報告的原價因子分析，尚未串接 Agent 或風控。`history-sample` 仍只下載 2330／5274，`contracts-demo` 的候選池仍來自人工 fixture 行情。後續應由組合流程明確傳入這份白名單；不會只因存在 `allowed_tickers` 就自動完成全流程限制。
 
 F05 是競賽 v1 股票池，不是已核實各歷史日期的可投資股票池。長期回測若固定沿用這份名單，仍須評估存續偏差、股票上市時間與當時適用名單；每日最新行情更新、交易日曆、停牌／公司行動與歷史公開時刻也另待實作。
 
@@ -241,7 +242,7 @@ python -B -m unittest discover -s tests -p test_coverage.py -v
 5. 使用真實交易日曆，不把週末、休市或停牌填成假成交；不拿補值製造低波動。
 6. 缺有效行情者不新買；既有持股仍保留在完整帳戶與風控中。公司行動未處理時，不把價格斷點當成選股訊號。
 
-現有合約已檢查部分數字與時間規則；月報 adapter 可供兩檔樣本與 F05 全股票下載共用，但尚未完成決策快照、交易日曆、停牌／公司行動查證及完整資料品質驗證。歷史下載的來源／格式檢查與逐日覆蓋，不等於已核實交易日期完整或可直接回測。
+現有合約已檢查部分數字與時間規則；月報 adapter 可供兩檔樣本與 F05 全股票下載共用，官方排程及價格視窗另有檢查，但尚未完成決策快照、臨時休市／個股停牌／公司行動查證及完整資料品質驗證。歷史下載的來源／格式檢查與逐日覆蓋，不等於已核實實際交易日期完整或可直接回測。
 
 官方歷史查詢入口：[TWSE 個股日成交資訊](https://www.twse.com.tw/zh/trading/historical/stock-day.html)、[TPEx 個股日成交資訊](https://www.tpex.org.tw/zh-tw/mainboard/trading/info/stock-pricing.html)。這兩個是供人查閱的官方網頁；程式實際請求 URL 必須跟原始回應一起保存，不能把最新行情入口當成已驗證的歷史 API。
 
@@ -330,7 +331,7 @@ TPEx 5274 同日收盤價為 `5015` 千元／張；報表揭示量 `356` 張、�
 
 ### exact_volume_amount 對決策的作用
 
-**本批評估後保留此欄位。** 它記錄來源量值精度，不是選股因子，也不是官方 D-Plan schema 的必填欄位。目前解析器依來源格式設定它，匯出 CSV／manifest 並顯示於 CLI；真實因子、配置與結算尚未實作，不能宣稱程式已依此旗標完成投資決策或正式驗證。
+**本批評估後保留此欄位。** 它記錄來源量值精度，不是選股因子，也不是官方 D-Plan schema 的必填欄位。目前解析器依來源格式設定它，匯出 CSV／manifest 並顯示於 CLI；下方三因子只使用收盤原價，不依此旗標選股。配置與結算尚未實作，不能宣稱程式已依此旗標完成投資決策或正式驗證。
 
 | 使用情境 | 是否受量值精度影響 | 建議使用方式 |
 |---|---|---|
@@ -366,16 +367,17 @@ CSV 的兩個均價欄位使用 `Decimal`、50 位計算精度，再以 `ROUND_H
 
 ### 資料使用入口與每日／每月檔案
 
-目前實作兩檔樣本及 F05 全股票月報的來源保存、每日表與個股月表匯出；因子讀取器、計算、預測、每日最新行情更新／排程及下列額外資料入口尚未實作。因子／模型將透過共用合約讀資料，不直接解析原報表的中文欄位與單位。
+目前實作兩檔樣本及 F05 全股票月報的來源保存、每日表與個股月表匯出，另有沿用完整價格視窗、只讀每日表收盤原價的三因子分析。正式快照／因子合約串接、預測、每日最新行情更新／排程及下列額外資料入口尚未實作；核心因子函式不解析原報表的中文欄位、不抓 API。
 
 | 資料 | 預計用途 | 目前狀態 |
 |---|---|---|
-| 清洗後的歷史價量 | 動能、均線、波動、成交金額篩選；20 日動能要同股 21 個有效交易日 | 有兩檔樣本與全股票月報下載；各批覆蓋／失敗見 manifest 與 coverage，日曆／公司行動未核實 |
-| [data/universe.csv](../data/universe.csv) | 限定 F05 白名單、標示股票與市場 | 已有 150 檔、來源版本及 loader／CLI，已接入月報下載與日表覆蓋核對；因子／交易流程尚待串接 |
-| 交易日曆／公司行動資料 | 找前一交易日、檢查連續有效日期及調整價格 | 尚未接入，檔案格式待討論 |
+| 清洗後的歷史價量 | 動能、均線、波動、成交金額篩選；20 日動能要同股 21 個有效交易日 | 有全股票月報下載、21 筆價格視窗檢查及三種原價因子；實際休市／公司行動與歷史可知時間仍待核實 |
+| [data/universe.csv](../data/universe.csv) | 限定 F05 白名單、標示股票與市場 | 已有 150 檔、來源版本及 loader／CLI，已接入月報下載、日表覆蓋及視窗分析；交易流程尚待串接 |
+| 交易日曆 | 找市場排程交易日、檢查指定日以前的價格視窗 | 已有兩市場官方年度排程的月份日曆，臨時全市場休市未全面核實 |
+| 公司行動／個股停牌 | 核對價格調整與當日可交易資格 | 尚未接入 |
 | 大盤行情 | 市場研判與市場因子 | 尚未接入 |
 | 法人、營收等資料表 | 新增這些因子時才加入，依公告與版本時間取用 | 未實作 |
-| `FeatureTable`／排名產物 | 模型接收計算後的因子、排名與證據；研究模型另需標籤與時間切分 | 僅有共用合約／fixture，沒有真實計算或訓練 |
+| `FeatureTable`／排名產物 | 模型接收計算後的因子、排名與證據；研究模型另需標籤與時間切分 | 原價三因子另有歷史分析產物，尚未接入此合約或排名；正式來源／觀察證據鏈及訓練待完成 |
 | `AccountSnapshot`／帳戶 JSON | 策略、配置及風控需知道完整持股與現金 | 僅有人工 demo／合約，尚無正式帳務 |
 
 先前已同意將**每日表作後續核心讀取入口**，每股每月表作歷史查閱視圖，並完成兩種視圖的匯出。同一批 raw 經同一清洗結果產生兩種表，不重複抓取；後續讀取器只用一種入口，不把兩種表同時合併，避免同股同日重複。日表方便每日更新及橫斷面排名，但 20 日動能仍須讀同股 21 個有效交易日，不能只讀單日日檔。
@@ -390,7 +392,7 @@ daily/2025-09/...                            # 共 21 個實際有資料的日�
 source_csv/2025-09/*_source.csv              # 原報表字串與單位，供來源核對
 ```
 
-第 06 批樣本曾從既有 42 列離線重排，得到兩份個股月表與 21 份日表，每日只有 2330／5274 兩列；原目錄現已清理，原始來源、價量與必要驗收紀錄在全股票目錄保留。全股票逐股取得狀態與逐日覆蓋見下節。真實每日最新更新、日曆與截止驗證仍另列批次，沒有建立每日抓取排程。缺行情或尚未核實者保留狀態／品質紀錄，不因資料不完整而默默從股票池消失。
+第 06 批樣本曾從既有 42 列離線重排，得到兩份個股月表與 21 份日表，每日只有 2330／5274 兩列；原目錄現已清理，原始來源、價量與必要驗收紀錄在全股票目錄保留。全股票逐股取得狀態與逐日覆蓋見下節，後續官方排程與價格視窗另存獨立報告。真實每日最新更新、臨時休市及截止驗證仍待補齊，沒有建立每日抓取排程。缺行情或尚未核實者保留狀態／品質紀錄，不因資料不完整而默默從股票池消失。
 
 盤前時間保留兩種不同意義：`trade_date` 是行情日，`known_at` 是有證據的公開可知時刻。若採「今日資料下一交易日使用」，可另增 `usable_from_trade_date` 作**自訂保守使用政策**；不能把 known_at 改成下一天或下一開盤時刻。使用日要依交易日曆、已完成資料及決策截止推導，遇休市或延遲公告須延後，不能固定日期加一。現在歷史 known_at 未核實，新增政策日期仍不能使資料通過正式快照驗證；此欄位與計算尚未實作。
 
@@ -443,10 +445,10 @@ coverage.json                              # 失敗股票、來源回傳各日�
 | `coverage.successful_stock_count`／`failed_stocks` | 150 檔之中成功來源數，以及失敗股票名稱／市場／原因 |
 | `coverage.daily_reports` | 對每個已產生日檔呼叫日表覆蓋檢查，保留已取得／有效價格／缺件／errors／warnings |
 | `data_quality.checks.all_150_symbols_covered` | 每個來源回傳日期的日表均通過 150 檔身分覆蓋；整月缺一個所有來源都未回傳的日期仍無法辨識 |
-| `calendar_completeness_verified`／`historical_universe_verified` | 固定為 false，未核實交易日曆與歷史各日適用股票池 |
+| `calendar_completeness_verified`／`historical_universe_verified` | 原下載報告維持 false；後續官方排程與價格視窗另存報告，歷史各日股票池未完整核實 |
 | `submission_ready` | 固定為 false，不產生正式 D-Plan 或已核對帳戶 |
 
-因此取得 150／150 與每日日表 150／150 須分別查看，且仍不能宣稱完整回測或正式決策資格。TPEx 精確量值／均價仍空白、`reported_*` 保留整數張／仟元報表換算；兩市場成交統計範圍未統一。歷史 `known_at` 與 `return_close` 留空、`adjustment_status=unresolved`、`tradable=false`，公司行動、日曆、因子視窗與當時可知版本未驗證。
+因此取得 150／150 與每日日表 150／150 須分別查看，且仍不能宣稱完整回測或正式決策資格。TPEx 精確量值／均價仍空白、`reported_*` 保留整數張／仟元報表換算；兩市場成交統計範圍未統一。歷史 `known_at` 與 `return_close` 留空、`adjustment_status=unresolved`、`tradable=false`；公司行動及當時可知版本未驗證。原下載報告不包含後續官方排程與價格視窗核對，後續結果另見下節。
 
 ### 2025-09 實際產物與缺件
 
@@ -459,7 +461,7 @@ coverage.json                              # 失敗股票、來源回傳各日�
 | 來源回傳的 2025-09-01～09-16 | 12 份日表，每份 146／150、缺 4；缺上述三檔與 7750 |
 | 來源回傳的 2025-09-17～09-30 | 9 份日表，每份 147／150、缺 3；缺上述三檔 |
 
-已完成走訪但整批 `success=false`、CLI exit code 2；全部日表 `coverage_complete=false`，`submission_ready=false`。此處 21 日只是來源回傳日期聯集，尚未用官方日曆驗證完整性。
+已完成走訪但整批 `success=false`、CLI exit code 2；全部日表 `coverage_complete=false`，`submission_ready=false`。原下載報告中的 21 日只是來源回傳日期聯集，當時尚未用官方日曆驗證；後續排程與價格視窗核對另外保存。
 
 資料入口：
 
@@ -485,6 +487,50 @@ python -B -m etf_agent.cli history-universe --month 2025-09 --universe data/univ
 `--month` 必填；`--universe` 預設 `data/universe.csv`，可用 `--universe-manifest` 指定白名單來源紀錄。未提供 `--cache-manifest` 時請求全部 150 檔；部分成功快取只減少已成功來源，完整成功快取才可零 HTTP 重輸出。`--output` 預設 `data/cache/history_universe`，`--transport` 支援 auto／curl／urllib 且保留憑證驗證。
 
 **程式位置：** [history.py](../src/etf_agent/history.py) 的 `download_history_universe()`、`_read_cached_month()`、`_export_month()`；[cli.py](../src/etf_agent/cli.py) 的 `history-universe` 命令；逐日核對重用 [coverage.py](../src/etf_agent/coverage.py)。實際執行與驗收證據統一記於 [development_notes.md](../development_notes.md)。
+
+## 官方排程日曆與價格視窗
+
+### 輸入、方法與產物
+
+`calendar-download` 取得 TWSE／TPEx 官方年度開休市表，按例行週一至週五及官方排程事件產生指定月份日曆。每批另存 `data/cache/calendar/<月份>/<版本>/calendar.json`、可用 Excel 開啟的 `calendar.csv` 與兩份原始回應；來源紀錄保存請求／回應 URL、抓取時間及 SHA-256。兩市場各自解析並核對回應年份，錯年或缺一市場不產生成功日曆；離線載入再核對 raw hash 與重建結果。
+
+已實測 [TWSE 2025 年表](https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule?response=json&date=20250101) 與 [TPEx 2025 年表](https://www.tpex.org.tw/www/zh-tw/bulletin/tradingDate?date=2025&response=json)。TWSE 必須用 `date=20250101`；直接傳 `queryYear=2025` 曾回傳 2026，解析器會拒絕錯年。TPEx 從 JSON 的 `data.html` 年度表解析，核對民國年標題，排除債券專屬事件；股票封關後的非交易期間仍保留。
+
+`calendar_basis=official_schedule`、各市場 `schedule_verified=true` 只表示官方年度排程已核對。天然災害等臨時全市場休市公告尚未全面核實，因此 `actual_sessions_verified=false`；日曆也不是個股停牌表，不證明歷史公開可知時間。
+
+`history-window-check` 接收全股票 manifest、保存的日曆與 `--as-of`，按每個市場取截止日以前最近 21 個排程交易日，核對相應日表中的每檔有效價格。例如 `--as-of 2025-09-30` 表示已完成歷史行情的資料截止日，不是 2025-09-30 盤前決策；不讀之後日期，也不把月表疊加進來。
+
+日期依日曆指定，缺整個日檔列入 `missing_day_files`，缺股票或無效價格分別保存日期清單；不能因總列數有 21 筆就跳過中間缺日。若當月截至指定日不足 21 個排程交易日，記錄 `calendar_window_shortfall`，不猜更早月份日期。本版只接受同月日曆／行情；跨月視窗的讀取仍待擴充，必須取得更早月日曆與價格。
+
+每次另建 `data/cache/history_windows/<截止日>/<版本>/`，不改原下載 manifest、行情或日曆：
+
+| 檔案／欄位 | 用途 |
+|---|---|
+| `window_coverage.csv` | UTF-8 BOM、13 欄，150 檔各一列：市場、有效價格筆數、缺失／無效價格的日期、日曆不足及狀態；不逐股重複 `expected_dates` |
+| `window_report.json`／`.md` | 完整逐日診斷／閱讀摘要，保留資料及日曆版本、來源與未核實事項 |
+| `window_complete` | 依已提供官方排程，所需 21 個日期都有有效價格；不表示正式可交易或因子已計算 |
+| `input_valid` | 日表讀取與列格式診斷；和缺日期、視窗完整分開判斷 |
+
+CSV 完整股票的 `missing_dates`／`invalid_price_dates` 留空；有缺失時以分號列出實際缺哪幾天。完整預期日期仍在 JSON 的分市場索引及日曆保存，閱讀表只呈現日期缺口。現有四檔不足的原因已核實為掛牌期間／新股視窗不足，依使用者指示先停止缺失查核，後續跨月視窗、意外漏資料、停牌／公司行動等工作列於 checklist 的 DATA-22。
+
+窗口檢查沿用每日 coverage 的價格口徑，尚未逐份驗歷史行情 raw、公司行動、`return_close`、`known_at`、帳戶或正式截止規則。CLI 成功保存無列錯誤報告可回傳 exit 0，即使某些股票視窗不足；manifest／日曆無法載入或日表列／讀檔錯誤回傳 2，缺日期則另外記錄。所有新產物仍為 `submission_ready=false`；原下載報告的未核實旗標保持當時內容。
+
+### 重跑與本批結果
+
+下載日曆會連網；價格視窗檢查完全離線。第二條示範使用本機已保存版本，新下載請改用 CLI 顯示的日曆路徑：
+
+```powershell
+python -B -m etf_agent.cli calendar-download --month 2025-09 --output data/cache/calendar --transport curl
+python -B -m etf_agent.cli history-window-check --manifest data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json --calendar data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json --as-of 2025-09-30 --output data/cache/history_windows
+```
+
+實際日曆下載為兩次 HTTP、exit 0；TWSE／TPEx 各 21 個排程交易日，9/29 排程休市。[日曆 CSV](../data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.csv) 供閱讀，[日曆 JSON](../data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json) 保存日期及官方來源索引，`actual_sessions_verified=false`。
+
+截至 2025-09-30，146 檔各有完整 21 筆有效價格，7750 有 9 筆、3718／7769／7828 各 0 筆；`missing_day_files=[]`、`input_valid=true`、CLI exit 0。[150 檔視窗 CSV](../data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv)、[完整 JSON](../data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.json) 與 [閱讀摘要](../data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md) 另存，沒有改原行情或下載 manifest。
+
+第 13 批實際通過一項日曆年度測試與三項價格視窗測試，未重跑全套。後續原價因子分析見下方「因子與排名」；視窗完整不能替代公司行動、歷史可知時間或正式快照核實。
+
+**程式位置：** [calendar.py](../src/etf_agent/calendar.py) 的 `download_calendar()`／`load_calendar()`；[history_windows.py](../src/etf_agent/history_windows.py) 的 `check_history_windows()`／`write_window_report()`；命令由 [cli.py](../src/etf_agent/cli.py) 組合。
 
 ## 帳戶與庫存
 
@@ -530,9 +576,27 @@ CLI 會使用 fixture 的前收重新核對這個等式，但 `AccountSnapshot` 
 
 同表股票不能重複；計算期間起訖不能顛倒；因子須有來源引用。缺失因子須有對應原因，排名須為正整數或空值，觀察 ID 須符合 O1～O999 格式。CLI 另檢查因子視窗不能延伸至決策日或未來。
 
+### 原價歷史三因子分析
+
+選擇理由、指標意義、公式、閱讀例子、執行與失敗處理集中在 [三因子分析說明](factor_analysis.md)。本節保留與其他模組接合時需要的輸入、欄位、單位及來源界線。
+
+`history-features` 沿用 `window_report.json` 的資料截止日、分市場共同日期與 `window_complete=true` 股票名單。只讀報告引用的 daily 收盤 `close_raw_ktwd_per_lot`，不讀月表或截止日之後；每股 21 筆原價得 20 個日簡單報酬。輸入價格為新臺幣千元／張，因子使用比例，單位在相除時抵消。`as_of` 為歷史資料截止日，並非決策日盤前時間。
+
+| 產物／欄位 | 合約與單位 |
+|---|---|
+| `features.csv` | 六欄：`ticker`、`name`、`market`、`mom20_pct`、`trend20_pct`、`vol20_annual_pct`；三因子為百分數，`10.000000` 代表 10%。UTF-8 BOM、六位小數、`ROUND_HALF_UP`。 |
+| `metadata.json` 的 `rows[].values` | `mom20`、`trend20`、`vol20` 以 Decimal 十進位字串保存比率；`0.10` 代表 10%。計算用 34 位精度、`ROUND_HALF_EVEN`。不能直接以 CSV 百分數替換核心 `FeatureRow.values`。 |
+| 每股來源 | `price_count=21`、`return_count=20`、`source_metadata`；保留來源 key、資料版本、取得時間及未核實時間／調整狀態。 |
+| 共同 metadata | `as_of`、`expected_dates_by_market`、`formulas`、`annualization_trading_days=252`、`units`、`input_window_report`、`input_manifest`、`daily_inputs`、`universe_version`、`calendar_version`／依據、`feature_version`、`price_basis`、`limitations`。輸入路徑與 hash 保留供追溯。 |
+| 排除紀錄／正式狀態 | `excluded_stocks` 沿用原視窗不足紀錄；`submission_ready=false`，原價分析不自動證明可交易或可提交。 |
+
+每次另建 `data/cache/features/<as_of>/<執行版本>/`，保存 features.csv、metadata.json 及 analysis.md。`feature_version` 按固定公式與輸入內容辨識，相同輸入可重算相同版本，執行時間與目錄另行保存。現有版本截至 2025-09-30 分析 146 檔、排除既有四檔；實際產物入口與重跑方式見 [專屬說明](factor_analysis.md#先看哪個檔案)。
+
+核心純計算為 [features.py](../src/etf_agent/features.py) 的 `calculate_price_features()`；`analyze_history_features()` 核對既有輸入並讀日表，`write_feature_analysis()` 保存產物。這份歷史分析尚未接入正式 `MarketSnapshot`／`FeatureTable`、完整 source→observation 證據鏈、加權排名或投資模型。公司行動、歷史 `known_at` 與臨時休市未全面核實，原行情的 `return_close` 留空、`adjustment_status=unresolved` 與 `tradable=false` 維持原狀；缺失處理另列 checklist DATA-22。
+
 ### 待完成
 
-現有 fixture 的因子與排名都是人工假值，`origin=fixture`。20 日動能、均線偏離、低波動、流動性篩選及加權排名還沒計算；需要至少 21 個符合條件的價格資料點與已核實市場交易日。O1～O25 只是 fixture 內部引用，還不是官方完整 source→observation 證據鏈。
+現有 `contracts-demo` 的因子與排名仍是人工假值，`origin=fixture`，上述真實歷史原價分析不會自動替換 fixture。調整價／公司行動、正式快照與因子合約串接、流動性篩選、因子標準化及加權排名尚未完成。O1～O25 只是 fixture 內部引用，還不是官方完整 source→observation 證據鏈。
 
 新增法人或營收時，在資料 adapter 與因子計算處擴充，沿用 FeatureTable、配置、股數計算與帳務。因子啟用與權重應集中配置，不能逐股偷偷換權重。
 

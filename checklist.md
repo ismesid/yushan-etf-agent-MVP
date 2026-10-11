@@ -4,6 +4,8 @@
 
 **本清單按實際驗收記錄，未勾選項目仍未完成。** 2026-10-11 已完成第 01～09 批合約、歷史樣本、CSV 格式、白名單及覆蓋檢查，以及第 10 批 F05 全股票月報下載功能。白名單共 150 檔（100 TWSE／50 TPEX）；2025-09 實際取得 147 檔、3,075 列，產生 21 個日檔及 147 個股月檔。3718／7769／7828 官方端點未回傳該月行情，後續已核實上市／上櫃日期均晚於該月；7750 僅回傳 2025-09-17～09-30 共 9 筆。前 12 個日檔 146／150、後 9 個日檔 147／150，缺件如實記錄，未宣稱完整覆蓋。第 10 批全套 132 項測試（30 核心合約＋36 歷史資料＋25 白名單＋28 覆蓋＋13 全股票下載）通過。CSV 4.0／22 欄及千元／張、張、千元等單位維持，核心合約仍用股與元。重複的 `history_sample` 目錄已清理，兩檔原始來源、行情及必要追溯／驗收證據併入全股票目錄，舊覆蓋報告保持原文；完整資料時間核實、公司行動、每日更新、因子、投資模型、配置、D-Plan、SQLite 帳務與回測仍待逐批實作。進度與授權統一記錄於 `development_notes.md`。
 
+第 15 批已完成 2025-09-30 的 146 檔歷史原價三因子分析 CSV、metadata JSON 與閱讀摘要，3 項重點測試通過，未重跑全套。第 16 批補齊指標理由／意義並整理 README 的架構與九命令入口、專屬操作文件，受影響匯出測試通過。第 13 批官方排程日曆及視窗為兩市場各 21 日，另外四檔不足沿用既有紀錄；第 14 批閱讀 CSV 已移除重複預期日期，缺失後續工作列 DATA-22。臨時休市、公司行動／return_close 與歷史可知時間仍待核實，正式資格仍 false；正式 FeatureTable／快照、排名及模型尚未串接。第 08～12 批累積修改已推送 `72a885b`，第 13～16 批納入本次 COMMIT PUSH 範圍，Git 操作與授權見 development_notes 的對應 Git 紀錄。
+
 第 01 批證據：`src/etf_agent/contracts.py`、`agent/base.py`、`cli.py`、`specs/internal/agent_draft.schema.json`、`tests/fixtures/contracts_demo.json`、`tests/test_contracts.py`、`docs/data_contracts.md`。PowerShell 先設定 `$env:PYTHONPATH = (Resolve-Path 'src').Path`；`python -B -m etf_agent.cli contracts-demo --fixture tests/fixtures/contracts_demo.json` 成功，25 檔持股市值 90,000,000.00 元＋現金 10,000,000.00 元＝NAV 100,000,000.00 元；`python -B -m unittest discover -s tests -p test_contracts.py` 為 30 tests、OK。全部為人工測試資料，`submission_ready=false`。
 
 每完成一項才把 `[ ]` 改成 `[x]`，並在旁邊留下測試結果／檔案路徑。若卡住，寫問題與採用的替代路徑，不直接勾選。`P0` 是這 8 小時必要；`P1` 延到會議後；`LIVE` 是正式參賽前必做，不以 demo 通過取代。
@@ -93,11 +95,11 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 
 - [x] **DATA-01／P0** 從 F05 擷取 `universe.csv`：四位字串代碼、名稱、TWSE／TPEX。第 08 批已產生 `data/universe.csv`／`universe.manifest.json`；純標準庫解碼三頁 PDF 文字，名稱沿用官方原文，保存來源／CSV hash、版本及每檔來源頁碼。
 - [x] **DATA-02／P0** 逐頁對照並測試 150 檔、100 上市、50 上櫃、無重複；抽查上市 2330／上櫃 5274。第 08 批核對頁 1 TWSE 60、頁 2 TWSE 40＋TPEX 16、頁 3 TPEX 34；`universe-check` exit 0，2330 台積電／TWSE、5274 信驊／TPEX。25 項白名單測試涵蓋上述檔數、未知代號／錯市場、重複、格式、缺檔與來源完整性；全套 91 tests、OK。
-- [ ] **DATA-03／P0** 取得官方交易日曆；前一交易日不以日期減 1 算，週末／休市也不造新資料。
+- [ ] **DATA-03／P0** 取得官方交易日曆；前一交易日不以日期減 1 算，週末／休市也不造新資料。第 13 批已取得兩市場官方年度排程，2025-09 各 21 個排程交易日、9/29 休市；臨時全市場休市仍未全面核實，actual_sessions_verified=false，完整實際日曆維持未勾選。
 - [x] **DATA-04／P0** TWSE 至少下載一個真實回應／CSV，檢查欄位、日期、量值單位、錯誤頁。第 02 批 `history-sample --month 2025-09` 實際 HTTP 200，2330 共 21 筆；JSON／原表 CSV／統一格式 CSV 已保存，股／元欄位及原始 SHA-256 核對通過；HTML 與 HTTP 拒絕的離線測試通過。
 - [ ] **DATA-05／P0** TPEx 同樣實測；若 API 不可用則取官方 CSV／快取，不漏 50 檔上櫃。第 10 批依 F05 處理全部 50 檔上櫃，2025-09 取得 48 檔、3718／7828 回傳空月；先前 5274 樣本已核對重用。月報為整數張／仟元且不含鉅額，核心精確股數／金額留空，reported 欄位僅換算；完整覆蓋及正式精確量值／成交口徑仍待核實，本項維持未勾選。
 - [ ] **DATA-06／P0** 核對 OpenAPI 是否真的支援歷史日期；不能把 latest 回應存成請求的歷史日。第 02 批確認兩市場個股月報查詢回傳指定 2025-09 並拒絕錯月；latest OpenAPI 加日期的能力未測試，不宣稱可查歷史。
-- [ ] **DATA-07／P0** 每檔核心因子用至少 21 個連續有效市場交易日；建議初次查 90 個日曆日。第 10 批 146 檔有 21 筆月報、7750 只有 9 筆、3 檔未取得；未核實交易日曆／公司行動，不能單憑筆數認定連續有效因子視窗。
+- [ ] **DATA-07／P0** 每檔核心因子用至少 21 個連續有效市場交易日；建議初次查 90 個日曆日。第 13 批依官方排程核對截至 2025-09-30 的 21 個日期，146 檔價格視窗完整、7750 僅 9 筆、3 檔為 0 筆；缺日不縮窗或補值。臨時休市、公司行動／return_close 與歷史可知時間尚未核實，尚無因子計算，維持未勾選。
 - [ ] **DATA-08／P0** 每個 provider 加 timeout／限速／最多 2 次重試及快取；儲存所有原始資料、實際 URL、抓取時刻與 hash。既有每請求 10 秒 timeout、獨立版本目錄、TLS 驗證與 raw 保存保持；第 10 批新增全股票下載單線、每兩個實際 HTTP 請求至少間隔 1 秒，核對快取 hash／月份／股票／來源後保留原 fetched_at 重用。150 個來源實跑 148 HTTP＋2 快取，逐股 manifest 原子保存可供續接。尚無自動重試或 HTTP 快取過期管理，本項維持未勾選。
 - [ ] **DATA-09／P0** 清理逗號／空白、ROC 日期；null 不填 0；所有量轉股、金額轉新臺幣元。月報樣本已實作上述內部轉換，單位／精度不符會停止；第 03 批閱讀 CSV 另用張顯示，不影響內部股數。上櫃核心量值暫留空，不把張／仟元縮位值當精確資料。全市場清洗仍未完成。
 - [ ] **DATA-10／P0** 檢查 OHLC、日期、交易金額／股數、重複與價格異常；衝突不任選一列。月報樣本已檢查日期／股票／OHLC／非負與零成交量值／重複衝突；完整成交均價口徑與異常政策仍未完成。
@@ -111,6 +113,12 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 - [ ] **DATA-18／P0** 如果改用 fixture，記錄切換原因；資料流程與報告中明確顯示 demo。
 - [ ] **DATA-19／P0** 取得官方產業分類，讓40%產業上限可驗；全缺失時不能拿UNKNOWN繞過限制。僅demo明示關閉則報告列「產業分散未實作」。
 - [x] **DATA-20／資料輔助** 依 F05 全 150 檔取得一個已完成月份，保存每檔成功／失敗、原始來源及每日／每股月 CSV；日／月內容一致，缺日缺股不補造。第 10 批 2025-09 實跑、132 項測試及下方產物核對通過。此項完成的是下載功能與取得範圍核對，不等於 150／150 完整行情或正式資料合格。
+- [x] **DATA-21／資料輔助** 保存兩市場官方月份排程，依資料截止日離線檢查 150 檔的 21 筆價格視窗，另存逐股 CSV／JSON／閱讀摘要。第 13 批兩個 CLI 實跑 exit 0，4 項重點測試通過；完成的是排程及價格缺件診斷，正式資格仍 false。
+- [ ] **DATA-22／後續資料工作** 使用者已接受 2025-09 的四檔不足原因，下一批優先討論因子分析，不再查缺失。後續需區分掛牌前本來無該市場行情、新股尚未累積 21 筆、停牌／無成交、API／檔案意外遺漏；跨月視窗讀取與必要下載另列批次。掛牌前不補造行情，新股累積足夠有效價格再納入；意外遺漏才評估續抓。臨時休市、公司行動／調整價與歷史可知時間依 DATA-03／11／13 後續補齊，正式用途前再驗收。第 14 批僅記錄待辦，未實作上述政策。
+
+第 14 批閱讀表調整：依使用者要求，`window_coverage.csv` 移除逐股重複的 expected_dates，改為 13 欄；missing_dates／invalid_price_dates 有缺失才列日期。程式匯出與目前開啟的 150 列 CSV 已同步，其他欄位值保持一致；JSON／日曆仍保存完整預期日期。DATA-22 是後續待辦，不宣稱缺失政策已完成，因子功能仍待新批次同意。
+
+第 13 批證據：[官方排程 CSV](data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.csv)、[排程來源及版本](data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json)、[150 檔價格視窗 CSV](data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv)、[閱讀摘要](data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md)。新增 `calendar.py`／`history_windows.py` 及兩個 CLI；日曆下載本身 2 次官方 HTTPS，視窗完全離線，沒有缺整日日表、input_valid=true。僅執行本批 4 項測試（0.195s）：完整視窗、週末／休市且不讀未來日、缺整日日表／新股不足，以及實際遇到的回應錯年防護；未重跑全套，前批 132 項通過證據仍是歷史紀錄。原下載 manifest／行情不改，actual_sessions_verified／submission_ready 均 false。重跑方式與授權見 `development_notes.md` 第 13 批。
 
 第 10 批全股票月報證據：[資料 manifest](data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json)、[逐日覆蓋／缺件](data/cache/history_universe/2025-09/20261011T145716_6e56c903/coverage.json)、[2025-09-01 日表](data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/2025-09-01_prices.csv)、[2330 月表](data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_2330_2025-09.csv)。150 個來源均有狀態與 raw，147 個月表／來源 CSV、21 個日檔共 3,075 列；150 raw hash 全部相符，日／月每欄值完全一致、3,075 個日期×股票唯一鍵，報告缺件集合一致。原兩檔快取保留 hash／fetched_at／版本，其餘 148 次真實官方 HTTPS。`history-universe` 已接 CLI，全套 132 tests、OK（13.821s）；錯月份 CLI 原生 exit 2 且未建輸出。下載有 3 檔缺件，coverage_complete／submission_ready 均 false；其他正式／完整資料項目維持未勾選。
 
@@ -140,22 +148,25 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 
 ## 6. T+2:00～3:00：特徵、排名與證據包
 
-- [ ] **FACTOR-01／P0** 實作 mom20=`P_t/P_(t-20)-1`，收益率以小數。
-- [ ] **FACTOR-02／P0** 實作 trend20=`P_t/SMA20-1`，SMA只用最近20交易日。
-- [ ] **FACTOR-03／P0** 實作 vol20=`std(20 daily returns,ddof=1)*sqrt(252)`；檢查0波動不是填值或停牌。
+- [x] **FACTOR-01／P0** 實作 mom20=`P_t/P_(t-20)-1`，收益率以小數。第 15 批 `features.py` 純函式與原價分析已驗收；內部 Decimal 小數、JSON 保存文字，閱讀 CSV 才顯示百分數；正式調整價格／候選資格另待核實。
+- [x] **FACTOR-02／P0** 實作 trend20=`P_t/SMA20-1`，SMA只用最近20交易日。第 15 批明確使用 21 筆中的最後 20 筆平均，手算及實際兩股獨立核對通過；不把 21 筆全平均當 SMA20。
+- [ ] **FACTOR-03／P0** 實作 vol20=`std(20 daily returns,ddof=1)*sqrt(252)`；檢查0波動不是填值或停牌。第 15 批已完成樣本波動公式（分母 19）及年化、固定價格回傳 0；停牌／零波動的正式資格政策仍未實作，完整本項維持未勾選。
 - [ ] **FACTOR-04／P0** 實作 adv20、lot_nav_pct、current_weight、breadth與TAIEX特徵；流動性作 eligibility，不額外偷偷加分。
 - [ ] **FACTOR-05／P0** 分位排名公式、平手平均、全相同0.5；低波動只反向一次。
 - [ ] **FACTOR-06／P0** 使用固定 profile：mom20=.40、trend20=.25、lowvol=.35；不逐股更換權重。
 - [ ] **FACTOR-07／P0** 儲存 features、每因子貢獻、score、排名、排除原因；平手以ticker固定順序。
-- [ ] **FACTOR-08／P0** 做一筆手算小例：價格增長／下降／恆定，確認因子方向、觀測數及區間。
+- [ ] **FACTOR-08／P0** 做一筆手算小例：價格增長／下降／恆定，確認因子方向、觀測數及區間。第 15 批手算首筆 100、後 20 筆 110（動能 10%、均線偏離 0%、年化波動 35.496479%）與固定價格三值 0 通過；專門下降手算尚未補測，維持未勾選。
 - [ ] **FACTOR-09／P0** 候選池＝前30＋全部原持股＋最多5分散候選；不得漏掉資料缺失的原持股。
+- [x] **FACTOR-10／分析輔助** 依已驗收完整視窗，離線產生三因子原價分析表、共用來源／公式 metadata 與分布閱讀摘要；截止日、期間與百分數單位明確，排除股票沿用既有缺失紀錄。第 15 批 146 檔／6 欄／21 日輸入及 3 項測試通過；不等於正式候選池、回測或模型決策。
 - [ ] **EVIDENCE-01／P0** Python 建 sources／observations；S/O連號、authority與市場一致、values只有數值。
 - [ ] **EVIDENCE-02／P0** 每個因子數字能對回原始列、區間與程式版本；計算值標明公式，不當作交易所直接公佈的欄位。
 - [ ] **EVIDENCE-03／P0** 明確決定歷史 source 分組方式；正式 sources≤50、observations≤100，不能刪必要證據湊數。
 - [ ] **EVIDENCE-04／P0** Evidence packet 含 cutoff、rules、account、rankings、原持股、baseline、O/S、allowed_tickers與品質報告。
 - [ ] **EVIDENCE-05／P0** 凍結packet與hash；不要讓Agent接資料時自行改清洗結果。
 
-完成證據：________。
+第 15 批完成證據：`src/etf_agent/features.py`、CLI `history-features`、`tests/test_features.py`、[146 檔分析 CSV](data/cache/features/2025-09-30/20261011T160349_3b42fa16/features.csv)、[來源／公式 metadata](data/cache/features/2025-09-30/20261011T160349_3b42fa16/metadata.json)、[閱讀摘要](data/cache/features/2025-09-30/20261011T160349_3b42fa16/analysis.md)。特徵版本 `price-features-v1-c9e2191b62ec`；3 tests、OK（1.505s），CLI exit 0，CSV BOM／146 唯一代號／6 欄與 JSON 一致，2330／5274 另用標準庫獨立公式核對 PASS；同輸入重算與不覆寫、日表改動阻擋已由測試驗收。全套、排名／權重、官方 S/O 引用及正式 FeatureTable／MarketSnapshot 尚未完成，本批不擴張勾選。
+
+第 16 批說明與導覽：[analysis.md](data/cache/features/2025-09-30/20261011T160349_3b42fa16/analysis.md) 及其產生器已補三指標的選用理由、含義、公式與未來用途，數值 CSV／metadata 不變。專屬 [因子分析](docs/factor_analysis.md)、[快速開始](docs/quickstart.md)、[歷史資料](docs/history_data.md)、[日曆／視窗](docs/calendar_windows.md) 說明由精簡 README 的架構／九命令入口連入；原價、正式串接及待實作狀態保持明確。受影響匯出測試 1 test、OK（0.130s），本批入口連結與命令對照通過，未新增測試或重跑全套；排名／風控及正式資格仍未完成。
 
 ## 7. T+3:00～4:00：真正的 Agent 決策與 API 預留
 

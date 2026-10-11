@@ -9,12 +9,15 @@ from decimal import Decimal
 from pathlib import Path
 
 from etf_agent.agent.base import AgentResult
+from etf_agent.calendar import CalendarError, download_calendar, load_calendar
 from etf_agent.contracts import (
     AccountSnapshot, AgentDraft, ContractError, DatasetSplitPlan, FeatureTable,
     MarketSnapshot, PortfolioProposal, ValidationReport,
 )
 from etf_agent.coverage import PriceCoverageError, check_daily_prices, write_coverage_report
+from etf_agent.features import FeatureAnalysisError, analyze_history_features, write_feature_analysis
 from etf_agent.history import download_history_sample, download_history_universe, export_history_sample
+from etf_agent.history_windows import HistoryWindowError, check_history_windows, write_window_report
 from etf_agent.providers.monthly import HistoryDataError
 from etf_agent.universe import UniverseError, load_universe
 
@@ -184,7 +187,68 @@ def main(argv: list[str] | None = None) -> int:
     prices.add_argument("--universe-manifest", type=Path, help="白名單來源版本紀錄")
     prices.add_argument("--output", type=Path, default=Path("data/cache/coverage"))
     prices.add_argument("--json", action="store_true", help="以 JSON 輸出報告及產物路徑")
+    calendar_command = commands.add_parser("calendar-download", help="取得官方年度開休市表，保存指定月份日曆")
+    calendar_command.add_argument("--month", required=True, help="已完成月份 YYYY-MM")
+    calendar_command.add_argument("--output", type=Path, default=Path("data/cache/calendar"))
+    calendar_command.add_argument("--transport", choices=("auto", "urllib", "curl"), default="auto")
+    windows = commands.add_parser("history-window-check", help="離線核對各股截至資料日的 21 筆價格視窗")
+    windows.add_argument("--manifest", required=True, type=Path, help="全股票歷史下載 manifest.json")
+    windows.add_argument("--calendar", required=True, type=Path, help="calendar-download 保存的 calendar.json")
+    windows.add_argument("--as-of", required=True, help="已完成歷史資料截止日，非盤前決策日 YYYY-MM-DD")
+    windows.add_argument("--universe", type=Path, default=Path("data/universe.csv"))
+    windows.add_argument("--universe-manifest", type=Path)
+    windows.add_argument("--output", type=Path, default=Path("data/cache/history_windows"))
+    features = commands.add_parser("history-features", help="依既有價格視窗離線產生原價三因子分析")
+    features.add_argument("--window-report", required=True, type=Path, help="已保存的 window_report.json")
+    features.add_argument("--output", type=Path, default=Path("data/cache/features"))
     args = parser.parse_args(argv)
+    if args.command == "history-features":
+        try:
+            report = analyze_history_features(args.window_report)
+            outputs = write_feature_analysis(report, args.output)
+        except (FeatureAnalysisError, OSError) as exc:
+            print(f"歷史因子分析錯誤：{exc}", file=sys.stderr)
+            return 2
+        print(f"截至 {report['as_of']}：分析 {len(report['rows'])} 檔；"
+              f"沿用既有不足視窗紀錄 {len(report['excluded_stocks'])} 檔。")
+        print("因子：20 日動能、20 日均線偏離、20 日年化波動；CSV 用百分數顯示。")
+        print(f"分析 CSV：{outputs['features_csv']}")
+        print(f"公式與來源 JSON：{outputs['metadata_json']}")
+        print(f"閱讀摘要：{outputs['analysis_md']}")
+        print("本批為歷史未調整原價分析；公司行動／歷史公開時間未核實，submission_ready=false。")
+        return 0
+    if args.command == "calendar-download":
+        try:
+            result = download_calendar(args.month, args.output, transport=args.transport)
+        except (CalendarError, OSError) as exc:
+            print(f"交易日曆取得錯誤：{exc}", file=sys.stderr)
+            return 2
+        for market, info in result["calendar"]["markets"].items():
+            print(f"{market} {args.month}：官方排程 {len(info['trade_dates'])} 個交易日")
+        print(f"日曆 JSON：{result['calendar_path']}")
+        print(f"日曆 CSV：{result['calendar_csv']}")
+        print("日曆依官方排程；臨時休市未完全核實，actual_sessions_verified=false。")
+        return 0
+    if args.command == "history-window-check":
+        try:
+            calendar = load_calendar(args.calendar)
+            universe = load_universe(args.universe, manifest_path=args.universe_manifest)
+            report = check_history_windows(args.manifest, as_of=args.as_of, calendar=calendar, universe=universe)
+            outputs = write_window_report(report, args.output)
+        except (CalendarError, UniverseError, HistoryWindowError, OSError) as exc:
+            print(f"價格視窗檢查錯誤：{exc}", file=sys.stderr)
+            return 2
+        summary = report["summary"]
+        print(f"截至 {args.as_of}：完整 {summary['complete_stock_count']}／{summary['stock_count']} 檔；"
+              f"不足 {summary['incomplete_stock_count']} 檔，每股需要 {report['required_bars']} 筆。")
+        for stock in report["stocks"]:
+            if not stock["window_complete"]:
+                print(f"{stock['market']} {stock['ticker']}：有效價格 {stock['valid_price_count']} 筆；{stock['status']}")
+        print(f"逐股 CSV：{outputs['report_csv']}")
+        print(f"報告 JSON：{outputs['report_json']}")
+        print(f"報告摘要：{outputs['report_md']}")
+        print("窗口齊全只表示歷史價格資料完整；公司行動／公開時間／正式交易仍未核實，submission_ready=false。")
+        return 0 if report["input_valid"] else 2
     if args.command == "history-universe":
         def show_progress(completed, total, entry):
             status = "快取" if entry.get("cache_hit") else "下載"
