@@ -2,7 +2,7 @@
 
 對應設計：`design1001.md` v0.3、`AGENTS.md` v1.0｜日期：2026-10-11
 
-**本清單按實際驗收記錄，未勾選項目仍未完成。** 2026-10-11 已完成第 01 批合約／離線 demo、第 02 批兩檔官方歷史月報下載、第 03 批張數顯示／離線重輸出、第 04 批千元／張與當日均價、第 05 批原報表 CSV 按月整理，以及第 06 批每日／每股月視圖。2330、5274 各 21 筆 2025-09 行情，已輸出 21 個日檔（每日 2 列）及 2 個股月檔；本次 Git 提交前重跑全套 66 項（30 核心合約＋36 歷史資料），全部通過。CSV 4.0 不逐列放網址／hash／原來源單位，成交量用張保留小數、價格／均價用千元／張、成交金額用千元；核心合約仍用股與元。150 檔完整資料、真實每日更新、因子、投資模型、配置、D-Plan、SQLite 帳務與回測仍待逐批實作；討論、決定及進度統一記錄於 `development_notes.md`。
+**本清單按實際驗收記錄，未勾選項目仍未完成。** 2026-10-11 已完成第 01～09 批合約、歷史樣本、CSV 格式、白名單及覆蓋檢查，以及第 10 批 F05 全股票月報下載功能。白名單共 150 檔（100 TWSE／50 TPEX）；2025-09 實際取得 147 檔、3,075 列，產生 21 個日檔及 147 個股月檔。3718／7769／7828 官方端點未回傳該月行情，後續已核實上市／上櫃日期均晚於該月；7750 僅回傳 2025-09-17～09-30 共 9 筆。前 12 個日檔 146／150、後 9 個日檔 147／150，缺件如實記錄，未宣稱完整覆蓋。第 10 批全套 132 項測試（30 核心合約＋36 歷史資料＋25 白名單＋28 覆蓋＋13 全股票下載）通過。CSV 4.0／22 欄及千元／張、張、千元等單位維持，核心合約仍用股與元。重複的 `history_sample` 目錄已清理，兩檔原始來源、行情及必要追溯／驗收證據併入全股票目錄，舊覆蓋報告保持原文；完整資料時間核實、公司行動、每日更新、因子、投資模型、配置、D-Plan、SQLite 帳務與回測仍待逐批實作。進度與授權統一記錄於 `development_notes.md`。
 
 第 01 批證據：`src/etf_agent/contracts.py`、`agent/base.py`、`cli.py`、`specs/internal/agent_draft.schema.json`、`tests/fixtures/contracts_demo.json`、`tests/test_contracts.py`、`docs/data_contracts.md`。PowerShell 先設定 `$env:PYTHONPATH = (Resolve-Path 'src').Path`；`python -B -m etf_agent.cli contracts-demo --fixture tests/fixtures/contracts_demo.json` 成功，25 檔持股市值 90,000,000.00 元＋現金 10,000,000.00 元＝NAV 100,000,000.00 元；`python -B -m unittest discover -s tests -p test_contracts.py` 為 30 tests、OK。全部為人工測試資料，`submission_ready=false`。
 
@@ -91,14 +91,14 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 
 ## 5. T+0:30～2:00：資料與清洗
 
-- [ ] **DATA-01／P0** 從 F05 擷取 `universe.csv`：四位字串代碼、名稱、TWSE／TPEX。
-- [ ] **DATA-02／P0** 逐頁對照並測試 150 檔、100 上市、50 上櫃、無重複；抽查上市 2330／上櫃 5274。
+- [x] **DATA-01／P0** 從 F05 擷取 `universe.csv`：四位字串代碼、名稱、TWSE／TPEX。第 08 批已產生 `data/universe.csv`／`universe.manifest.json`；純標準庫解碼三頁 PDF 文字，名稱沿用官方原文，保存來源／CSV hash、版本及每檔來源頁碼。
+- [x] **DATA-02／P0** 逐頁對照並測試 150 檔、100 上市、50 上櫃、無重複；抽查上市 2330／上櫃 5274。第 08 批核對頁 1 TWSE 60、頁 2 TWSE 40＋TPEX 16、頁 3 TPEX 34；`universe-check` exit 0，2330 台積電／TWSE、5274 信驊／TPEX。25 項白名單測試涵蓋上述檔數、未知代號／錯市場、重複、格式、缺檔與來源完整性；全套 91 tests、OK。
 - [ ] **DATA-03／P0** 取得官方交易日曆；前一交易日不以日期減 1 算，週末／休市也不造新資料。
 - [x] **DATA-04／P0** TWSE 至少下載一個真實回應／CSV，檢查欄位、日期、量值單位、錯誤頁。第 02 批 `history-sample --month 2025-09` 實際 HTTP 200，2330 共 21 筆；JSON／原表 CSV／統一格式 CSV 已保存，股／元欄位及原始 SHA-256 核對通過；HTML 與 HTTP 拒絕的離線測試通過。
-- [ ] **DATA-05／P0** TPEx 同樣實測；若 API 不可用則取官方 CSV／快取，不漏 50 檔上櫃。第 02 批 5274 月報 HTTP 200、21 筆，但尚未覆蓋 50 檔。月報為整數張／仟元且不含鉅額，核心精確股數／金額留空，reported 欄位僅換算；正式精確量值與成交口徑仍待接入。
+- [ ] **DATA-05／P0** TPEx 同樣實測；若 API 不可用則取官方 CSV／快取，不漏 50 檔上櫃。第 10 批依 F05 處理全部 50 檔上櫃，2025-09 取得 48 檔、3718／7828 回傳空月；先前 5274 樣本已核對重用。月報為整數張／仟元且不含鉅額，核心精確股數／金額留空，reported 欄位僅換算；完整覆蓋及正式精確量值／成交口徑仍待核實，本項維持未勾選。
 - [ ] **DATA-06／P0** 核對 OpenAPI 是否真的支援歷史日期；不能把 latest 回應存成請求的歷史日。第 02 批確認兩市場個股月報查詢回傳指定 2025-09 並拒絕錯月；latest OpenAPI 加日期的能力未測試，不宣稱可查歷史。
-- [ ] **DATA-07／P0** 每檔核心因子用至少 21 個連續有效市場交易日；建議初次查 90 個日曆日。
-- [ ] **DATA-08／P0** 每個 provider 加 timeout／限速／最多 2 次重試及快取；儲存所有原始資料、實際 URL、抓取時刻與 hash。第 02 批小量兩請求有 10 秒 timeout、每次獨立版本目錄及 manifest；TLS 維持驗證，403 不繞過。第 03 批已可由 manifest／raw 完全離線重新匯出，先核對 hash 並保留原 fetched_at；尚無自動重試、批次限速或 HTTP 快取命中／過期管理。
+- [ ] **DATA-07／P0** 每檔核心因子用至少 21 個連續有效市場交易日；建議初次查 90 個日曆日。第 10 批 146 檔有 21 筆月報、7750 只有 9 筆、3 檔未取得；未核實交易日曆／公司行動，不能單憑筆數認定連續有效因子視窗。
+- [ ] **DATA-08／P0** 每個 provider 加 timeout／限速／最多 2 次重試及快取；儲存所有原始資料、實際 URL、抓取時刻與 hash。既有每請求 10 秒 timeout、獨立版本目錄、TLS 驗證與 raw 保存保持；第 10 批新增全股票下載單線、每兩個實際 HTTP 請求至少間隔 1 秒，核對快取 hash／月份／股票／來源後保留原 fetched_at 重用。150 個來源實跑 148 HTTP＋2 快取，逐股 manifest 原子保存可供續接。尚無自動重試或 HTTP 快取過期管理，本項維持未勾選。
 - [ ] **DATA-09／P0** 清理逗號／空白、ROC 日期；null 不填 0；所有量轉股、金額轉新臺幣元。月報樣本已實作上述內部轉換，單位／精度不符會停止；第 03 批閱讀 CSV 另用張顯示，不影響內部股數。上櫃核心量值暫留空，不把張／仟元縮位值當精確資料。全市場清洗仍未完成。
 - [ ] **DATA-10／P0** 檢查 OHLC、日期、交易金額／股數、重複與價格異常；衝突不任選一列。月報樣本已檢查日期／股票／OHLC／非負與零成交量值／重複衝突；完整成交均價口徑與異常政策仍未完成。
 - [ ] **DATA-11／P0** 儲存停牌／無成交／公司行動狀態；無調整資料的事件區間股票不新建倉。
@@ -106,18 +106,31 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 - [ ] **DATA-13／P0** 把資料日／known_at／fetched_at 分開；盤前 packet 不含 T 日結算量值。第 02 批保留真實 fetched_at、trade_date、hash，無證據的 known_at 留空；未建真實盤前 packet 或核實歷史發布版本。
 - [ ] **DATA-14／P0** 建 `account_snapshot` 匯入：cash、NAV、ticker／shares、結算日、origin、reconciled。
 - [ ] **DATA-15／P0** 區分測試全現金帳、simulated、official_confirmed；測試 10 億本金不冒充實際官方期初帳。
-- [ ] **DATA-16／P0** 產 `data_quality.json`，列可選股數、缺資料、單位確認、資料日期、demo旗標與阻擋原因。第 02 批已有兩檔下載範圍的品質報告與限制，尚未有全股票池可選股數、完整覆蓋率或正式阻擋檢查。
+- [ ] **DATA-16／P0** 產 `data_quality.json`，列可選股數、缺資料、單位確認、資料日期、demo旗標與阻擋原因。第 02 批已有兩檔下載範圍的品質報告與限制；第 09 批已驗收獨立日表對 F05 的覆蓋率、有效價格與缺件報告。全股票池正式可選股數、交易日曆／截止／來源核實及正式阻擋檢查仍未完成，因此本項維持未勾選。
 - [ ] **DATA-17／P0** 不足20檔或缺NAV／庫存，回可讀失敗；不要硬補數字繼續。
 - [ ] **DATA-18／P0** 如果改用 fixture，記錄切換原因；資料流程與報告中明確顯示 demo。
 - [ ] **DATA-19／P0** 取得官方產業分類，讓40%產業上限可驗；全缺失時不能拿UNKNOWN繞過限制。僅demo明示關閉則報告列「產業分散未實作」。
+- [x] **DATA-20／資料輔助** 依 F05 全 150 檔取得一個已完成月份，保存每檔成功／失敗、原始來源及每日／每股月 CSV；日／月內容一致，缺日缺股不補造。第 10 批 2025-09 實跑、132 項測試及下方產物核對通過。此項完成的是下載功能與取得範圍核對，不等於 150／150 完整行情或正式資料合格。
 
-第 02 批樣本證據：首次下載的舊目錄已依使用者要求刪除；兩份原始 JSON／原表 CSV 及下載 manifest 原文保存於第 03 批 `data/cache/history_sample/2025-09/20261011T125021_603f0054/`（manifest 原文在 `provenance/original_manifest.json`）。檔案由 Git 忽略。`src/etf_agent/history.py`／`providers/`／CLI 已能重跑；當時 `tests/test_history.py` 25 項及原 30 項合約測試合計 55 tests、OK。功能與現存產物連結見 `docs/data_contracts.md`；這不代表本節其他未勾選項已完成。
+第 10 批全股票月報證據：[資料 manifest](data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json)、[逐日覆蓋／缺件](data/cache/history_universe/2025-09/20261011T145716_6e56c903/coverage.json)、[2025-09-01 日表](data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/2025-09-01_prices.csv)、[2330 月表](data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_2330_2025-09.csv)。150 個來源均有狀態與 raw，147 個月表／來源 CSV、21 個日檔共 3,075 列；150 raw hash 全部相符，日／月每欄值完全一致、3,075 個日期×股票唯一鍵，報告缺件集合一致。原兩檔快取保留 hash／fetched_at／版本，其餘 148 次真實官方 HTTPS。`history-universe` 已接 CLI，全套 132 tests、OK（13.821s）；錯月份 CLI 原生 exit 2 且未建輸出。下載有 3 檔缺件，coverage_complete／submission_ready 均 false；其他正式／完整資料項目維持未勾選。
+
+後續缺件核實及資料清理：[2025-09 行情可取得範圍](docs/history_availability_2025-09.md) 保存官方上市／上櫃日期及來源。3718／7769／7828 在該月尚未上市／上櫃，不填零、不補前身代號或興櫃行情、不改 F05 的 150 檔及原下載 manifest／coverage。全股票目錄為現行分析入口；原 `data/cache/history_sample/` 經重複資料核對後已清理。[樣本 manifest 原文](data/cache/history_universe/2025-09/20261011T145716_6e56c903/sample_manifest.json) 與 `provenance/history_sample/` 共保留七份追溯／驗收證據；兩份 raw／原表 CSV 與原價量已在全股票目錄。兩股離線匯出使用 `history-export --manifest data/cache/history_universe/2025-09/20261011T145716_6e56c903/sample_manifest.json --output data/cache/history_export`；重跑第 09 批 2／150 可用 [保存的樣本日表](data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv)。不勾選日曆／公司行動或正式品質項目。
+
+清理驗收：[cleanup.json](data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/cleanup.json) 記錄刪除 33 檔、68,275 bytes 及七份證據保存位置／hash。清理後全套 132 tests、OK（13.556s），樣本 manifest 已實測零 HTTP 重建 42 列／21 日檔，首日檔與保存的原輸入逐位元相同；原輸入也重跑 2／150 覆蓋。原全股票 468 檔、九份官方來源與兩份白名單檔案 hash 全不變，暫存驗證輸出已清理；本批沒有更動程式或正式資料合格條件。
+
+第 12 批清理：依使用者指示刪除 `data/cache/history_probe/`；其中兩份探測 JSON 已在全股票資料保存，無程式／文件／快取引用。只做必要的目標、依賴與刪除結果確認，未跑全套測試。後續驗證優先關鍵行為與常見案例，依改動影響選擇範圍，合作偏好見 `development_notes.md` 第 12 批。
+
+第 08 批白名單證據：`src/etf_agent/universe.py`／`tests/test_universe.py`、`data/universe.csv`／`universe.manifest.json`。版本 `F05-v1-c12c57571f22`，PDF 與 CSV 完整 SHA-256 記在 manifest；載入器核對雙 hash、150／100／50 與三欄格式。PowerShell 設定 `PYTHONPATH=src` 後執行 `python -B -m etf_agent.cli universe-check --universe data/universe.csv` 或 `python -B -m unittest discover -s tests -p test_universe.py`。當時白名單尚未串接行情下載；第 10 批已接入月報下載，目前仍未串接因子／Agent，不能因此勾選全市場完整行情、正式候選池或交易驗證；F05 也不是已核實的歷史時點股票池。
+
+第 09 批覆蓋驗收證據：沿用中斷前已存在的 `src/etf_agent/coverage.py`／`tests/test_coverage.py` 與 CLI `prices-check`，本批沒有重建白名單或修改程式。全套 119 tests、OK（1.736s）；28 項覆蓋測試包含錯日期／市場／重複、缺件、價格與 CLI exit 2 診斷。真實歷史日表實測 exit 0，另存 [覆蓋報告](data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.md)，取得 2／150、缺 148（TWSE 99／TPEX 49）、有效價格 2、原列 tradable=true 為 0、submission_ready=false；缺件 CSV 148 個唯一代號與白名單差集一致。當時另核對全部 21 個日表、42 列均符合相同覆蓋結果，禁止 HTTP／外部程序的核對中沒有網路呼叫。當時輸入、官方來源、白名單與舊報告保持不變；後續樣本目錄清理將重跑所需輸入原文另存，舊報告仍保留原輸入路徑與 hash。本機快取由 Git 忽略。當時使用者選擇下一批完整行情先做 2025-09、沿用 CSV，待第 10 批同意後才下載。
+
+第 02 批樣本證據：首次下載的舊目錄依使用者要求刪除後，兩份原始 JSON／原表 CSV 及下載 manifest 原文曾保存於第 03 批樣本目錄。該樣本目錄現也已清理，raw／原表 CSV 保留於全股票目錄，首次 manifest 原文保存於 [provenance/history_sample/original_manifest.json](data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/original_manifest.json)。檔案由 Git 忽略。`src/etf_agent/history.py`／`providers/`／CLI 已能重跑；當時 `tests/test_history.py` 25 項及原 30 項合約測試合計 55 tests、OK。功能與現存產物連結見 `docs/data_contracts.md`；這不代表本節其他未勾選項已完成。
 
 第 03 批格式驗收：`data/cache/history_sample/2025-09/20261011T125021_603f0054/` 的合併／個股 CSV 顯示 `volume_lots`／`reported_volume_lots`，不放 source_url；網址、精度及來源版本仍在 manifest。離線 `history-export` exit 0，42 列保留原價量、時間與 hash，股張換算可回復；TWSE 23,022,319 股＝23,022.319 張，TPEx 報表 356 張但精確值仍空。manifest 為 network_requests=0、CSV 2.0，核心合約1.0；59 tests（30＋29）OK，舊版與原始證據不覆寫。此批沒有勾選任何新的全市場資料／交易功能。
 
 後續清理：使用者要求直接刪除舊樣本，已移除 `20261011T122548_f1b87c04` 資料夾；刪除前確認新版原始檔與舊版相同、保留舊 manifest 原文及 hash，刪除後確認新版 42 列仍完整。README／功能文件及重跑指令改指向現存新版；程式仍按原方式每次建立新匯出目錄，此次清理沒有修改程式。
 
-第 04 批格式驗收：依使用者選擇，現存 `20261011T125021_603f0054/` 三份閱讀 CSV 已就地替換為 3.0，仍 42 列。價格欄 `_ktwd_per_lot` 表示千元／張，成交金額 `_ktwd` 表示千元；移除 CSV raw_sha256，保留 manifest 完整 hash／data_version 與核心合約。新增精確量值推算與 reported 估算均價，TPEx 精確均價空；均價顯示 8 位小數僅供閱讀，零量／缺值不補。63 tests（30 合約＋33 歷史）OK，逐列換算／時間／版本與原始檔 hash 核對通過，新版 manifest CLI 離線重輸出成功且零 HTTP。CSV 2.0 manifest 原文保存在 `provenance/csv_v2_manifest.json`；原始 JSON／原欄位 CSV 不變。正式結算、公司行動及防洩漏缺項未完成，因此未勾選新的交易／回測功能。
+第 04 批格式驗收：依使用者選擇，當時 `20261011T125021_603f0054/` 三份閱讀 CSV 就地替換為 3.0，仍 42 列。價格欄 `_ktwd_per_lot` 表示千元／張，成交金額 `_ktwd` 表示千元；移除 CSV raw_sha256，保留 manifest 完整 hash／data_version 與核心合約。新增精確量值推算與 reported 估算均價，TPEx 精確均價空；均價顯示 8 位小數僅供閱讀，零量／缺值不補。63 tests（30 合約＋33 歷史）OK，逐列換算／時間／版本與原始檔 hash 核對通過，新版 manifest CLI 離線重輸出成功且零 HTTP。CSV 2.0 manifest 原文當時保存在 `provenance/csv_v2_manifest.json`，現另存全股票目錄 `provenance/history_sample/csv_v2_manifest.json`；原始 JSON／原欄位 CSV 不變。正式結算、公司行動及防洩漏缺項未完成，因此未勾選新的交易／回測功能。
 
 第 05 批來源檔整理：兩份原欄位 CSV 已移到同 run 的 `source_csv/2025-09/`，檔名改為 `TWSE_2330_2025-09_source.csv`／`TPEX_5274_2025-09_source.csv`，移動前後 SHA-256 相同、舊同名來源檔不存在；產生器與 manifest 路徑同步。新增一項行為測試，歷史 34 tests、OK；既有離線重輸出測試亦確認不依賴手動改動的 source_csv。三份閱讀 CSV 仍為格式 3.0。每日／每股月視圖、可使用交易日及移除閱讀表原單位欄僅討論，尚未實作，不勾選日曆或防洩漏功能。
 
