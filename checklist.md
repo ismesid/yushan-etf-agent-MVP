@@ -4,7 +4,7 @@
 
 **本清單按實際驗收記錄，未勾選項目仍未完成。** 2026-10-11 已完成第 01～09 批合約、歷史樣本、CSV 格式、白名單及覆蓋檢查，以及第 10 批 F05 全股票月報下載功能。白名單共 150 檔（100 TWSE／50 TPEX）；2025-09 實際取得 147 檔、3,075 列，產生 21 個日檔及 147 個股月檔。3718／7769／7828 官方端點未回傳該月行情，後續已核實上市／上櫃日期均晚於該月；7750 僅回傳 2025-09-17～09-30 共 9 筆。前 12 個日檔 146／150、後 9 個日檔 147／150，缺件如實記錄，未宣稱完整覆蓋。第 10 批全套 132 項測試（30 核心合約＋36 歷史資料＋25 白名單＋28 覆蓋＋13 全股票下載）通過。CSV 4.0／22 欄及千元／張、張、千元等單位維持，核心合約仍用股與元。重複的 `history_sample` 目錄已清理，兩檔原始來源、行情及必要追溯／驗收證據併入全股票目錄，舊覆蓋報告保持原文；完整資料時間核實、公司行動、每日更新、因子、投資模型、配置、D-Plan、SQLite 帳務與回測仍待逐批實作。進度與授權統一記錄於 `development_notes.md`。
 
-第 15 批已完成 2025-09-30 的 146 檔歷史原價三因子分析 CSV、metadata JSON 與閱讀摘要，3 項重點測試通過，未重跑全套。第 16 批補齊指標理由／意義並整理 README 的架構與九命令入口、專屬操作文件，受影響匯出測試通過。第 13 批官方排程日曆及視窗為兩市場各 21 日，另外四檔不足沿用既有紀錄；第 14 批閱讀 CSV 已移除重複預期日期，缺失後續工作列 DATA-22。臨時休市、公司行動／return_close 與歷史可知時間仍待核實，正式資格仍 false；正式 FeatureTable／快照、排名及模型尚未串接。第 08～12 批累積修改已推送 `72a885b`，第 13～16 批納入本次 COMMIT PUSH 範圍，Git 操作與授權見 development_notes 的對應 Git 紀錄。
+第 15 批已完成 2025-09-30 的 146 檔歷史原價三因子分析 CSV、metadata JSON 與閱讀摘要，3 項重點測試通過，未重跑全套。第 16 批補齊指標理由／意義並整理 README 的架構與九命令入口、專屬操作文件，受影響匯出測試通過。第 13 批官方排程日曆及視窗為兩市場各 21 日，另外四檔不足沿用既有紀錄；第 14 批閱讀 CSV 已移除重複預期日期，缺失後續工作列 DATA-22。臨時休市、公司行動／return_close 與歷史可知時間仍待核實，正式資格仍 false；正式 FeatureTable／快照、排名及模型尚未串接。第 08～12 批累積修改已推送 `72a885b`，第 13～16 批已推送 `3848134`，Git 操作與授權見 development_notes 的對應 Git 紀錄。
 
 第 01 批證據：`src/etf_agent/contracts.py`、`agent/base.py`、`cli.py`、`specs/internal/agent_draft.schema.json`、`tests/fixtures/contracts_demo.json`、`tests/test_contracts.py`、`docs/data_contracts.md`。PowerShell 先設定 `$env:PYTHONPATH = (Resolve-Path 'src').Path`；`python -B -m etf_agent.cli contracts-demo --fixture tests/fixtures/contracts_demo.json` 成功，25 檔持股市值 90,000,000.00 元＋現金 10,000,000.00 元＝NAV 100,000,000.00 元；`python -B -m unittest discover -s tests -p test_contracts.py` 為 30 tests、OK。全部為人工測試資料，`submission_ready=false`。
 
@@ -167,6 +167,8 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 第 15 批完成證據：`src/etf_agent/features.py`、CLI `history-features`、`tests/test_features.py`、[146 檔分析 CSV](data/cache/features/2025-09-30/20261011T160349_3b42fa16/features.csv)、[來源／公式 metadata](data/cache/features/2025-09-30/20261011T160349_3b42fa16/metadata.json)、[閱讀摘要](data/cache/features/2025-09-30/20261011T160349_3b42fa16/analysis.md)。特徵版本 `price-features-v1-c9e2191b62ec`；3 tests、OK（1.505s），CLI exit 0，CSV BOM／146 唯一代號／6 欄與 JSON 一致，2330／5274 另用標準庫獨立公式核對 PASS；同輸入重算與不覆寫、日表改動阻擋已由測試驗收。全套、排名／權重、官方 S/O 引用及正式 FeatureTable／MarketSnapshot 尚未完成，本批不擴張勾選。
 
 第 16 批說明與導覽：[analysis.md](data/cache/features/2025-09-30/20261011T160349_3b42fa16/analysis.md) 及其產生器已補三指標的選用理由、含義、公式與未來用途，數值 CSV／metadata 不變。專屬 [因子分析](docs/factor_analysis.md)、[快速開始](docs/quickstart.md)、[歷史資料](docs/history_data.md)、[日曆／視窗](docs/calendar_windows.md) 說明由精簡 README 的架構／九命令入口連入；原價、正式串接及待實作狀態保持明確。受影響匯出測試 1 test、OK（0.130s），本批入口連結與命令對照通過，未新增測試或重跑全套；排名／風控及正式資格仍未完成。
+
+第 17 批 GitHub 導覽修正：README 的 6 個本機快取成果連結改連已提交的操作說明；相關文件 49 個快取超連結改標本機路徑。README 32 個及 docs 109 個導航連結已按 Git 追蹤範圍與標題 anchor 核對通過，改正第 16 批只驗本機存在的不足。本清單的歷史快取連結是本機驗收紀錄；GitHub 查閱及重建入口使用上述專屬說明。僅文件修改，未重跑程式測試或新增功能勾選，授權與證據見 `development_notes.md` 第 17 批。
 
 ## 7. T+3:00～4:00：真正的 Agent 決策與 API 預留
 

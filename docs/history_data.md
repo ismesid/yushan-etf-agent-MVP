@@ -54,7 +54,7 @@ history_universe/<月份>/<執行版本>/
 
 官方日期與來源見 [歷史行情可取得範圍](history_availability_2025-09.md)。維持原 150 檔名單，不補零、不用其他代號或興櫃行情替代。後續擴期間的缺失處理留在 checklist DATA-22，目前沿既有紀錄進行分析。
 
-可查看既有 [manifest](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json)、[逐日覆蓋](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/coverage.json)、[品質限制](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/data_quality.json)、[9/1 日表](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/2025-09-01_prices.csv) 與 [2330 月表](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_2330_2025-09.csv)。
+可查看既有 manifest（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json`）、逐日覆蓋（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/coverage.json`）、品質限制（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/data_quality.json`）、9/1 日表（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/2025-09-01_prices.csv`） 與 2330 月表（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_2330_2025-09.csv`）。
 
 三檔指定市場缺件使這次下載 `success=false`，但成功資料與失敗回應均保存。原價、調整價與歷史公開時間的限制仍有效，`submission_ready=false`。
 
@@ -72,7 +72,7 @@ python -B -m etf_agent.cli history-sample --month 2025-09 --output data/cache/hi
 python -B -m etf_agent.cli history-export --manifest data/cache/history_universe/2025-09/20261011T145716_6e56c903/sample_manifest.json --output data/cache/history_export
 ```
 
-以上 manifest 與兩檔 raw 已保存在全股票目錄，原 `history_sample` 重複快取已清理；仍可離線重建 42 列／21 個日表。早期驗收與原報告保存在 [provenance/history_sample](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/)，對應索引見 [cleanup.json](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/cleanup.json)。全股票重建使用前述 `history-universe --cache-manifest`，不要將全股票 manifest 交給 `history-export`。
+以上 manifest 與兩檔 raw 已保存在全股票目錄，原 `history_sample` 重複快取已清理；仍可離線重建 42 列／21 個日表。早期驗收與原報告保存在 provenance/history_sample（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/`），對應索引見 cleanup.json（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/cleanup.json`）。全股票重建使用前述 `history-universe --cache-manifest`，不要將全股票 manifest 交給 `history-export`。
 
 ## 每日覆蓋檢查
 
@@ -86,7 +86,7 @@ python -B -m etf_agent.cli prices-check --prices data/cache/history_universe/202
 
 每次另建 `data/cache/coverage/<資料日>/<版本>/`，保存 `coverage.json`、`coverage.md`、`missing_stocks.csv`。已取得股票、有效價格及原輸入 `tradable=true` 分開統計；覆蓋完整不代表正式可交易。
 
-早期兩檔示例的 [舊覆蓋報告](../data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.md) 保存當時 2／150 結果及原路徑。若要重現，改讀 [保存的兩檔日表](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv)；日常分析使用全股票 daily。
+早期兩檔示例的 舊覆蓋報告（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.md`） 保存當時 2／150 結果及原路徑。若要重現，改讀 保存的兩檔日表（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`）；日常分析使用全股票 daily。
 
 ## 退碼與後續步驟
 

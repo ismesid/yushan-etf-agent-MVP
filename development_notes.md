@@ -7,6 +7,7 @@
 - 目標：約 8 小時完成可開會討論的 ETF MVP，模組保留資料、因子、模型與 UI 的擴充邊界。
 - 每批約 10～30 分鐘，先說明與討論，使用者明確同意後實作；每批完成展示結果，再討論下一批。第一批同意不授權後續階段。
 - 文件維護：依使用者第 16 批要求，README 作快速理解專案架構、現況與執行的入口；完整參數、輸入輸出、續接與失敗處理連到各功能專屬文件。各批更新 README 的功能狀態與入口，測試流水帳留本檔／checklist，避免持續堆進 README。
+- GitHub 導覽：README 與操作文件的倉庫內連結必須指向 Git 已追蹤的檔案或目錄，並核對章節標題；不能只驗本機檔案存在。被忽略的快取成果顯示為明確本機路徑，入口連至可閱讀的說明與重建方式。
 - 已讀根目錄 `AGENTS.md` v1.0、`design1001.md` v0.3、`checklist.md`（2026-10-11），首輪已閱讀 F01～F09 九份官方來源，來源內容未修改。
 - 官方要求以對應原文為準；策略權重、風控閾值仍待討論。下列 demo 數值與時間切分是專案示例，不能當成官方規則。
 
@@ -303,3 +304,12 @@ python -B -m unittest discover -s tests -p test_features.py -v
 - 範圍：15 檔，包括 calendar／history_windows／features 三個模組、三份對應測試、CLI、README、資料合約、四份專屬操作文件、checklist 與本檔；行情快取與生成分析保留本機，提交摘要產生器及重算說明。
 - 提交前檢查：git diff --check 通過，變更名單與 CLI 所需模組一致；.gitignore 已排除 cache、帳戶、金鑰及本機設定，沒有額外未授權檔案。沿用第 13～16 批的必要測試與實際產物驗收證據，不重跑全套或抓行情。
 - 保存目標：本機 main → origin/main，GitHub `ismesid/yushan-etf-agent-MVP`；以一般 git commit／git push 保存。最終 commit ID 與推送／同步結果在本次回覆提供，也可用 git log -1 與 git status 查看。
+
+## 17｜修正 GitHub 文件的快取成果連結（2026-10-11）
+
+- 授權：使用者回報 README 連結在 GitHub 顯示 404，後續要求「繼續」。延續已授權文件修正與 COMMIT PUSH，修正導航、更新紀錄並推送；未開始排名、策略或資料下載。
+- 原因：第 16 批僅檢查本機存在，漏了 Git 追蹤範圍；README 的 6 個成果連結指向被 `.gitignore` 排除的 `data/cache/`，GitHub 沒有這些檔案。第 13～16 批先前已由 `3848134` 推送 main，本批修正該版本的文件入口。
+- 修改：README 的成果入口連至已提交的歷史資料、日曆／視窗與因子分析說明；5 份相關文件的 49 個快取超連結改為標明本機的程式碼路徑，quickstart 同步說明 GitHub 閱讀與本機重建。資料合約及因子文件升 1.17。歷史 checklist 的驗收連結保留當時紀錄，本批不將快取加入 Git。
+- 閱讀例子：在 GitHub 點 README「因子說明、範例與重算」可進入 `docs/factor_analysis.md`，閱讀三個指標與 2330 範例；依命令重建後，再用 IDE／Excel 開啟本機 `features.csv`、`analysis.md`、`metadata.json`。既有數值、行情、計算程式、帳戶與正式資格均未修改。
+- 實際驗收：README 32 個及 docs 109 個本地 Markdown 導航連結，全部能對應 Git 追蹤檔案／目錄，所用標題 anchor 均吻合；快取已不再作這兩個範圍的導航連結。文字替換的 UTF-8 標記問題已在提交前修正；命令範例與原版一致，git diff --check 通過。僅文件修改，未跑 Python 測試、掃行情 hash 或查外部網址／HTTP 狀態。
+- 保存與後續：本批 9 份文件以一般 commit／push 保存 main → origin/main，最終 ID 與同步結果在回覆提供。排名／權重仍需另外討論；本機行情與分析維持原保存方式。

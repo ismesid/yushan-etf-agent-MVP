@@ -23,7 +23,7 @@ python -B -m etf_agent.cli calendar-download --month 2025-09 --output data/cache
 
 日曆以例行週一至週五及官方排程事件建立。`calendar_basis=official_schedule`、`schedule_verified=true`；天然災害等臨時全市場休市尚未全面核實，`actual_sessions_verified=false`。它是排程核對基礎，不能宣稱已確認所有實際交易日。
 
-現有 2025-09 日曆兩市場各 21 個排程交易日，9/29 排程休市。可查看 [calendar.csv](../data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.csv) 與 [calendar.json](../data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json)。
+現有 2025-09 日曆兩市場各 21 個排程交易日，9/29 排程休市。可查看 calendar.csv（本機路徑 `data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.csv`） 與 calendar.json（本機路徑 `data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json`）。
 
 ## 價格視窗檢查
 
@@ -59,7 +59,7 @@ python -B -m etf_agent.cli history-window-check --manifest data/cache/history_un
 | 7750 | 9 筆 | 缺 9/17 掛牌前的 12 個排程日 |
 | 3718、7769、7828 | 各 0 筆 | 各缺 21 個排程日，該月尚未在指定市場掛牌 |
 
-沒有缺整日日表，`input_valid=true`。可查看 [150 檔 CSV](../data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv)、[完整 JSON](../data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.json) 與 [閱讀報告](../data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md)。掛牌原因見 [歷史行情可取得範圍](history_availability_2025-09.md)。
+沒有缺整日日表，`input_valid=true`。可查看 150 檔 CSV（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv`）、完整 JSON（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.json`） 與 閱讀報告（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md`）。掛牌原因見 [歷史行情可取得範圍](history_availability_2025-09.md)。
 
 ## 退碼與限制
 

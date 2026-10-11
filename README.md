@@ -58,13 +58,15 @@ python -B -m etf_agent.cli contracts-demo --fixture tests/fixtures/contracts_dem
 | 檢查 21 筆價格 | `history-window-check` | [價格視窗](docs/calendar_windows.md#價格視窗檢查) |
 | 產生與閱讀三因子 | `history-features` | [因子意義、公式與用法](docs/factor_analysis.md) |
 
-## 查看目前成果
+## 查看結果與重建
 
-| 內容 | 本機成果 |
-|---|---|
-| 每日／每股月行情 | [daily 目錄](data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/)／[monthly 目錄](data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/) |
-| 150 檔價格視窗與缺失日期 | [window_coverage.csv](data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv)／[閱讀報告](data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md) |
-| 146 檔三因子與解讀 | [features.csv](data/cache/features/2025-09-30/20261011T160349_3b42fa16/features.csv)／[analysis.md](data/cache/features/2025-09-30/20261011T160349_3b42fa16/analysis.md) |
+GitHub 可直接閱讀下方說明與數值範例。行情 CSV、來源 JSON 與每次產生的分析報告保存在本機 `data/cache/`；依操作說明重建後，用 CLI 顯示的路徑在 IDE 或 Excel 開啟。
+
+| 內容 | GitHub 說明與重建方式 | 本機產物 |
+|---|---|---|
+| 每日／每股月行情 | [資料結構與下載](docs/history_data.md#產物結構與讀取方式) | `daily/`、`monthly/` 下的 CSV |
+| 150 檔價格視窗與缺失日期 | [視窗報告與解讀](docs/calendar_windows.md#輸出與閱讀) | `window_coverage.csv`、`window_report.md` |
+| 146 檔三因子與解讀 | [因子說明、範例與重算](docs/factor_analysis.md) | `features.csv`、`analysis.md`、`metadata.json` |
 
 ## 設計、規則與進度
 

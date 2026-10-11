@@ -1,6 +1,6 @@
 # 共用資料合約與功能導覽
 
-文件版本：1.16｜更新：2026-10-11｜內部合約版本：1.0｜歷史閱讀 CSV 格式版本：4.0｜對應設計：[design1001.md v0.3](../design1001.md)
+文件版本：1.17｜更新：2026-10-11｜內部合約版本：1.0｜歷史閱讀 CSV 格式版本：4.0｜對應設計：[design1001.md v0.3](../design1001.md)
 
 本文件說明各模組吃什麼資料、交出什麼結果，以及目前程式實際能做什麼。**資料合約**是模組共用的欄位、單位與檢查規則；定義合約不等於已完成抓取、計算或交易功能。六種核心合約集中在 [contracts.py](../src/etf_agent/contracts.py)，金額使用 `Decimal`，以 Python 標準庫的 `dataclass` 定義資料。HTTP、模型 SDK、檔案與資料庫操作留在各自模組。
 
@@ -191,9 +191,9 @@ python -B -m unittest discover -s tests -p test_coverage.py -v
 
 日表格式無列錯誤時，CLI 回傳 exit code 0，即使只有 2／150 檔也會保存報告並顯示 `coverage_complete=false`。有錯日期／市場／重複或數值等列錯誤時，仍保存診斷報告，回傳 2。缺檔、標頭不符、CSV 無法解析或白名單載入失敗時，直接回傳 2，不製造看似有效的覆蓋報告。成功讀取與完整覆蓋分開判斷，日後選股不能只看 CLI exit code。
 
-第 09 批接續驗收已實際執行全套 119 項測試並通過，其中覆蓋檢查為 28 項。當時真實歷史樣本日表的 CLI 實測另存 [2025-09-01 閱讀報告](../data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.md)、[完整 JSON](../data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.json) 與 [148 檔缺件 CSV](../data/cache/coverage/2025-09-01/20261011T144802_4463a889/missing_stocks.csv)。結果為取得 2／150、有效價格 2、原列 tradable=true 為 0，並保留四類限制及 submission_ready=false。當時全部 21 個日表、42 列也已離線核對相同覆蓋結果；沒有下載新行情，測試中的 150 檔完整列仍是人工 fixture。
+第 09 批接續驗收已實際執行全套 119 項測試並通過，其中覆蓋檢查為 28 項。當時真實歷史樣本日表的 CLI 實測另存 2025-09-01 閱讀報告（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.md`）、完整 JSON（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.json`） 與 148 檔缺件 CSV（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/missing_stocks.csv`）。結果為取得 2／150、有效價格 2、原列 tradable=true 為 0，並保留四類限制及 submission_ready=false。當時全部 21 個日表、42 列也已離線核對相同覆蓋結果；沒有下載新行情，測試中的 150 檔完整列仍是人工 fixture。
 
-舊報告與原輸入路徑保留為當時證據，原樣本目錄已清理。要重跑 2／150 的樣本覆蓋結果，可將上述 `--prices` 改為 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`；這份 [保存的兩檔輸入](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv) 保留原文與 hash。日常分析用全股票日表，上述目前指令會核對 146／150。
+舊報告與原輸入路徑保留為當時證據，原樣本目錄已清理。要重跑 2／150 的樣本覆蓋結果，可將上述 `--prices` 改為 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`；這份 保存的兩檔輸入（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`） 保留原文與 hash。日常分析用全股票日表，上述目前指令會核對 146／150。
 
 **程式位置：** [coverage.py](../src/etf_agent/coverage.py) 的 `check_daily_prices()`、`write_coverage_report()`；[cli.py](../src/etf_agent/cli.py) 的 `prices-check` 命令；相關行為測試見 [test_coverage.py](../tests/test_coverage.py)。授權、實測與下一步記於 [development_notes.md](../development_notes.md) 第 09 批。
 
@@ -273,14 +273,14 @@ CSV 使用 UTF-8 BOM，方便 Excel 顯示中文；空欄代表 `null`。新版�
 
 `ktwd` 表示新臺幣千元，`lot` 表示張。第 06 批曾完全離線將兩檔樣本整理為 21 份日表及兩份月表，保留 42 列；第 10 批全股票下載核對並復用這兩份原始來源，現存資料統一於 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/`：
 
-- [2025-09-01 每日價量 CSV（146 列、張／千元）](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/2025-09-01_prices.csv)。全批 21 個來源回傳日，共 3,075 列；缺件另見下節，未填造休市或無行情日期。
-- [TWSE 2330 月表（21 列）](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_2330_2025-09.csv)、[TPEx 5274 月表（21 列）](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TPEX_5274_2025-09.csv)。兩股原價量、原抓取時間與版本保留；來源代號依全股票批次配置。月表供個股歷史查閱，不與日表重複合併。
-- [TWSE 原報表欄位 CSV](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/source_csv/2025-09/TWSE_2330_2025-09_source.csv)、[TPEx 原報表欄位 CSV](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/source_csv/2025-09/TPEX_5274_2025-09_source.csv)。依月份分目錄、檔名加 `_source`，保留原欄位、字串及單位，與原樣本檔逐位元相同。
-- [TWSE 原始 JSON](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/raw/TWSE_2330_2025-09.json)、[TPEx 原始 JSON](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/raw/TPEX_5274_2025-09.json)。原內容及 hash 保留，不重新下載這兩股。
-- [全股票 manifest](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json) 與 [品質報告](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/data_quality.json) 是現行索引，保存網址、HTTP 狀態、原抓取時間、hash、版本、單位及日／月路徑。
-- [樣本 manifest 原文](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/sample_manifest.json)、[樣本品質報告](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/data_quality.json) 與 [首次下載 manifest 原文](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/original_manifest.json) 另行保存，內容與 hash 不變。樣本 manifest 的舊 run ID、輸入目錄、日表列數與格式整理路徑是歷史紀錄，不能當作現行全股票索引；`history-export` 仍可從它與同目錄兩份 raw 完全離線重建兩股 CSV。
+- 2025-09-01 每日價量 CSV（146 列、張／千元）（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/2025-09-01_prices.csv`）。全批 21 個來源回傳日，共 3,075 列；缺件另見下節，未填造休市或無行情日期。
+- TWSE 2330 月表（21 列）（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_2330_2025-09.csv`）、TPEx 5274 月表（21 列）（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TPEX_5274_2025-09.csv`）。兩股原價量、原抓取時間與版本保留；來源代號依全股票批次配置。月表供個股歷史查閱，不與日表重複合併。
+- TWSE 原報表欄位 CSV（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/source_csv/2025-09/TWSE_2330_2025-09_source.csv`）、TPEx 原報表欄位 CSV（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/source_csv/2025-09/TPEX_5274_2025-09_source.csv`）。依月份分目錄、檔名加 `_source`，保留原欄位、字串及單位，與原樣本檔逐位元相同。
+- TWSE 原始 JSON（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/raw/TWSE_2330_2025-09.json`）、TPEx 原始 JSON（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/raw/TPEX_5274_2025-09.json`）。原內容及 hash 保留，不重新下載這兩股。
+- 全股票 manifest（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json`） 與 品質報告（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/data_quality.json`） 是現行索引，保存網址、HTTP 狀態、原抓取時間、hash、版本、單位及日／月路徑。
+- 樣本 manifest 原文（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/sample_manifest.json`）、樣本品質報告（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/data_quality.json`） 與 首次下載 manifest 原文（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/original_manifest.json`） 另行保存，內容與 hash 不變。樣本 manifest 的舊 run ID、輸入目錄、日表列數與格式整理路徑是歷史紀錄，不能當作現行全股票索引；`history-export` 仍可從它與同目錄兩份 raw 完全離線重建兩股 CSV。
 
-原 `data/cache/history_sample/` 經重複資料核對後已清理。樣本格式變遷證據另存 `provenance/history_sample/`，包含 `csv_v2_manifest.json`、`source_layout_manifest.json`、`daily_monthly_manifest.json` 及 [第 09 批兩股日表輸入](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv)；上述樣本 manifest 與品質／原始 manifest 合計保存七份證據。另有 [清理及保存 hash 索引](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/cleanup.json)，記錄原路徑、保存路徑及刪除範圍。第 09 批覆蓋報告保留原始輸入路徑，不回改歷史。
+原 `data/cache/history_sample/` 經重複資料核對後已清理。樣本格式變遷證據另存 `provenance/history_sample/`，包含 `csv_v2_manifest.json`、`source_layout_manifest.json`、`daily_monthly_manifest.json` 及 第 09 批兩股日表輸入（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`）；上述樣本 manifest 與品質／原始 manifest 合計保存七份證據。另有 清理及保存 hash 索引（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/cleanup.json`），記錄原路徑、保存路徑及刪除範圍。第 09 批覆蓋報告保留原始輸入路徑，不回改歷史。
 
 | 閱讀 CSV 欄位 | 單位與用途 | 精度／例子 |
 |---|---|---|
@@ -465,9 +465,9 @@ coverage.json                              # 失敗股票、來源回傳各日�
 
 資料入口：
 
-- [每日表目錄](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/)及 [2025-09-01 日表](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/2025-09-01_prices.csv)。
-- [每股月表目錄](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/)、[2330 月表](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_2330_2025-09.csv)、[7750 月表（9 筆）](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_7750_2025-09.csv)。
-- [來源及逐股狀態 manifest](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json)、[逐日覆蓋與缺件 coverage](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/coverage.json)、[品質報告](../data/cache/history_universe/2025-09/20261011T145716_6e56c903/data_quality.json)。
+- 每日表目錄（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/`）及 2025-09-01 日表（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/2025-09-01_prices.csv`）。
+- 每股月表目錄（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/`）、2330 月表（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_2330_2025-09.csv`）、7750 月表（9 筆）（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_7750_2025-09.csv`）。
+- 來源及逐股狀態 manifest（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json`）、逐日覆蓋與缺件 coverage（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/coverage.json`）、品質報告（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/data_quality.json`）。
 
 第 10 批全套 132 項測試通過（13.821 秒）。這是程式檢查證據；三檔真實來源無行情與 7750 部分日期仍如實保留，不因測試通過而變成完整歷史資料集。第 09 批覆蓋報告保留不改，樣本來源與必要驗收紀錄已另存；以上連結為 Git 忽略的本機快取，新 clone 不會附帶。
 
@@ -524,9 +524,9 @@ python -B -m etf_agent.cli calendar-download --month 2025-09 --output data/cache
 python -B -m etf_agent.cli history-window-check --manifest data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json --calendar data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json --as-of 2025-09-30 --output data/cache/history_windows
 ```
 
-實際日曆下載為兩次 HTTP、exit 0；TWSE／TPEx 各 21 個排程交易日，9/29 排程休市。[日曆 CSV](../data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.csv) 供閱讀，[日曆 JSON](../data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json) 保存日期及官方來源索引，`actual_sessions_verified=false`。
+實際日曆下載為兩次 HTTP、exit 0；TWSE／TPEx 各 21 個排程交易日，9/29 排程休市。日曆 CSV（本機路徑 `data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.csv`） 供閱讀，日曆 JSON（本機路徑 `data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json`） 保存日期及官方來源索引，`actual_sessions_verified=false`。
 
-截至 2025-09-30，146 檔各有完整 21 筆有效價格，7750 有 9 筆、3718／7769／7828 各 0 筆；`missing_day_files=[]`、`input_valid=true`、CLI exit 0。[150 檔視窗 CSV](../data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv)、[完整 JSON](../data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.json) 與 [閱讀摘要](../data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md) 另存，沒有改原行情或下載 manifest。
+截至 2025-09-30，146 檔各有完整 21 筆有效價格，7750 有 9 筆、3718／7769／7828 各 0 筆；`missing_day_files=[]`、`input_valid=true`、CLI exit 0。150 檔視窗 CSV（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv`）、完整 JSON（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.json`） 與 閱讀摘要（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md`） 另存，沒有改原行情或下載 manifest。
 
 第 13 批實際通過一項日曆年度測試與三項價格視窗測試，未重跑全套。後續原價因子分析見下方「因子與排名」；視窗完整不能替代公司行動、歷史可知時間或正式快照核實。
 

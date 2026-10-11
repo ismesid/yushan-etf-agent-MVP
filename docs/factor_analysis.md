@@ -1,6 +1,6 @@
 # 三因子分析：選擇理由、數值解讀與執行方式
 
-文件版本：1.16｜更新：2026-10-11｜對應設計：[design1001.md §3、§7.1、§8](../design1001.md)
+文件版本：1.17｜更新：2026-10-11｜對應設計：[design1001.md §3、§7.1、§8](../design1001.md)
 
 本頁說明目前已實作的歷史原價分析。專案架構與快速入口見 [README](../README.md)，欄位與模組責任見 [資料合約](data_contracts.md#原價歷史三因子分析)。
 
@@ -53,9 +53,9 @@
 
 | 檔案 | 用途 | 本機已完成的 2025-09-30 版本 |
 |---|---|---|
-| `analysis.md` | 先理解指標選擇、數值含義，再看分析母體、分布與股票範例 | [閱讀摘要](../data/cache/features/2025-09-30/20261011T160349_3b42fa16/analysis.md) |
-| `features.csv` | 用 Excel 查看、篩選每股三因子原始值；一股一列 | [146 檔分析表](../data/cache/features/2025-09-30/20261011T160349_3b42fa16/features.csv) |
-| `metadata.json` | 查共同日期、公式、單位、內部數值、來源版本與排除紀錄 | [計算來源](../data/cache/features/2025-09-30/20261011T160349_3b42fa16/metadata.json) |
+| `analysis.md` | 先理解指標選擇、數值含義，再看分析母體、分布與股票範例 | 閱讀摘要（本機路徑 `data/cache/features/2025-09-30/20261011T160349_3b42fa16/analysis.md`） |
+| `features.csv` | 用 Excel 查看、篩選每股三因子原始值；一股一列 | 146 檔分析表（本機路徑 `data/cache/features/2025-09-30/20261011T160349_3b42fa16/features.csv`） |
+| `metadata.json` | 查共同日期、公式、單位、內部數值、來源版本與排除紀錄 | 計算來源（本機路徑 `data/cache/features/2025-09-30/20261011T160349_3b42fa16/metadata.json`） |
 
 這些產物是本機快取，Git 忽略 `data/cache`；新 checkout 不會自帶上述執行版本，需先取得月行情、日曆與視窗，再重算分析。
 

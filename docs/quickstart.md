@@ -81,7 +81,7 @@ python -B -m unittest discover -s tests -p 'test_*.py' -v
 
 程式、官方參考來源及白名單放在倉庫；行情與分析各次執行另建 `data/cache/<功能>/<月份或截止日>/<執行版本>/`。新產物不覆寫舊版本，下一個命令應使用剛產生的 manifest／報告路徑。
 
-[.gitignore](../.gitignore) 忽略 `data/cache/`、真實帳戶 `data/account/`、執行產物、資料庫、日誌、金鑰與本機設定。README 的既有行情連結指向本機快取；需要重建時依序使用 [歷史資料](history_data.md)、[日曆／視窗](calendar_windows.md)、[三因子分析](factor_analysis.md)。
+[.gitignore](../.gitignore) 忽略 `data/cache/`、真實帳戶 `data/account/`、執行產物、資料庫、日誌、金鑰與本機設定。文件所列快取路徑供本機查閱，GitHub 的可點擊入口連到已提交的說明；需要重建時依序使用 [歷史資料](history_data.md)、[日曆／視窗](calendar_windows.md)、[三因子分析](factor_analysis.md)。
 
 每次提交前先檢查差異，明確加入本批檔案；以下只是合約與文件修改的示例：
 
