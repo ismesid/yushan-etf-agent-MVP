@@ -61,3 +61,10 @@ schema 只驗證 JSON 可讀及檢查結構，沒有執行 `jsonschema` 或官�
 - 驗證：忽略規則已命中 `.env`、`data/account/`、`data/cache/`、`runs/`；文字檔金鑰模式檢查無匹配。程式未變，本批不重跑既有 30 項合約測試。
 - 提交／推送：初始提交 `d6cd05f` 成功推送，`main` 已追蹤 `origin/main`；九份官方檔案的工作檔與 Git blob SHA-256 比對全部相同。日記、README 及本紀錄的完成證據另作文件提交。
 - Windows 環境：沙盒初始化的 Git 目錄與本機使用者不同；經工具批准，只將本專案的絕對路徑加入 Git `safe.directory`，未信任其他目錄。
+
+## Git-02｜倉庫名稱加上 MVP（2026-10-11）
+
+- 授權：使用者明確要求在倉庫名稱最後加 `MVP`，表示測試版。
+- 結果：GitHub 已改名為私有 [ismesid/yushan-etf-agent-MVP](https://github.com/ismesid/yushan-etf-agent-MVP)，API 核對改名前後 repository ID 相同、`private=true`、主要分支為 `main`。
+- 本機：`origin=https://github.com/ismesid/yushan-etf-agent-MVP.git`；README、checklist 的目前連結已更新，diary 記錄改名原因。Git-01 的舊名保留為初建歷史；Python package 名稱沿用 `yushan-etf-agent`。
+- 驗收：改名後重新讀取 GitHub 資料成功，文件差異檢查通過。功能程式沒有修改，本批不重跑合約測試。

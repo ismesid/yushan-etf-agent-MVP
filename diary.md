@@ -46,3 +46,9 @@
 - 決定：本地使用 `main` 分支；建立私有 GitHub 倉庫 [ismesid/yushan-etf-agent](https://github.com/ismesid/yushan-etf-agent)。保存程式、測試、討論紀錄及官方參考來源。
 - 原因：讓每批修改有提交紀錄；金鑰、本機設定、真實帳戶、下載快取及執行產物排除於 Git。
 - 結果：初始提交 `d6cd05f` 已推送，`main` 追蹤 `origin/main`；九份官方來源與 Git 保存內容逐位元相同。新增 README、忽略規則及來源保留設定，沒有安裝套件。
+
+## 2026-10-11｜倉庫名稱加上 MVP
+
+- 討論：使用者希望名稱最後加 `MVP`，表示這是測試版。
+- 決定：改名為 [ismesid/yushan-etf-agent-MVP](https://github.com/ismesid/yushan-etf-agent-MVP)，同步更新本機遠端、README 與 checklist。
+- 結果：GitHub 確認倉庫身分相同、仍為私有且主要分支為 `main`；本機 `origin` 已改用新網址。保留前面的初建紀錄，方便追查改名過程。

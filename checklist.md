@@ -79,7 +79,7 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 - [x] **SETUP-01／P0** 將 `design1001.md`、本清單與九份官方檔放到專案；來源原樣保留到 `specs/official/`。首輪盤點確認已存在，本批未修改官方來源。
 - [x] **SETUP-02／P0** 讀 F04／F07／F05；確認 ETF 清單 F03 只是參考，不可拿來交易。九份來源已讀；F05 文字盤點 150 個不重複代碼，100 TWSE／50 TPEX。
 - [ ] **SETUP-03／P0** 建 Python 虛擬環境、pyproject 與 `etf_agent` package；核心依賴按設計 §16。第 01 批已建 `pyproject.toml`／package；虛擬環境與第三方依賴尚未建立。
-- [x] **SETUP-04／P0** 初始化 git 或版本包；不要把 key、登入資料、大量原始快取放進 git。Git-01 已初始化 `main`，初始提交 `d6cd05f` 推送至私有 `ismesid/yushan-etf-agent`，建立 `.gitignore`／`.gitattributes`／README；九份官方來源逐位元比對 PASS，金鑰與私人資料路徑已排除。
+- [x] **SETUP-04／P0** 初始化 git 或版本包；不要把 key、登入資料、大量原始快取放進 git。Git-01 已初始化 `main`，初始提交 `d6cd05f` 已推送；目前私有倉庫為 [ismesid/yushan-etf-agent-MVP](https://github.com/ismesid/yushan-etf-agent-MVP)。已建立 `.gitignore`／`.gitattributes`／README；九份官方來源逐位元比對 PASS，金鑰與私人資料路徑已排除。
 - [x] **SETUP-05／P0** 建 CLI 命令骨架與 exit code；`python -m etf_agent.cli --help` 可執行。第 01 批在 `PYTHONPATH=src` 下 help／contracts-demo exit 0，缺 fixture 回可讀錯誤及 exit 2；其他設計命令未實作。
 - [ ] **SETUP-06／P0** 設 mode=demo、Asia/Taipei、`official_rules_confirmed=false`；未知官方截止、rounding 留 null。
 - [ ] **SETUP-07／P0** TEAM 編號正式必填；demo 可用 DEMO_TEAM，不能照抄附件 TEAM_042。
