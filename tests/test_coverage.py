@@ -351,9 +351,7 @@ class PriceCoverageTests(unittest.TestCase):
         self.assertEqual(stored["present_count"], 2)
         self.assertEqual(stored["missing_count"], 148)
         self.assertFalse(stored["submission_ready"])
-        markdown = Path(first["report_md"]).read_text(encoding="utf-8-sig")
-        self.assertIn(DAY, markdown)
-        self.assertIn("148", markdown)
+        self.assertEqual({path.name for path in Path(first["run_dir"]).iterdir()}, {"coverage.json", "missing_stocks.csv"})
         with Path(first["missing_csv"]).open(encoding="utf-8-sig", newline="") as handle:
             reader = csv.DictReader(handle)
             self.assertEqual(reader.fieldnames, ["ticker", "name", "market"])
@@ -397,7 +395,7 @@ class PriceCoverageTests(unittest.TestCase):
         report = json.loads(saved[0].read_text(encoding="utf-8"))
         self.assert_row_errors(report, ticker="2330")
         self.assertEqual(report["present_tickers"], ["5274"])
-        self.assertTrue(saved[0].with_name("coverage.md").is_file())
+        self.assertFalse(saved[0].with_name("coverage.md").exists())
         self.assertTrue(saved[0].with_name("missing_stocks.csv").is_file())
 
     def test_cli_invalid_header_returns_two_without_writing_a_report_version(self):

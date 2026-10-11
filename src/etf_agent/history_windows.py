@@ -204,14 +204,13 @@ def check_history_windows(
 
 
 def write_window_report(report: dict, output_dir: Path | str) -> dict:
-    """保存新的 JSON、150 股閱讀 CSV 與摘要，不覆寫輸入或舊報告。"""
+    """保存新的 JSON 與逐股閱讀 CSV，不覆寫輸入或舊報告。"""
     now = datetime.now(timezone(timedelta(hours=8)))
     run_id = now.strftime("%Y%m%dT%H%M%S") + "_" + uuid4().hex[:8]
     run_dir = Path(output_dir).resolve() / report["as_of"] / run_id
     run_dir.mkdir(parents=True, exist_ok=False)
     stored = {**report, "created_at": now.isoformat(), "run_id": run_id}
-    report_json, report_csv, report_md = (run_dir / name for name in
-                                       ("window_report.json", "window_coverage.csv", "window_report.md"))
+    report_json, report_csv = (run_dir / name for name in ("window_report.json", "window_coverage.csv"))
     report_json.write_text(json.dumps(stored, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
                            encoding="utf-8", newline="\n")
     with report_csv.open("w", encoding="utf-8-sig", newline="") as handle:
@@ -222,23 +221,5 @@ def write_window_report(report: dict, output_dir: Path | str) -> dict:
             writer.writerow({key: ";".join(value) if isinstance(value, list)
                              else str(value).lower() if isinstance(value, bool) else value
                              for key, value in row.items() if key in WINDOW_CSV_COLUMNS})
-    summary = report["summary"]
-    lines = [f"# {report['as_of']} 歷史價格視窗", "",
-             f"完整 {summary['complete_stock_count']}／{summary['stock_count']} 檔；"
-             f"不足 {summary['incomplete_stock_count']} 檔。每檔需要 {report['required_bars']} 筆有效價格。", "",
-             f"日曆基礎：`{report['calendar_basis']}`；版本：`{report['calendar_version']}`。",
-             f"輸入格式：{'PASS' if report['input_valid'] else 'FAIL'}；"
-             f"缺日表 {len(report['missing_day_files'])} 日；列／讀檔錯誤 {len(report['daily_errors'])} 項。", "",
-             "| 股票 | 市場 | 有效筆數 | 缺價格日數 | 無效價格日數 | 日曆不足筆數 | 狀態 |",
-             "|---|---|---:|---:|---:|---:|---|"]
-    for stock in report["stocks"]:
-        if not stock["window_complete"]:
-            lines.append(f"| {stock['ticker']} {stock['name']} | {stock['market']} | {stock['valid_price_count']} | "
-                         f"{len(stock['missing_dates'])} | {len(stock['invalid_price_dates'])} | "
-                         f"{stock['calendar_window_shortfall']} | {stock['status']} |")
-    lines.extend(["", "完整日期與逐日診斷見 [JSON](window_report.json)，逐股結果見 [CSV](window_coverage.csv)。", ""])
-    lines.extend(f"- {limit}。" for limit in report["limitations"])
-    lines.extend(["", "window_complete 只代表價格視窗齊全；submission_ready=false。", ""])
-    report_md.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     return {"run_dir": str(run_dir), "report_json": str(report_json),
-            "report_csv": str(report_csv), "report_md": str(report_md)}
+            "report_csv": str(report_csv)}

@@ -113,12 +113,12 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 - [ ] **DATA-18／P0** 如果改用 fixture，記錄切換原因；資料流程與報告中明確顯示 demo。
 - [ ] **DATA-19／P0** 取得官方產業分類，讓40%產業上限可驗；全缺失時不能拿UNKNOWN繞過限制。僅demo明示關閉則報告列「產業分散未實作」。
 - [x] **DATA-20／資料輔助** 依 F05 全 150 檔取得一個已完成月份，保存每檔成功／失敗、原始來源及每日／每股月 CSV；日／月內容一致，缺日缺股不補造。第 10 批 2025-09 實跑、132 項測試及下方產物核對通過。此項完成的是下載功能與取得範圍核對，不等於 150／150 完整行情或正式資料合格。
-- [x] **DATA-21／資料輔助** 保存兩市場官方月份排程，依資料截止日離線檢查 150 檔的 21 筆價格視窗，另存逐股 CSV／JSON／閱讀摘要。第 13 批兩個 CLI 實跑 exit 0，4 項重點測試通過；完成的是排程及價格缺件診斷，正式資格仍 false。
+- [x] **DATA-21／資料輔助** 保存兩市場官方月份排程，依資料截止日離線檢查 150 檔的 21 筆價格視窗，另存逐股 CSV／JSON。第 13 批兩個 CLI 實跑 exit 0，4 項重點測試通過；第 18 批將說明集中 docs，停止產生重複 Markdown。完成的是排程及價格缺件診斷，正式資格仍 false。
 - [ ] **DATA-22／後續資料工作** 使用者已接受 2025-09 的四檔不足原因，下一批優先討論因子分析，不再查缺失。後續需區分掛牌前本來無該市場行情、新股尚未累積 21 筆、停牌／無成交、API／檔案意外遺漏；跨月視窗讀取與必要下載另列批次。掛牌前不補造行情，新股累積足夠有效價格再納入；意外遺漏才評估續抓。臨時休市、公司行動／調整價與歷史可知時間依 DATA-03／11／13 後續補齊，正式用途前再驗收。第 14 批僅記錄待辦，未實作上述政策。
 
 第 14 批閱讀表調整：依使用者要求，`window_coverage.csv` 移除逐股重複的 expected_dates，改為 13 欄；missing_dates／invalid_price_dates 有缺失才列日期。程式匯出與目前開啟的 150 列 CSV 已同步，其他欄位值保持一致；JSON／日曆仍保存完整預期日期。DATA-22 是後續待辦，不宣稱缺失政策已完成，因子功能仍待新批次同意。
 
-第 13 批證據：[官方排程 CSV](data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.csv)、[排程來源及版本](data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json)、[150 檔價格視窗 CSV](data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv)、[閱讀摘要](data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md)。新增 `calendar.py`／`history_windows.py` 及兩個 CLI；日曆下載本身 2 次官方 HTTPS，視窗完全離線，沒有缺整日日表、input_valid=true。僅執行本批 4 項測試（0.195s）：完整視窗、週末／休市且不讀未來日、缺整日日表／新股不足，以及實際遇到的回應錯年防護；未重跑全套，前批 132 項通過證據仍是歷史紀錄。原下載 manifest／行情不改，actual_sessions_verified／submission_ready 均 false。重跑方式與授權見 `development_notes.md` 第 13 批。
+第 13 批證據：[官方排程 CSV](data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.csv)、[排程來源及版本](data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json)、[150 檔價格視窗 CSV](data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv)。原 Markdown 摘要第 18 批清理，說明與既有結果例子見 [日曆／視窗](docs/calendar_windows.md)，完整結果保留在 `window_report.json`。新增 `calendar.py`／`history_windows.py` 及兩個 CLI；日曆下載本身 2 次官方 HTTPS，視窗完全離線，沒有缺整日日表、input_valid=true。僅執行本批 4 項測試（0.195s）：完整視窗、週末／休市且不讀未來日、缺整日日表／新股不足，以及實際遇到的回應錯年防護；未重跑全套，前批 132 項通過證據仍是歷史紀錄。原下載 manifest／行情不改，actual_sessions_verified／submission_ready 均 false。重跑方式與授權見 `development_notes.md` 第 13 批。
 
 第 10 批全股票月報證據：[資料 manifest](data/cache/history_universe/2025-09/20261011T145716_6e56c903/manifest.json)、[逐日覆蓋／缺件](data/cache/history_universe/2025-09/20261011T145716_6e56c903/coverage.json)、[2025-09-01 日表](data/cache/history_universe/2025-09/20261011T145716_6e56c903/daily/2025-09/2025-09-01_prices.csv)、[2330 月表](data/cache/history_universe/2025-09/20261011T145716_6e56c903/monthly/2025-09/TWSE_2330_2025-09.csv)。150 個來源均有狀態與 raw，147 個月表／來源 CSV、21 個日檔共 3,075 列；150 raw hash 全部相符，日／月每欄值完全一致、3,075 個日期×股票唯一鍵，報告缺件集合一致。原兩檔快取保留 hash／fetched_at／版本，其餘 148 次真實官方 HTTPS。`history-universe` 已接 CLI，全套 132 tests、OK（13.821s）；錯月份 CLI 原生 exit 2 且未建輸出。下載有 3 檔缺件，coverage_complete／submission_ready 均 false；其他正式／完整資料項目維持未勾選。
 
@@ -130,7 +130,7 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 
 第 08 批白名單證據：`src/etf_agent/universe.py`／`tests/test_universe.py`、`data/universe.csv`／`universe.manifest.json`。版本 `F05-v1-c12c57571f22`，PDF 與 CSV 完整 SHA-256 記在 manifest；載入器核對雙 hash、150／100／50 與三欄格式。PowerShell 設定 `PYTHONPATH=src` 後執行 `python -B -m etf_agent.cli universe-check --universe data/universe.csv` 或 `python -B -m unittest discover -s tests -p test_universe.py`。當時白名單尚未串接行情下載；第 10 批已接入月報下載，目前仍未串接因子／Agent，不能因此勾選全市場完整行情、正式候選池或交易驗證；F05 也不是已核實的歷史時點股票池。
 
-第 09 批覆蓋驗收證據：沿用中斷前已存在的 `src/etf_agent/coverage.py`／`tests/test_coverage.py` 與 CLI `prices-check`，本批沒有重建白名單或修改程式。全套 119 tests、OK（1.736s）；28 項覆蓋測試包含錯日期／市場／重複、缺件、價格與 CLI exit 2 診斷。真實歷史日表實測 exit 0，另存 [覆蓋報告](data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.md)，取得 2／150、缺 148（TWSE 99／TPEX 49）、有效價格 2、原列 tradable=true 為 0、submission_ready=false；缺件 CSV 148 個唯一代號與白名單差集一致。當時另核對全部 21 個日表、42 列均符合相同覆蓋結果，禁止 HTTP／外部程序的核對中沒有網路呼叫。當時輸入、官方來源、白名單與舊報告保持不變；後續樣本目錄清理將重跑所需輸入原文另存，舊報告仍保留原輸入路徑與 hash。本機快取由 Git 忽略。當時使用者選擇下一批完整行情先做 2025-09、沿用 CSV，待第 10 批同意後才下載。
+第 09 批覆蓋驗收證據：沿用中斷前已存在的 `src/etf_agent/coverage.py`／`tests/test_coverage.py` 與 CLI `prices-check`，本批沒有重建白名單或修改程式。全套 119 tests、OK（1.736s）；28 項覆蓋測試包含錯日期／市場／重複、缺件、價格與 CLI exit 2 診斷。真實歷史日表實測 exit 0，另存 [覆蓋報告](data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.json)，取得 2／150、缺 148（TWSE 99／TPEX 49）、有效價格 2、原列 tradable=true 為 0、submission_ready=false；缺件 CSV 148 個唯一代號與白名單差集一致。當時另核對全部 21 個日表、42 列均符合相同覆蓋結果，禁止 HTTP／外部程序的核對中沒有網路呼叫。當時輸入、官方來源、白名單與舊報告保持不變；後續樣本目錄清理將重跑所需輸入原文另存，舊報告仍保留原輸入路徑與 hash。本機快取由 Git 忽略。當時使用者選擇下一批完整行情先做 2025-09、沿用 CSV，待第 10 批同意後才下載。
 
 第 02 批樣本證據：首次下載的舊目錄依使用者要求刪除後，兩份原始 JSON／原表 CSV 及下載 manifest 原文曾保存於第 03 批樣本目錄。該樣本目錄現也已清理，raw／原表 CSV 保留於全股票目錄，首次 manifest 原文保存於 [provenance/history_sample/original_manifest.json](data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/original_manifest.json)。檔案由 Git 忽略。`src/etf_agent/history.py`／`providers/`／CLI 已能重跑；當時 `tests/test_history.py` 25 項及原 30 項合約測試合計 55 tests、OK。功能與現存產物連結見 `docs/data_contracts.md`；這不代表本節其他未勾選項已完成。
 
@@ -152,23 +152,29 @@ T+0 從你真正開始合作實作時計，不是收到這份檔案的時間；�
 - [x] **FACTOR-02／P0** 實作 trend20=`P_t/SMA20-1`，SMA只用最近20交易日。第 15 批明確使用 21 筆中的最後 20 筆平均，手算及實際兩股獨立核對通過；不把 21 筆全平均當 SMA20。
 - [ ] **FACTOR-03／P0** 實作 vol20=`std(20 daily returns,ddof=1)*sqrt(252)`；檢查0波動不是填值或停牌。第 15 批已完成樣本波動公式（分母 19）及年化、固定價格回傳 0；停牌／零波動的正式資格政策仍未實作，完整本項維持未勾選。
 - [ ] **FACTOR-04／P0** 實作 adv20、lot_nav_pct、current_weight、breadth與TAIEX特徵；流動性作 eligibility，不額外偷偷加分。
-- [ ] **FACTOR-05／P0** 分位排名公式、平手平均、全相同0.5；低波動只反向一次。
-- [ ] **FACTOR-06／P0** 使用固定 profile：mom20=.40、trend20=.25、lowvol=.35；不逐股更換權重。
-- [ ] **FACTOR-07／P0** 儲存 features、每因子貢獻、score、排名、排除原因；平手以ticker固定順序。
+- [x] **FACTOR-05／P0** 分位排名公式、平手平均、全相同0.5；低波動只反向一次。第 19 批純函式使用精確 Fraction，單股同樣給 0.5，數學上總分平手按 ticker；3 項重點測試及實際 146 檔獨立公式核對通過。
+- [x] **FACTOR-06／P0** 使用固定 profile：mom20=.40、trend20=.25、lowvol=.35；不逐股更換權重。第 19 批依使用者明確同意，集中於 `config/ranking.json`；啟用因子、權重及設定 hash 隨 JSON 保存。此為初始分析設定，非業界標準或已驗最佳值，研究連結見 `docs/factor_analysis.md`。
+- [x] **FACTOR-07／P0** 儲存 features、每因子貢獻、score、排名、排除原因；平手以ticker固定順序。第 19 批保存 146 檔歷史排名 16 欄 CSV／JSON，保留精確原始值、來源與四檔排除；完成的是分析結果保存，formal_eligible／submission_ready 均 false，正式資格及候選交易池仍待後續實作。
 - [ ] **FACTOR-08／P0** 做一筆手算小例：價格增長／下降／恆定，確認因子方向、觀測數及區間。第 15 批手算首筆 100、後 20 筆 110（動能 10%、均線偏離 0%、年化波動 35.496479%）與固定價格三值 0 通過；專門下降手算尚未補測，維持未勾選。
 - [ ] **FACTOR-09／P0** 候選池＝前30＋全部原持股＋最多5分散候選；不得漏掉資料缺失的原持股。
-- [x] **FACTOR-10／分析輔助** 依已驗收完整視窗，離線產生三因子原價分析表、共用來源／公式 metadata 與分布閱讀摘要；截止日、期間與百分數單位明確，排除股票沿用既有缺失紀錄。第 15 批 146 檔／6 欄／21 日輸入及 3 項測試通過；不等於正式候選池、回測或模型決策。
+- [x] **FACTOR-10／分析輔助** 依已驗收完整視窗，離線產生三因子原價分析表與共用來源／公式 metadata；截止日、期間與百分數單位明確，排除股票沿用既有缺失紀錄。第 15 批 146 檔／6 欄／21 日輸入及 3 項測試通過；第 18 批分布範例與解說集中 docs，本機保留 CSV／JSON。不等於正式候選池、回測或模型決策。
 - [ ] **EVIDENCE-01／P0** Python 建 sources／observations；S/O連號、authority與市場一致、values只有數值。
 - [ ] **EVIDENCE-02／P0** 每個因子數字能對回原始列、區間與程式版本；計算值標明公式，不當作交易所直接公佈的欄位。
 - [ ] **EVIDENCE-03／P0** 明確決定歷史 source 分組方式；正式 sources≤50、observations≤100，不能刪必要證據湊數。
 - [ ] **EVIDENCE-04／P0** Evidence packet 含 cutoff、rules、account、rankings、原持股、baseline、O/S、allowed_tickers與品質報告。
 - [ ] **EVIDENCE-05／P0** 凍結packet與hash；不要讓Agent接資料時自行改清洗結果。
 
-第 15 批完成證據：`src/etf_agent/features.py`、CLI `history-features`、`tests/test_features.py`、[146 檔分析 CSV](data/cache/features/2025-09-30/20261011T160349_3b42fa16/features.csv)、[來源／公式 metadata](data/cache/features/2025-09-30/20261011T160349_3b42fa16/metadata.json)、[閱讀摘要](data/cache/features/2025-09-30/20261011T160349_3b42fa16/analysis.md)。特徵版本 `price-features-v1-c9e2191b62ec`；3 tests、OK（1.505s），CLI exit 0，CSV BOM／146 唯一代號／6 欄與 JSON 一致，2330／5274 另用標準庫獨立公式核對 PASS；同輸入重算與不覆寫、日表改動阻擋已由測試驗收。全套、排名／權重、官方 S/O 引用及正式 FeatureTable／MarketSnapshot 尚未完成，本批不擴張勾選。
+第 15 批完成證據：`src/etf_agent/features.py`、CLI `history-features`、`tests/test_features.py`、[146 檔分析 CSV](data/cache/features/2025-09-30/20261011T160349_3b42fa16/features.csv)、[來源／公式 metadata](data/cache/features/2025-09-30/20261011T160349_3b42fa16/metadata.json)。原閱讀摘要第 18 批清理，分布與前五股範例轉存 [因子分析說明](docs/factor_analysis.md)。特徵版本 `price-features-v1-c9e2191b62ec`；3 tests、OK（1.505s），CLI exit 0，CSV BOM／146 唯一代號／6 欄與 JSON 一致，2330／5274 另用標準庫獨立公式核對 PASS；同輸入重算與不覆寫、日表改動阻擋已由測試驗收。全套、排名／權重、官方 S/O 引用及正式 FeatureTable／MarketSnapshot 尚未完成，本批不擴張勾選。
 
-第 16 批說明與導覽：[analysis.md](data/cache/features/2025-09-30/20261011T160349_3b42fa16/analysis.md) 及其產生器已補三指標的選用理由、含義、公式與未來用途，數值 CSV／metadata 不變。專屬 [因子分析](docs/factor_analysis.md)、[快速開始](docs/quickstart.md)、[歷史資料](docs/history_data.md)、[日曆／視窗](docs/calendar_windows.md) 說明由精簡 README 的架構／九命令入口連入；原價、正式串接及待實作狀態保持明確。受影響匯出測試 1 test、OK（0.130s），本批入口連結與命令對照通過，未新增測試或重跑全套；排名／風控及正式資格仍未完成。
+第 16 批說明與導覽：當時 `analysis.md` 及其產生器補三指標的選用理由、含義、公式與未來用途，數值 CSV／metadata 不變；第 18 批移除重複本機文件及產生器，解說集中以下 docs。專屬 [因子分析](docs/factor_analysis.md)、[快速開始](docs/quickstart.md)、[歷史資料](docs/history_data.md)、[日曆／視窗](docs/calendar_windows.md) 說明由精簡 README 的架構／九命令入口連入；原價、正式串接及待實作狀態保持明確。受影響匯出測試 1 test、OK（0.130s），本批入口連結與命令對照通過，未新增測試或重跑全套；排名／風控及正式資格仍未完成。
 
 第 17 批 GitHub 導覽修正：README 的 6 個本機快取成果連結改連已提交的操作說明；相關文件 49 個快取超連結改標本機路徑。README 32 個及 docs 109 個導航連結已按 Git 追蹤範圍與標題 anchor 核對通過，改正第 16 批只驗本機存在的不足。本清單的歷史快取連結是本機驗收紀錄；GitHub 查閱及重建入口使用上述專屬說明。僅文件修改，未重跑程式測試或新增功能勾選，授權與證據見 `development_notes.md` 第 17 批。
+
+第 18 批解說集中：比對後刪除本機 `analysis.md`、`window_report.md` 及兩份早期 `coverage.md`，三因子分布與前五股共 8 列數值已轉存 [因子說明](docs/factor_analysis.md)，完整結果及來源留在 CSV／JSON。三個產生器與 CLI 同步，重跑不再產生 Markdown；4 個受影響既有案例通過，沒有新增測試或跑全套。清理前後 7 份 CSV／JSON 不變，metadata 僅移除已刪 MD 的 artifact 引用；README／docs 143 個導航入口及原命令已核對。本批未 commit／push，詳細授權、清理路徑及重跑方式見 `development_notes.md` 第 18 批。
+
+第 19 批排名證據：`src/etf_agent/ranking.py`、`config/ranking.json`、CLI `history-rankings`、`tests/test_ranking.py`；本機結果位於 `data/cache/rankings/2025-09-30/20261011T165509_b1899354/`，只有 `rankings.csv`／`metadata.json`。版本 `price-rankings-v1-3f25120fa996`，146 檔參與、4 檔沿原缺失排除；緯創／廣達／聯電前三，分數依序 78.482759／78.206897／76.758621 分。3 項重點測試 OK（0.108s），實際 CLI exit 0，另用獨立平均名次／Fraction 公式核對全排序與貢獻；缺檔 native exit 2。權重研究與五來源連結見 [因子說明](docs/factor_analysis.md#權重查詢紀錄供開會討論)，計算與重跑見 [排名說明](docs/ranking.md)。本批未重跑全套、行情下載或模型；正式資格、流動性、回測及候選交易池仍未完成，18～19 批尚未 commit／push。
+
+Git 保存授權（2026-10-11）：使用者另行要求「commit push」，保存上述第 18～19 批的 19 檔程式、設定、測試與文件；本次沿用既有驗收，只檢查提交範圍及 Git 狀態。歷史段落的「尚未 commit／push」為當時紀錄，後續保存目標與核對方式見 `development_notes.md` 的 Git 紀錄；不增加功能完成勾選。
 
 ## 7. T+3:00～4:00：真正的 Agent 決策與 API 預留
 

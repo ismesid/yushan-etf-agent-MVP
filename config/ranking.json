@@ -1,0 +1,10 @@
+{
+  "format_version": "1.0",
+  "factor_profile": "price_only_v1",
+  "enabled_factors": ["mom20", "trend20", "lowvol20"],
+  "weights": {
+    "mom20": "0.40",
+    "trend20": "0.25",
+    "lowvol20": "0.35"
+  }
+}

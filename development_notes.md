@@ -8,6 +8,7 @@
 - 每批約 10～30 分鐘，先說明與討論，使用者明確同意後實作；每批完成展示結果，再討論下一批。第一批同意不授權後續階段。
 - 文件維護：依使用者第 16 批要求，README 作快速理解專案架構、現況與執行的入口；完整參數、輸入輸出、續接與失敗處理連到各功能專屬文件。各批更新 README 的功能狀態與入口，測試流水帳留本檔／checklist，避免持續堆進 README。
 - GitHub 導覽：README 與操作文件的倉庫內連結必須指向 Git 已追蹤的檔案或目錄，並核對章節標題；不能只驗本機檔案存在。被忽略的快取成果顯示為明確本機路徑，入口連至可閱讀的說明與重建方式。
+- 解說集中：依第 18 批要求，通用解釋與閱讀範例維護在 docs；覆蓋、價格視窗與三因子執行保留 CSV／JSON，CLI 顯示當次數據摘要與專屬文件位置，避免產生重複本機 Markdown。
 - 已讀根目錄 `AGENTS.md` v1.0、`design1001.md` v0.3、`checklist.md`（2026-10-11），首輪已閱讀 F01～F09 九份官方來源，來源內容未修改。
 - 官方要求以對應原文為準；策略權重、風控閾值仍待討論。下列 demo 數值與時間切分是專案示例，不能當成官方規則。
 
@@ -313,3 +314,47 @@ python -B -m unittest discover -s tests -p test_features.py -v
 - 閱讀例子：在 GitHub 點 README「因子說明、範例與重算」可進入 `docs/factor_analysis.md`，閱讀三個指標與 2330 範例；依命令重建後，再用 IDE／Excel 開啟本機 `features.csv`、`analysis.md`、`metadata.json`。既有數值、行情、計算程式、帳戶與正式資格均未修改。
 - 實際驗收：README 32 個及 docs 109 個本地 Markdown 導航連結，全部能對應 Git 追蹤檔案／目錄，所用標題 anchor 均吻合；快取已不再作這兩個範圍的導航連結。文字替換的 UTF-8 標記問題已在提交前修正；命令範例與原版一致，git diff --check 通過。僅文件修改，未跑 Python 測試、掃行情 hash 或查外部網址／HTTP 狀態。
 - 保存與後續：本批 9 份文件以一般 commit／push 保存 main → origin/main，最終 ID 與同步結果在回覆提供。排名／權重仍需另外討論；本機行情與分析維持原保存方式。
+
+## 18｜解說集中 docs，清理重複本機 Markdown（2026-10-11）
+
+- 授權：使用者肯定解釋文件集中 docs，要求確認原本僅本機可看的解釋文件與 docs 重複很多時可刪。先比對四份現有快取 Markdown 與相應 docs、CSV／JSON，再清理並同步產生器、CLI、引用及必要測試；不擴至策略、排名或新資料取得。
+- 比對：三因子 `analysis.md` 的選用理由、意義、公式、用途及限制均已在 `docs/factor_analysis.md`；獨有分布與前五股閱讀範例先完整移入該頁，標記 2025-09-30、146 檔及既有版本。視窗結果與限制已有 `docs/calendar_windows.md`；兩份內容相同的早期覆蓋摘要已有 `docs/history_data.md`，各自 JSON 保存原輸入、雜湊、市場統計、警告與缺失，CSV 保存完整清單。
+- 清理範圍：移除 `features/2025-09-30/20261011T160349_3b42fa16/analysis.md`、`history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md` 及 `coverage/2025-09-01/` 下 `20261011T143543_bb32db7e`／`20261011T144802_4463a889` 的 `coverage.md`（以上均在 `data/cache/`）。現有 metadata 的 artifacts 僅去掉已刪 Markdown 項目，其餘資料保持原值。
+- 程式與文件：移除 features／history_windows／coverage 三個 writer 的 Markdown 呈現，三種執行各保存 CSV／JSON，不再回傳 analysis_md／report_md；CLI 改顯示 docs 專屬說明。README、操作文件、資料合約及 checklist 同步，因子／資料合約說明升 1.18。核心資料合約、CSV 格式、因子公式、特徵版本及官方來源未改；歷史 notes 保留當時建立 Markdown 的紀錄，本節說明其後續清理。
+- 例子：既有三因子仍是 146／150 檔、4 檔排除；2330 的動能／均線偏離／年化波動仍為 12.017167%／4.337398%／23.192445%。之後先讀 docs，再開當次 `features.csv`；日期、排除、公式與來源在 `metadata.json`。全部仍是歷史原價分析、submission_ready=false，沒有帳戶或投資模型參與。
+- 必要測試：只更新既有匯出案例並跑 4 tests、全部 OK；因子匯出／來源／重算一致 1 項（0.133s），視窗 CSV／JSON 1 項（0.086s），覆蓋版本不覆寫及 CLI 錯誤時診斷保存 2 項（0.051s）。測試確認各次輸出只含原 CSV／JSON，未新增測試或重跑全套；程式數值邏輯未更動。
+- 實際清理驗收：四個絕對目標均核對位於本專案 `data/cache/` 且為 Markdown 檔，再逐檔刪除；目前快取沒有 Markdown。既有 7 份 CSV／JSON hash 與清理前相同，metadata JSON 除去 artifacts.analysis_md 後與原值完整相同；分布及前五股共 8 列數值在 docs 與原 MD 逐列一致。README／docs 的 143 個相對導航連結均指向 Git 追蹤檔／目錄且章節存在，47 行既有命令未改，git diff --check 通過；未查外部 HTTP 或掃其他行情快取。
+- 重跑與後續：三個 CLI 的命令參數維持不變，按 `docs/history_data.md`、`docs/calendar_windows.md`、`docs/factor_analysis.md` 執行。無安裝、連網、模型呼叫或正式交易；本批尚未 commit／push。排名／權重仍待另批討論。
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path -LiteralPath 'src').Path
+python -B -m unittest discover -s tests -p test_features.py -k test_complete_stock_only_daily_inputs_percent_csv_and_repeatable_new_runs -v
+python -B -m unittest discover -s tests -p test_history_windows.py -k test_complete_21_price_window_reports_each_stock_and_writes_readable_bom_csv -v
+python -B -m unittest discover -s tests -p test_coverage.py -k test_report_outputs_are_readable_and_each_run_is_separate -k test_cli_invalid_row_returns_two_and_preserves_diagnostics -v
+```
+
+## 19｜權重研究備註與歷史因子排名（2026-10-11）
+
+- 授權：使用者要求將本輪權重資料查詢記錄於 `docs/factor_analysis.md`，附連結供開會，並明確要求「先按照預定的 % 執行排名」。本批沿原提案，動能 40%、均線偏離 25%、低波動 35%；未改因子期間或新增資料／模型，尚未授權 Git 提交推送。
+- 決定：40／25／35 是專案初始分析設定，不是公開資料證明的業界標準或最佳配比。研究資料記錄 MSCI 的中期風險調整動能、S&P 四因子等權合成與低波動配置、均線作者頁及 French 動能定義；版本及與本專案的差異一併保存。多期含成本驗證與相關性列會議待討論，本批按已同意配比執行。
+- 方法及界線：讀現有 features metadata 的精確十進位字串，三因子各算平均平手分位，低波動僅反向一次；總分降序、精確平手按 ticker 升序。146 檔完整視窗只是歷史分析母體；保留原四檔排除紀錄，formal_eligible／submission_ready 均 false，不建立正式 FeatureTable／MarketSnapshot 或候選交易池。
+- 保存：新增 `src/etf_agent/ranking.py`、`config/ranking.json`、`tests/test_ranking.py` 與離線 `history-rankings` CLI，另建 `data/cache/rankings/<截止日>/<執行版本>/` 的 CSV／JSON。計算、metadata 讀取、產物保存分開；精確 Fraction 排序後將比率保存為 34 位 Decimal 字串、ROUND_HALF_EVEN，避免 1/3／1/145 等非終止小數造成假平手。CSV 為 UTF-8 BOM、16 欄，三個原始因子欄為百分數，分位／貢獻／總分欄乘 100 顯示相對分數，六位 ROUND_HALF_UP。方向固定為動能／均線正向、波動僅反向一次；無完整因子、重複代號、非有限值或不合法權重則停止，不逐股重新配重。
+- 實際執行：CLI exit 0，本機產物 `data/cache/rankings/2025-09-30/20261011T165509_b1899354/`，版本 `price-rankings-v1-3f25120fa996`；146 檔、4 檔排除、16 欄，只有 rankings.csv／metadata.json，沒有本機說明 MD。各股保留原 source_metadata，JSON 保存特徵／白名單／日曆版本、完整 profile、輸入 metadata 與設定檔路徑及 hash、排名公式、排除理由及限制。
+- 歷史結果例子：第 1 名 3231 緯創 78.482759 分；動能／均線偏離／低波動貢獻顯示為 36.965517／24.137931／17.379310 分，各欄獨立四捨五入，顯示相加可與總分差最後一位。第 2～5 名依序 2382 廣達 78.206897、2303 聯電 76.758621、2887 台新新光金 76.275862、3227 原相 75.586207；2330 第 7 名 73.655172，5274 第 98 名 43.103448。這些是同截止日歷史分析的相對分數，不是報酬率、買賣或配置指令，沒有帳戶參與。
+- 必要驗收：3 tests、OK（0.108s），涵蓋手算／平均平手／全同／單股／低波動反向與非終止小數精確平手、常見不完整因子與配置錯誤、僅讀 metadata／設定及來源／排除保存、重算一致與新 run 不覆寫。真實 CLI 整合後，另以獨立 less／equal 計數推導平均名次及 Fraction 公式核對 146 全排序、貢獻、分數與 ticker 決勝通過；CSV BOM／16 欄／146 列及 JSON 分數一致，輸入 metadata hash 保持 `5cf1b5270d726ef98befa70df9ecd6b45c7aa10e69c0767b11b29b782333304b`。缺檔 CLI 回可讀錯誤、native exit 2；PowerShell 外層原回 1，明確傳回 `$LASTEXITCODE` 後核實原生退出碼，未修改程式。未重跑全套或掃行情／raw hash。
+- 文件：`docs/factor_analysis.md` 記錄五份來源與開會問題，新增 `docs/ranking.md` 說明計算、欄位、範例及操作；README 更新架構／已完成排名／十個命令入口，quickstart 與資料合約同步。因子／資料合約文件升 1.19，排名說明 1.0。FACTOR-05～07 按歷史分析範圍勾選，其餘正式資料／資格／流動性及模型項目不擴張勾選。
+- 文件驗收：研究來源用原文網址與指定版本記錄，未把作者資料頁或不同指數方法當成同一配比的證明；本批不重做外部 HTTP。新增導航目標可對應已追蹤或本批新增待提交檔案及章節，沒有指向 Git 忽略快取的導航；固定歷史範例對照實際 CSV，git diff --check 通過。缺檔驗收沒有另建結果版本，目前真實排名目錄只有上述一次成功執行。
+- 下一步與保存：可另批討論正式資格、流動性及證據包／帳戶接合，再形成模型決策池；本批不做相關性、等權比較或回測。18～19 批仍未 commit／push；沒有新增依賴、抓行情、模型／付費服務或正式交易。實際命令如下，重跑會另建版本，相同輸入及 profile 的值與 ranking_version 相同。
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path -LiteralPath 'src').Path
+python -B -m etf_agent.cli history-rankings --feature-metadata data/cache/features/2025-09-30/20261011T160349_3b42fa16/metadata.json --profile config/ranking.json --output data/cache/rankings
+python -B -m unittest discover -s tests -p test_ranking.py -v
+```
+
+## Git｜文件清理、權重研究與歷史排名提交（2026-10-11）
+
+- 授權：使用者明確要求「commit push」，保存第 18～19 批已完成且驗收的修改；兩批先前「未 commit／push」是當時狀態，本節記錄後續 Git 授權。
+- 範圍：19 檔，涵蓋 CSV／JSON 產物保存調整、排名模組與 CLI、40／25／35 設定、相關測試、README、docs 及開發紀錄。本機行情與排名快取仍由原忽略規則管理。
+- 提交前檢查：修改及未追蹤名單均屬上述範圍，`git diff --check` 通過；沿用第 18 批 4 項受影響測試、第 19 批 3 項排名測試及真實產物核對結果，本次沒有再跑測試或抓行情。
+- 保存目標：本機 `main` → `origin/main`，GitHub `ismesid/yushan-etf-agent-MVP`，一般 commit／push。暫存後檢查範圍與空白錯誤，推送後核對本機與遠端追蹤版本及工作目錄；最終 commit ID 與實際結果在本次回覆提供，亦可用 `git log -1`、`git status` 查閱。

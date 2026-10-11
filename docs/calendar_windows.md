@@ -47,9 +47,8 @@ python -B -m etf_agent.cli history-window-check --manifest data/cache/history_un
 |---|---|
 | `window_coverage.csv` | 150 檔逐股價格筆數、狀態、缺失／無效日期 |
 | `window_report.json` | 共用預期日期、來源版本、讀取日表、完整錯誤及逐股狀態 |
-| `window_report.md` | 統計、不足股票與資料限制的閱讀報告 |
 
-閱讀 CSV 已移除各股重複的 `expected_dates`；共同日期保存在 JSON／日曆。`missing_dates` 與 `invalid_price_dates` 只在有缺失或無效價格時填寫，以分號分隔日期。`window_complete=true` 表示該股票在目前排程下有全部需要的有效價格。
+解釋集中在本頁，每次執行只產生 CSV／JSON。閱讀 CSV 已移除各股重複的 `expected_dates`；共同日期保存在 JSON／日曆。`missing_dates` 與 `invalid_price_dates` 只在有缺失或無效價格時填寫，以分號分隔日期。`window_complete=true` 表示該股票在目前排程下有全部需要的有效價格。
 
 現有截至 2025-09-30 的結果：
 
@@ -59,7 +58,7 @@ python -B -m etf_agent.cli history-window-check --manifest data/cache/history_un
 | 7750 | 9 筆 | 缺 9/17 掛牌前的 12 個排程日 |
 | 3718、7769、7828 | 各 0 筆 | 各缺 21 個排程日，該月尚未在指定市場掛牌 |
 
-沒有缺整日日表，`input_valid=true`。可查看 150 檔 CSV（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv`）、完整 JSON（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.json`） 與 閱讀報告（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md`）。掛牌原因見 [歷史行情可取得範圍](history_availability_2025-09.md)。
+沒有缺整日日表，`input_valid=true`。可查看 150 檔 CSV（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv`）與完整 JSON（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.json`）。掛牌原因見 [歷史行情可取得範圍](history_availability_2025-09.md)。
 
 ## 退碼與限制
 

@@ -121,7 +121,7 @@ class HistoryWindowTests(unittest.TestCase):
         self.assertNotIn("expected_dates", reader.fieldnames)
         self.assertTrue(all(row["missing_dates"] == "" and row["invalid_price_dates"] == "" for row in rows))
         self.assertEqual(json.loads(Path(saved["report_json"]).read_text(encoding="utf-8"))["stocks"], report["stocks"])
-        self.assertTrue(Path(saved["report_md"]).is_file())
+        self.assertEqual({path.name for path in Path(saved["run_dir"]).iterdir()}, {"window_report.json", "window_coverage.csv"})
 
     def test_weekend_and_holiday_as_of_stop_at_prior_session_without_reading_future_prices(self):
         manifest = self.manifest_fixture()

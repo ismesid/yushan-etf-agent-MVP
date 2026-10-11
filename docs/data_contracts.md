@@ -1,6 +1,6 @@
 # 共用資料合約與功能導覽
 
-文件版本：1.17｜更新：2026-10-11｜內部合約版本：1.0｜歷史閱讀 CSV 格式版本：4.0｜對應設計：[design1001.md v0.3](../design1001.md)
+文件版本：1.19｜更新：2026-10-11｜內部合約版本：1.0｜歷史閱讀 CSV 格式版本：4.0｜對應設計：[design1001.md v0.3](../design1001.md)
 
 本文件說明各模組吃什麼資料、交出什麼結果，以及目前程式實際能做什麼。**資料合約**是模組共用的欄位、單位與檢查規則；定義合約不等於已完成抓取、計算或交易功能。六種核心合約集中在 [contracts.py](../src/etf_agent/contracts.py)，金額使用 `Decimal`，以 Python 標準庫的 `dataclass` 定義資料。HTTP、模型 SDK、檔案與資料庫操作留在各自模組。
 
@@ -171,12 +171,11 @@ TPEx 的精確 `volume_lots`、`amount_ktwd`、`avg_price_ktwd_per_lot` 空白�
 
 ### 保存、重跑與失敗行為
 
-`write_coverage_report(report, output_dir)` 為每次檢查建立 `output_dir/<資料日期>/<時間_隨機識別碼>/`，回傳 `run_dir`、`report_json`、`report_md`、`missing_csv` 四個路徑。目錄內有三檔：
+`write_coverage_report(report, output_dir)` 為每次檢查建立 `output_dir/<資料日期>/<時間_隨機識別碼>/`，回傳 `run_dir`、`report_json`、`missing_csv` 三個路徑。目錄內有兩檔，解讀方式集中在 [歷史行情說明](history_data.md#每日覆蓋檢查)：
 
 | 檔案 | 用途 |
 |---|---|
 | `coverage.json` | 完整欄位、錯誤、限制、輸入／白名單版本，以及本次 `created_at`／`run_id`；報告格式版本為 1.0 |
-| `coverage.md` | 可直接閱讀的總數與市場摘要；完整錯誤見 JSON，Markdown 至多展示前 20 筆列錯誤 |
 | `missing_stocks.csv` | 缺件股票，只有 `ticker,name,market` 三欄，按代號排序；沒有缺件時仍保留標頭 |
 
 預設輸出在 `data/cache/coverage/`，和下載 run 分開；每次是新版本，不覆寫輸入日表、既有報告或歷史 manifest。本機快取不由 Git 追蹤。使用現有 Python 標準庫，不安裝套件、不連網、不呼叫模型：
@@ -191,9 +190,9 @@ python -B -m unittest discover -s tests -p test_coverage.py -v
 
 日表格式無列錯誤時，CLI 回傳 exit code 0，即使只有 2／150 檔也會保存報告並顯示 `coverage_complete=false`。有錯日期／市場／重複或數值等列錯誤時，仍保存診斷報告，回傳 2。缺檔、標頭不符、CSV 無法解析或白名單載入失敗時，直接回傳 2，不製造看似有效的覆蓋報告。成功讀取與完整覆蓋分開判斷，日後選股不能只看 CLI exit code。
 
-第 09 批接續驗收已實際執行全套 119 項測試並通過，其中覆蓋檢查為 28 項。當時真實歷史樣本日表的 CLI 實測另存 2025-09-01 閱讀報告（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.md`）、完整 JSON（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.json`） 與 148 檔缺件 CSV（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/missing_stocks.csv`）。結果為取得 2／150、有效價格 2、原列 tradable=true 為 0，並保留四類限制及 submission_ready=false。當時全部 21 個日表、42 列也已離線核對相同覆蓋結果；沒有下載新行情，測試中的 150 檔完整列仍是人工 fixture。
+第 09 批接續驗收已實際執行全套 119 項測試並通過，其中覆蓋檢查為 28 項。當時真實歷史樣本日表的 CLI 實測另存 2025-09-01 完整 JSON（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.json`）與 148 檔缺件 CSV（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/missing_stocks.csv`）。結果為取得 2／150、有效價格 2、原列 tradable=true 為 0，並保留四類限制及 submission_ready=false。當時全部 21 個日表、42 列也已離線核對相同覆蓋結果；沒有下載新行情，測試中的 150 檔完整列仍是人工 fixture。
 
-舊報告與原輸入路徑保留為當時證據，原樣本目錄已清理。要重跑 2／150 的樣本覆蓋結果，可將上述 `--prices` 改為 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`；這份 保存的兩檔輸入（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`） 保留原文與 hash。日常分析用全股票日表，上述目前指令會核對 146／150。
+舊 JSON／CSV 與原輸入路徑保留為當時證據，原樣本目錄已清理。要重跑 2／150 的樣本覆蓋結果，可將上述 `--prices` 改為 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`；這份 保存的兩檔輸入（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`） 保留原文與 hash。日常分析用全股票日表，上述目前指令會核對 146／150。
 
 **程式位置：** [coverage.py](../src/etf_agent/coverage.py) 的 `check_daily_prices()`、`write_coverage_report()`；[cli.py](../src/etf_agent/cli.py) 的 `prices-check` 命令；相關行為測試見 [test_coverage.py](../tests/test_coverage.py)。授權、實測與下一步記於 [development_notes.md](../development_notes.md) 第 09 批。
 
@@ -377,7 +376,7 @@ CSV 的兩個均價欄位使用 `Decimal`、50 位計算精度，再以 `ROUND_H
 | 公司行動／個股停牌 | 核對價格調整與當日可交易資格 | 尚未接入 |
 | 大盤行情 | 市場研判與市場因子 | 尚未接入 |
 | 法人、營收等資料表 | 新增這些因子時才加入，依公告與版本時間取用 | 未實作 |
-| `FeatureTable`／排名產物 | 模型接收計算後的因子、排名與證據；研究模型另需標籤與時間切分 | 原價三因子另有歷史分析產物，尚未接入此合約或排名；正式來源／觀察證據鏈及訓練待完成 |
+| `FeatureTable`／排名產物 | 模型接收計算後的因子、排名與證據；研究模型另需標籤與時間切分 | 原價三因子與加權排名已有歷史分析產物，尚未接入正式合約；來源／觀察證據鏈及訓練待完成 |
 | `AccountSnapshot`／帳戶 JSON | 策略、配置及風控需知道完整持股與現金 | 僅有人工 demo／合約，尚無正式帳務 |
 
 先前已同意將**每日表作後續核心讀取入口**，每股每月表作歷史查閱視圖，並完成兩種視圖的匯出。同一批 raw 經同一清洗結果產生兩種表，不重複抓取；後續讀取器只用一種入口，不把兩種表同時合併，避免同股同日重複。日表方便每日更新及橫斷面排名，但 20 日動能仍須讀同股 21 個有效交易日，不能只讀單日日檔。
@@ -507,7 +506,7 @@ python -B -m etf_agent.cli history-universe --month 2025-09 --universe data/univ
 | 檔案／欄位 | 用途 |
 |---|---|
 | `window_coverage.csv` | UTF-8 BOM、13 欄，150 檔各一列：市場、有效價格筆數、缺失／無效價格的日期、日曆不足及狀態；不逐股重複 `expected_dates` |
-| `window_report.json`／`.md` | 完整逐日診斷／閱讀摘要，保留資料及日曆版本、來源與未核實事項 |
+| `window_report.json` | 完整逐日診斷，保留資料及日曆版本、來源與未核實事項；解讀方式集中在 [視窗說明](calendar_windows.md#輸出與閱讀) |
 | `window_complete` | 依已提供官方排程，所需 21 個日期都有有效價格；不表示正式可交易或因子已計算 |
 | `input_valid` | 日表讀取與列格式診斷；和缺日期、視窗完整分開判斷 |
 
@@ -526,7 +525,7 @@ python -B -m etf_agent.cli history-window-check --manifest data/cache/history_un
 
 實際日曆下載為兩次 HTTP、exit 0；TWSE／TPEx 各 21 個排程交易日，9/29 排程休市。日曆 CSV（本機路徑 `data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.csv`） 供閱讀，日曆 JSON（本機路徑 `data/cache/calendar/2025-09/20261011T154421_1306c9a4/calendar.json`） 保存日期及官方來源索引，`actual_sessions_verified=false`。
 
-截至 2025-09-30，146 檔各有完整 21 筆有效價格，7750 有 9 筆、3718／7769／7828 各 0 筆；`missing_day_files=[]`、`input_valid=true`、CLI exit 0。150 檔視窗 CSV（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv`）、完整 JSON（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.json`） 與 閱讀摘要（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.md`） 另存，沒有改原行情或下載 manifest。
+截至 2025-09-30，146 檔各有完整 21 筆有效價格，7750 有 9 筆、3718／7769／7828 各 0 筆；`missing_day_files=[]`、`input_valid=true`、CLI exit 0。150 檔視窗 CSV（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_coverage.csv`）與完整 JSON（本機路徑 `data/cache/history_windows/2025-09-30/20261011T154440_9842e79e/window_report.json`）另存，沒有改原行情或下載 manifest。
 
 第 13 批實際通過一項日曆年度測試與三項價格視窗測試，未重跑全套。後續原價因子分析見下方「因子與排名」；視窗完整不能替代公司行動、歷史可知時間或正式快照核實。
 
@@ -590,13 +589,28 @@ CLI 會使用 fixture 的前收重新核對這個等式，但 `AccountSnapshot` 
 | 共同 metadata | `as_of`、`expected_dates_by_market`、`formulas`、`annualization_trading_days=252`、`units`、`input_window_report`、`input_manifest`、`daily_inputs`、`universe_version`、`calendar_version`／依據、`feature_version`、`price_basis`、`limitations`。輸入路徑與 hash 保留供追溯。 |
 | 排除紀錄／正式狀態 | `excluded_stocks` 沿用原視窗不足紀錄；`submission_ready=false`，原價分析不自動證明可交易或可提交。 |
 
-每次另建 `data/cache/features/<as_of>/<執行版本>/`，保存 features.csv、metadata.json 及 analysis.md。`feature_version` 按固定公式與輸入內容辨識，相同輸入可重算相同版本，執行時間與目錄另行保存。現有版本截至 2025-09-30 分析 146 檔、排除既有四檔；實際產物入口與重跑方式見 [專屬說明](factor_analysis.md#先看哪個檔案)。
+每次另建 `data/cache/features/<as_of>/<執行版本>/`，只保存 `features.csv` 與 `metadata.json`，解釋集中在 docs。`feature_version` 按固定公式與輸入內容辨識，相同輸入可重算相同版本，執行時間與目錄另行保存。現有版本截至 2025-09-30 分析 146 檔、排除既有四檔；實際產物入口與重跑方式見 [專屬說明](factor_analysis.md#先看哪個檔案)。
 
-核心純計算為 [features.py](../src/etf_agent/features.py) 的 `calculate_price_features()`；`analyze_history_features()` 核對既有輸入並讀日表，`write_feature_analysis()` 保存產物。這份歷史分析尚未接入正式 `MarketSnapshot`／`FeatureTable`、完整 source→observation 證據鏈、加權排名或投資模型。公司行動、歷史 `known_at` 與臨時休市未全面核實，原行情的 `return_close` 留空、`adjustment_status=unresolved` 與 `tradable=false` 維持原狀；缺失處理另列 checklist DATA-22。
+核心純計算為 [features.py](../src/etf_agent/features.py) 的 `calculate_price_features()`；`analyze_history_features()` 核對既有輸入並讀日表，`write_feature_analysis()` 保存產物。後續歷史排名讀取這份 metadata，見下一節。這份歷史分析尚未接入正式 `MarketSnapshot`／`FeatureTable`、完整 source→observation 證據鏈或投資模型。公司行動、歷史 `known_at` 與臨時休市未全面核實，原行情的 `return_close` 留空、`adjustment_status=unresolved` 與 `tradable=false` 維持原狀；缺失處理另列 checklist DATA-22。
+
+### 原價歷史加權排名
+
+公式、手算例子、CSV 欄位解讀與命令集中在 [排名說明](ranking.md)；初始配比的文獻查詢與限制集中在 [因子權重查詢](factor_analysis.md#權重查詢紀錄供開會討論)。本節保留接合責任。
+
+`history-rankings` 只讀既有特徵 `metadata.json` 及 [config/ranking.json](../config/ranking.json)，不讀四捨五入的 features.csv、不重算價格、不抓資料、不修改庫存。固定 `price_only_v1` 啟用 `mom20`、`trend20`、`lowvol20`，配比 0.40／0.25／0.35；同批所有股票使用同一設定。每項平均名次轉 0～1 分位，低波動使用 `1-pct_rank(vol20)`，全同或單一股票得分 0.5。總分降序、平手代號升序。
+
+| 產物／欄位 | 合約與單位 |
+|---|---|
+| `rankings.csv` | 16 欄；原三因子仍為百分數，因子得分／貢獻／`score_pct` 為內部比率乘 100 的相對分數，不是報酬率。BOM、六位小數、ROUND_HALF_UP。另含 `analysis_included` 與 `formal_eligible`，分開分析納入與正式資格。 |
+| `rows[].values`／得分 | 原 `mom20`、`trend20`、`vol20` 比率原樣保留；`rank_scores`、`contributions` 各用 mom20／trend20／lowvol20，`score` 為總分，保存十進位字串，`rank` 為正整數。分位／貢獻／總分以 Fraction 精確排序後轉 34 位 Decimal、ROUND_HALF_EVEN，避免循環小數捨入改變平手。 |
+| 來源與設定 | `input_feature_metadata`、`input_profile` 保留路徑／SHA-256，`profile` 保存完整設定；沿用 `feature_version`、`universe_version`、`calendar_version` 及每股 `source_metadata`，保存 `ranking_version`、單位及限制。 |
+| 股票集合／正式狀態 | 本次 146 檔排序，`excluded_stocks` 原樣保留四檔；已排名列 `analysis_included=true`、`formal_eligible=false`，共同 `submission_ready=false`。分析納入不能當成已確認可交易。 |
+
+每次另建 `data/cache/rankings/<as_of>/<執行版本>/`，保存 `rankings.csv` 與 `metadata.json`，相同輸入／設定可重算相同數值與排名版本。核心 [ranking.py](../src/etf_agent/ranking.py) 分為 `calculate_factor_rankings()` 純計算、`analyze_history_rankings()` 輸入組合與 `write_ranking_analysis()` 保存。排名器不依賴資料 adapter 或模型 SDK，正式資格與候選池仍需後續模組提供。
 
 ### 待完成
 
-現有 `contracts-demo` 的因子與排名仍是人工假值，`origin=fixture`，上述真實歷史原價分析不會自動替換 fixture。調整價／公司行動、正式快照與因子合約串接、流動性篩選、因子標準化及加權排名尚未完成。O1～O25 只是 fixture 內部引用，還不是官方完整 source→observation 證據鏈。
+現有 `contracts-demo` 的因子與排名仍是人工假值，`origin=fixture`，上述真實歷史原價分析與排名不會自動替換 fixture。歷史分析的分位得分及加權排名已完成；調整價／公司行動、正式快照與因子合約串接、流動性篩選、候選池與真實模型仍待完成。O1～O25 只是 fixture 內部引用，還不是官方完整 source→observation 證據鏈。
 
 新增法人或營收時，在資料 adapter 與因子計算處擴充，沿用 FeatureTable、配置、股數計算與帳務。因子啟用與權重應集中配置，不能逐股偷偷換權重。
 

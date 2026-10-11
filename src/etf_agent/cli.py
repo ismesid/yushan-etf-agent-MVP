@@ -19,6 +19,7 @@ from etf_agent.features import FeatureAnalysisError, analyze_history_features, w
 from etf_agent.history import download_history_sample, download_history_universe, export_history_sample
 from etf_agent.history_windows import HistoryWindowError, check_history_windows, write_window_report
 from etf_agent.providers.monthly import HistoryDataError
+from etf_agent.ranking import RankingError, analyze_history_rankings, write_ranking_analysis
 from etf_agent.universe import UniverseError, load_universe
 
 
@@ -156,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8")
-    parser = argparse.ArgumentParser(description="玉山 ETF MVP：資料合約示例、官方白名單與歷史樣本")
+    parser = argparse.ArgumentParser(description="玉山 ETF MVP：資料合約、官方白名單、歷史資料與因子排名")
     commands = parser.add_subparsers(dest="command", required=True)
     demo = commands.add_parser("contracts-demo", help="讀取fixture、檢查合約並展示demo帳")
     demo.add_argument("--fixture", type=Path, default=Path("tests/fixtures/contracts_demo.json"))
@@ -201,7 +202,26 @@ def main(argv: list[str] | None = None) -> int:
     features = commands.add_parser("history-features", help="依既有價格視窗離線產生原價三因子分析")
     features.add_argument("--window-report", required=True, type=Path, help="已保存的 window_report.json")
     features.add_argument("--output", type=Path, default=Path("data/cache/features"))
+    rankings = commands.add_parser("history-rankings", help="依既有精確因子值離線排名，保存各因子貢獻與總分")
+    rankings.add_argument("--feature-metadata", required=True, type=Path, help="history-features 保存的 metadata.json")
+    rankings.add_argument("--profile", type=Path, default=Path("config/ranking.json"), help="統一因子方向與權重設定")
+    rankings.add_argument("--output", type=Path, default=Path("data/cache/rankings"))
     args = parser.parse_args(argv)
+    if args.command == "history-rankings":
+        try:
+            report = analyze_history_rankings(args.feature_metadata, profile_path=args.profile)
+            outputs = write_ranking_analysis(report, args.output)
+        except (RankingError, OSError) as exc:
+            print(f"歷史因子排名錯誤：{exc}", file=sys.stderr)
+            return 2
+        print(f"截至 {report['as_of']}：排名 {len(report['rows'])} 檔；"
+              f"沿用既有不足視窗紀錄 {len(report['excluded_stocks'])} 檔。")
+        print(f"因子設定：{report['profile']['factor_profile']}；排名版本：{report['ranking_version']}")
+        print(f"排名 CSV：{outputs['rankings_csv']}")
+        print(f"設定、各因子貢獻與來源 JSON：{outputs['metadata_json']}")
+        print("使用說明：docs/ranking.md")
+        print("排名為歷史原價分析；正式交易資格未核實，formal_eligible=false，submission_ready=false。")
+        return 0
     if args.command == "history-features":
         try:
             report = analyze_history_features(args.window_report)
@@ -214,7 +234,7 @@ def main(argv: list[str] | None = None) -> int:
         print("因子：20 日動能、20 日均線偏離、20 日年化波動；CSV 用百分數顯示。")
         print(f"分析 CSV：{outputs['features_csv']}")
         print(f"公式與來源 JSON：{outputs['metadata_json']}")
-        print(f"閱讀摘要：{outputs['analysis_md']}")
+        print("使用說明：docs/factor_analysis.md")
         print("本批為歷史未調整原價分析；公司行動／歷史公開時間未核實，submission_ready=false。")
         return 0
     if args.command == "calendar-download":
@@ -246,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{stock['market']} {stock['ticker']}：有效價格 {stock['valid_price_count']} 筆；{stock['status']}")
         print(f"逐股 CSV：{outputs['report_csv']}")
         print(f"報告 JSON：{outputs['report_json']}")
-        print(f"報告摘要：{outputs['report_md']}")
+        print("使用說明：docs/calendar_windows.md")
         print("窗口齊全只表示歷史價格資料完整；公司行動／公開時間／正式交易仍未核實，submission_ready=false。")
         return 0 if report["input_valid"] else 2
     if args.command == "history-universe":
@@ -290,7 +310,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"輸入格式：{'PASS' if report['input_valid'] else 'FAIL'}；完整覆蓋={str(report['coverage_complete']).lower()}")
             print(f"原列 tradable=true：{report['tradable_flag_count']} 檔；submission_ready=false")
             print(f"錯誤：{len(report['errors'])} 項；限制：{len(report['warnings'])} 類")
-            print(f"閱讀報告：{outputs['report_md']}")
+            print("使用說明：docs/history_data.md")
             print(f"完整 JSON：{outputs['report_json']}")
             print(f"缺股票 CSV：{outputs['missing_csv']}")
         return 0 if report["input_valid"] else 2

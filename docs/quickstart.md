@@ -14,11 +14,12 @@ python -B -m etf_agent.cli --help
 
 `PYTHONPATH` 讓 Python 找到 `src/etf_agent`，設定只影響目前 PowerShell 工作階段；另開終端時重新設定。`-B` 避免執行時產生 Python 位元碼快取。
 
-九個命令的個別參數可用 `--help` 查看，例如：
+十個命令的個別參數可用 `--help` 查看，例如：
 
 ```powershell
 python -B -m etf_agent.cli history-universe --help
 python -B -m etf_agent.cli history-features --help
+python -B -m etf_agent.cli history-rankings --help
 ```
 
 下載命令的 `--transport auto` 優先使用系統既有 curl，否則使用 Python `urllib`；也可明確選 `curl` 或 `urllib`。都保留 HTTPS 憑證驗證，不需為目前功能另安裝 Python 套件。
@@ -66,10 +67,11 @@ python -B -m etf_agent.cli universe-check --universe data/universe.csv
 ```powershell
 python -B -m unittest discover -s tests -p test_contracts.py -v
 python -B -m unittest discover -s tests -p test_features.py -v
+python -B -m unittest discover -s tests -p test_ranking.py -v
 python -B -m unittest discover -s tests -p 'test_*.py' -k CalendarTests -k HistoryWindowTests -v
 ```
 
-第一條驗核心合約，第二條驗因子，第三條驗日曆與價格視窗；依當批修改選擇。只有跨模組或共用規則變更等需要整體確認時，才擴大執行：
+上列分別驗核心合約、因子、排名、日曆與價格視窗；依當批修改選擇。只有跨模組或共用規則變更等需要整體確認時，才擴大執行：
 
 ```powershell
 python -B -m unittest discover -s tests -p 'test_*.py' -v
@@ -79,9 +81,9 @@ python -B -m unittest discover -s tests -p 'test_*.py' -v
 
 ## 產物與版本管理
 
-程式、官方參考來源及白名單放在倉庫；行情與分析各次執行另建 `data/cache/<功能>/<月份或截止日>/<執行版本>/`。新產物不覆寫舊版本，下一個命令應使用剛產生的 manifest／報告路徑。
+程式、官方參考來源及白名單放在倉庫，解釋與操作文件集中在 `docs/`；行情與分析各次執行另建 `data/cache/<功能>/<月份或截止日>/<執行版本>/`，保存 CSV／JSON 結果。新產物不覆寫舊版本，下一個命令應使用剛產生的 manifest／報告 JSON 路徑。
 
-[.gitignore](../.gitignore) 忽略 `data/cache/`、真實帳戶 `data/account/`、執行產物、資料庫、日誌、金鑰與本機設定。文件所列快取路徑供本機查閱，GitHub 的可點擊入口連到已提交的說明；需要重建時依序使用 [歷史資料](history_data.md)、[日曆／視窗](calendar_windows.md)、[三因子分析](factor_analysis.md)。
+[.gitignore](../.gitignore) 忽略 `data/cache/`、真實帳戶 `data/account/`、執行產物、資料庫、日誌、金鑰與本機設定。文件所列快取路徑供本機查閱，GitHub 的可點擊入口連到倉庫內的說明；需要重建時依序使用 [歷史資料](history_data.md)、[日曆／視窗](calendar_windows.md)、[三因子分析](factor_analysis.md)、[加權排名](ranking.md)。
 
 每次提交前先檢查差異，明確加入本批檔案；以下只是合約與文件修改的示例：
 

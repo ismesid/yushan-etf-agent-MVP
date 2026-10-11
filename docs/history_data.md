@@ -72,7 +72,7 @@ python -B -m etf_agent.cli history-sample --month 2025-09 --output data/cache/hi
 python -B -m etf_agent.cli history-export --manifest data/cache/history_universe/2025-09/20261011T145716_6e56c903/sample_manifest.json --output data/cache/history_export
 ```
 
-以上 manifest 與兩檔 raw 已保存在全股票目錄，原 `history_sample` 重複快取已清理；仍可離線重建 42 列／21 個日表。早期驗收與原報告保存在 provenance/history_sample（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/`），對應索引見 cleanup.json（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/cleanup.json`）。全股票重建使用前述 `history-universe --cache-manifest`，不要將全股票 manifest 交給 `history-export`。
+以上 manifest 與兩檔 raw 已保存在全股票目錄，原 `history_sample` 重複快取已清理；仍可離線重建 42 列／21 個日表。早期驗收與來源紀錄保存在 provenance/history_sample（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/`），對應索引見 cleanup.json（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/cleanup.json`）。全股票重建使用前述 `history-universe --cache-manifest`，不要將全股票 manifest 交給 `history-export`。
 
 ## 每日覆蓋檢查
 
@@ -84,9 +84,17 @@ python -B -m etf_agent.cli prices-check --prices data/cache/history_universe/202
 
 `--date` 是預期資料日，並非決策日；預設使用 `data/universe.csv`，可另設 `--universe`／`--universe-manifest`。加入 `--json` 輸出完整報告與產物路徑。
 
-每次另建 `data/cache/coverage/<資料日>/<版本>/`，保存 `coverage.json`、`coverage.md`、`missing_stocks.csv`。已取得股票、有效價格及原輸入 `tradable=true` 分開統計；覆蓋完整不代表正式可交易。
+每次另建 `data/cache/coverage/<資料日>/<版本>/`，只保存 `coverage.json` 與 `missing_stocks.csv`，解釋集中在本頁。CSV 以 `ticker,name,market` 列出缺件股票；JSON 保存完整結果與來源。
 
-早期兩檔示例的 舊覆蓋報告（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.md`） 保存當時 2／150 結果及原路徑。若要重現，改讀 保存的兩檔日表（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`）；日常分析使用全股票 daily。
+| JSON 欄位 | 閱讀方式 |
+|---|---|
+| `present_count`／`expected_count`、`missing_count`、`by_market` | 已取得／預期股票數、缺件數及分市場統計；`missing_stocks` 保存缺件名單 |
+| `valid_price_count`、`tradable_flag_count` | 有效價格數與原輸入 `tradable=true` 數，兩者分開；覆蓋完整不代表正式可交易 |
+| `input_valid`、`coverage_complete` | 輸入格式有效與股票池覆蓋完整，缺股票時前者仍可能為 true |
+| `errors`、`warnings`、`checks_not_performed` | 列錯誤、已知限制與尚未執行的核實；目前 `submission_ready=false` |
+| `trade_date`、`input_csv`／hash、`universe_version`、`created_at`／`run_id` | 資料日、輸入與白名單版本及本次執行識別；舊輸入路徑保留當時原紀錄 |
+
+早期兩檔示例的完整 JSON（本機路徑 `data/cache/coverage/2025-09-01/20261011T144802_4463a889/coverage.json`）保存當時 2／150 結果及原路徑。若要重現，改讀保存的兩檔日表（本機路徑 `data/cache/history_universe/2025-09/20261011T145716_6e56c903/provenance/history_sample/input/2025-09-01_prices.csv`）；日常分析使用全股票 daily。
 
 ## 退碼與後續步驟
 
@@ -95,4 +103,4 @@ python -B -m etf_agent.cli prices-check --prices data/cache/history_universe/202
 | `history-universe`、`history-sample`、`history-export` | 各指定來源取得／解析或匯出成功 | 有來源失敗、錯誤快取或輸入／執行錯誤；先查看保存報告 |
 | `prices-check` | `input_valid=true`，即使股票覆蓋不完整 | 日表輸入格式無效或載入／執行錯誤 |
 
-行情完成後，使用 [官方排程與價格視窗](calendar_windows.md) 找到可分析股票，再用 [三因子分析](factor_analysis.md) 產生 CSV 與閱讀摘要。沒有資料下載命令會自行呼叫投資模型或產生正式 D-Plan。
+行情完成後，使用 [官方排程與價格視窗](calendar_windows.md) 找到可分析股票，再用 [三因子分析](factor_analysis.md) 產生 CSV／JSON；指標解讀與既有數值範例集中在該說明頁。沒有資料下載命令會自行呼叫投資模型或產生正式 D-Plan。

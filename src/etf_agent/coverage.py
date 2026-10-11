@@ -219,26 +219,10 @@ def write_coverage_report(report: dict, output_dir: Path | str) -> dict:
     run_dir = Path(output_dir).resolve() / report["trade_date"] / run_id
     run_dir.mkdir(parents=True, exist_ok=False)
     stored = {**report, "created_at": created_at.isoformat(), "run_id": run_id}
-    report_json, report_md, missing_csv = (run_dir / name for name in ("coverage.json", "coverage.md", "missing_stocks.csv"))
+    report_json, missing_csv = (run_dir / name for name in ("coverage.json", "missing_stocks.csv"))
     report_json.write_text(json.dumps(stored, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     with missing_csv.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=("ticker", "name", "market"), lineterminator="\n")
         writer.writeheader()
         writer.writerows(report["missing_stocks"])
-    lines = [f"# {report['trade_date']} 每日行情覆蓋報告", "",
-             f"股票範圍：`{report['universe_version']}`。輸入：`{report['input_csv']}`。", "",
-             f"已取得 **{report['present_count']}／{report['expected_count']} 檔**（{report['coverage_percent']}%）；缺 **{report['missing_count']} 檔**。",
-             f"有效價格 {report['valid_price_count']} 檔；原列 tradable=true {report['tradable_flag_count']} 檔。", "",
-             "| 市場 | 白名單 | 已取得 | 有效價格 | 缺少 |", "|---|---:|---:|---:|---:|"]
-    for market, counts in report["by_market"].items():
-        lines.append(f"| {market} | {counts['expected_count']} | {counts['present_count']} | {counts['valid_price_count']} | {counts['missing_count']} |")
-    lines.extend(["", f"輸入格式核對：{'PASS' if report['input_valid'] else 'FAIL'}；完整覆蓋：{str(report['coverage_complete']).lower()}。", "",
-                  "已取得按同日、白名單內、正市場且唯一列計數；缺價格仍算已取得，重複列整組排除。",
-                  "完整錯誤、限制與輸入雜湊見 [coverage.json](coverage.json)；缺股票見 [missing_stocks.csv](missing_stocks.csv)。", ""])
-    for warning in report["warnings"]:
-        lines.append(f"- {warning['message']}：{len(warning['tickers'])} 檔。")
-    for issue in report["errors"][:20]:
-        lines.append(f"- 第 {issue['row']} 列 {issue['ticker']}：{issue['message']}。")
-    lines.extend(["", "本報告檢查資料範圍與基本格式；未檢核交易日曆、資料截止、原始來源與帳戶，submission_ready=false。", ""])
-    report_md.write_text("\n".join(lines), encoding="utf-8", newline="\n")
-    return {"run_dir": str(run_dir), "report_json": str(report_json), "report_md": str(report_md), "missing_csv": str(missing_csv)}
+    return {"run_dir": str(run_dir), "report_json": str(report_json), "missing_csv": str(missing_csv)}

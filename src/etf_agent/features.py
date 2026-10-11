@@ -9,7 +9,6 @@ import json
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_EVEN, ROUND_HALF_UP, localcontext
 from pathlib import Path
-from statistics import median
 from uuid import uuid4
 
 
@@ -253,65 +252,13 @@ def _percent(value: str | Decimal) -> str:
         return format((Decimal(value) * 100).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP), "f")
 
 
-def _render_feature_analysis(report: dict) -> str:
-    """將已計算的分析轉成含選用理由與數值解讀的閱讀摘要。"""
-    summary = report["summary"]
-    lines = [f"# {report['as_of']} 三因子原價分析", "",
-             f"分析 {summary['analyzed_stock_count']}／{summary['stock_count']} 檔；"
-             f"沿用既有不足視窗並排除 {summary['excluded_stock_count']} 檔，沒有補值。", "",
-             f"特徵版本：`{report['feature_version']}`；日曆依據：`{report['calendar_basis']}`。", "",
-             "數值以百分數呈現；例如 10 表示 10%。每檔 21 筆收盤原價提供 20 個相鄰日報酬。", "",
-             "## 為什麼先使用這三個指標", "",
-             "這組指標沿用專案的價格動能與風險控制草案。現有收盤資料就能計算，公式簡單、來源可追溯，"
-             "適合先建立可檢查的 MVP 分析流程。20 個交易日大約對應一個月，讓三項數值採用相同的近期觀察範圍。", "",
-             "動能看整段首尾漲跌；均線偏離補充期末價格相對近期平均的位置；波動衡量期間每日漲跌的起伏。"
-             "動能與均線偏離有相關性，這三項主要涵蓋趨勢與波動兩種面向。基本面、法人籌碼與新聞資料仍待後續加入。", "",
-             "這是 MVP 的初始分析選擇，尚未經回測選出最佳指標或期間；20 日及年化常數 252 都是設計約定。", "",
-             "## 各指標代表什麼", "",
-             "| 指標 | 如何讀數值 | 分析時要留意 |",
-             "|---|---|---|",
-             "| 20 日動能 | 10% 表示這段期間原價上漲 10%；負值表示下跌。 | 可比較近期表現強弱；高動能也可能出現回撤。 |",
-             "| 均線偏離 | 3% 表示最後收盤高於最近 20 筆平均 3%；負值表示低於平均。 | 可觀察期末趨勢位置；過大偏離也可能表示短期漲幅集中。 |",
-             "| 年化波動 | 將這 20 個日報酬的離散程度換算到年尺度；數值較高表示近期起伏較大。 | 可作價格風險的比較尺度；不能直接推得未來報酬或虧損機率，低波動仍可能虧損。 |", "",
-             "## 計算方式", "",
-             "- 20 日動能：最後收盤／最早收盤 − 1，觀察整段期間漲跌。",
-             "- 均線偏離：最後收盤／最後 20 筆平均 − 1，觀察相對近期平均的位置。",
-             "- 年化波動：20 個日報酬的樣本標準差（分母 19）× √252，觀察價格起伏。", "",
-             "## 後續如何運用", "",
-             "1. 先在同一截止日比較各股的原始因子值，轉成相對排名。",
-             "2. 依設計草案討論動能／均線偏離正向、低波動反向的分數，再決定綜合權重與候選清單。",
-             "3. 將因子與來源證據交給模型，結合市場背景及既有持股提出選股理由；配置程式再處理權重、風控、股數與現金。", "",
-             "目前已完成原價因子數值分析；上述排名、綜合權重及投資模型流程仍待後續批次討論與實作。", "",
-             "## 分布", "", "| 因子 | 最小值（%） | 中位數（%） | 最大值（%） |",
-             "|---|---:|---:|---:|"]
-    labels = {"mom20": "20 日動能", "trend20": "均線偏離", "vol20": "年化波動"}
-    with localcontext() as context:
-        context.prec = DECIMAL_PRECISION
-        for key, label in labels.items():
-            values = [Decimal(row["values"][key]) for row in report["rows"]]
-            if values:
-                lines.append(f"| {label} | {_percent(min(values))} | {_percent(median(values))} | {_percent(max(values))} |")
-    lines.extend(["", "## 股票閱讀範例", "", "依股票代號列前五檔，便於對照 CSV。", "",
-                  "| 股票 | 市場 | 動能（%） | 均線偏離（%） | 年化波動（%） |",
-                  "|---|---|---:|---:|---:|"])
-    for row in report["rows"][:5]:
-        lines.append(f"| {row['ticker']} {row['name']} | {row['market']} | "
-                     f"{_percent(row['values']['mom20'])} | {_percent(row['values']['trend20'])} | "
-                     f"{_percent(row['values']['vol20'])} |")
-    lines.extend(["", "完整分析見 [CSV](features.csv)；共同日期、公式、內部小數及來源見 [metadata](metadata.json)。", ""])
-    lines.extend(f"- {limitation}" for limitation in report["limitations"])
-    lines.extend(["", "`submission_ready=false`。", ""])
-    return "\n".join(lines)
-
-
 def write_feature_analysis(report: dict, output_dir: Path | str) -> dict:
-    """以獨立執行版本保存六欄分析 CSV、計算來源 metadata 及可讀摘要。"""
+    """以獨立執行版本保存六欄分析 CSV 與計算來源 metadata。"""
     now = datetime.now(timezone(timedelta(hours=8)))
     run_id = now.strftime("%Y%m%dT%H%M%S") + "_" + uuid4().hex[:8]
     run_dir = Path(output_dir).resolve() / report["as_of"] / run_id
     run_dir.mkdir(parents=True, exist_ok=False)
-    features_csv, metadata_json, analysis_md = (run_dir / name for name in
-                                               ("features.csv", "metadata.json", "analysis.md"))
+    features_csv, metadata_json = (run_dir / name for name in ("features.csv", "metadata.json"))
     with features_csv.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=FEATURE_CSV_COLUMNS, lineterminator="\n")
         writer.writeheader()
@@ -320,10 +267,9 @@ def write_feature_analysis(report: dict, output_dir: Path | str) -> dict:
                              "mom20_pct": _percent(row["values"]["mom20"]),
                              "trend20_pct": _percent(row["values"]["trend20"]),
                              "vol20_annual_pct": _percent(row["values"]["vol20"])})
-    analysis_md.write_text(_render_feature_analysis(report), encoding="utf-8", newline="\n")
     stored = {**report, "created_at": now.isoformat(), "run_id": run_id,
-              "artifacts": {"features_csv": features_csv.name, "analysis_md": analysis_md.name}}
+              "artifacts": {"features_csv": features_csv.name}}
     metadata_json.write_text(json.dumps(stored, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
                              encoding="utf-8", newline="\n")
     return {"run_dir": str(run_dir), "features_csv": str(features_csv),
-            "metadata_json": str(metadata_json), "analysis_md": str(analysis_md)}
+            "metadata_json": str(metadata_json)}
