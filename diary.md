@@ -43,6 +43,6 @@
 ## 2026-10-11｜GitHub 版本管理
 
 - 討論：使用者要求把目前專案建立成 GitHub repository，方便保存與管理版本。
-- 決定：本地使用 `main` 分支；GitHub 倉庫暫定 `yushan-etf-agent`、私有。保存程式、測試、討論紀錄及官方參考來源。
+- 決定：本地使用 `main` 分支；建立私有 GitHub 倉庫 [ismesid/yushan-etf-agent](https://github.com/ismesid/yushan-etf-agent)。保存程式、測試、討論紀錄及官方參考來源。
 - 原因：讓每批修改有提交紀錄；金鑰、本機設定、真實帳戶、下載快取及執行產物排除於 Git。
-- 進度：已初始化本地 Git，新增 README、忽略規則及官方來源的原始位元保留設定；GitHub 建立與推送結果待確認。
+- 結果：初始提交 `d6cd05f` 已推送，`main` 追蹤 `origin/main`；九份官方來源與 Git 保存內容逐位元相同。新增 README、忽略規則及來源保留設定，沒有安裝套件。

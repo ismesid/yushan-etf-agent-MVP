@@ -56,6 +56,8 @@ schema 只驗證 JSON 可讀及檢查結構，沒有執行 `jsonschema` 或官�
 
 - 授權：使用者明確要求將現有專案建立為 GitHub repository，範圍包含本地 Git 初始化、必要說明／忽略設定、提交、建立遠端及推送。此要求不授權後續 ETF 功能批次。
 - 本地：已初始化 `main`；沿用既有 Git 作者設定。新增 `README.md`、`.gitignore`、`.gitattributes`，官方來源設為不做文字換行轉換。
-- 排除：環境金鑰、本機設定、真實帳戶、行情快取、產生的 runs／exports、SQLite 及日誌；測試 fixture 与官方參考來源保留。
-- GitHub：預設私有 `yushan-etf-agent`；已找到 Git Credential Manager 的既有 GitHub 帳號，遠端結果待實際確認。沒有安裝新套件。
+- 排除：環境金鑰、本機設定、真實帳戶、行情快取、產生的 runs／exports、SQLite 及日誌；測試 fixture 與官方參考來源保留。
+- GitHub：已建立私有 [ismesid/yushan-etf-agent](https://github.com/ismesid/yushan-etf-agent)，`origin=https://github.com/ismesid/yushan-etf-agent.git`。用既有 Git Credential Manager 登入與 Python 標準庫完成，憑證僅在記憶體中使用，沒有安裝新套件。
 - 驗證：忽略規則已命中 `.env`、`data/account/`、`data/cache/`、`runs/`；文字檔金鑰模式檢查無匹配。程式未變，本批不重跑既有 30 項合約測試。
+- 提交／推送：初始提交 `d6cd05f` 成功推送，`main` 已追蹤 `origin/main`；九份官方檔案的工作檔與 Git blob SHA-256 比對全部相同。日記、README 及本紀錄的完成證據另作文件提交。
+- Windows 環境：沙盒初始化的 Git 目錄與本機使用者不同；經工具批准，只將本專案的絕對路徑加入 Git `safe.directory`，未信任其他目錄。

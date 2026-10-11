@@ -1,5 +1,7 @@
 # 玉山 AI CUP：AI Agent 主動型 ETF MVP
 
+GitHub：[ismesid/yushan-etf-agent](https://github.com/ismesid/yushan-etf-agent)（私有倉庫），主要分支為 `main`。
+
 目標是在約 8 小時內完成可供開會檢查的 ETF 決策流程，並方便增加資料源、因子、模型與 UI。目前完成第一批：共用資料合約與離線示例，完整投資流程仍在開發。
 
 ## 目前功能
